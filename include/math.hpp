@@ -5,6 +5,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "half.hpp"
+
 #define PI 3.141592654f
 #define INV_PI 0.318309886f
 
@@ -14,6 +16,7 @@
 inline const float max(const float a, const float b) {return a > b ? a : b;}
 inline const float min(const float a, const float b) {return a < b ? a : b;}
 
+using half = half_float::half;
 
 //////// VECTOR ////////
 
@@ -21,6 +24,7 @@ using Vec2i = std::array<int, 2>;
 using Vec2f = std::array<float, 2>;
 using Vec3i = std::array<int, 3>;
 using Vec3f = std::array<float, 3>;
+using Vec3h = std::array<half, 3>;
 
 inline const Vec2f operator*	(const float f, const Vec2f v) { return {f*v[0], f*v[1]}; }
 inline const Vec2f operator*	(const Vec2f v, const float f) { return {f*v[0], f*v[1]}; }
@@ -55,6 +59,24 @@ inline std::ostream& operator<<(std::ostream& os, const Vec3f& v) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, Vec3f& v) {
+	return os << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
+}
+
+inline const half  dot			(const Vec3h& a, const Vec3h& b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+inline const Vec3h cross		(const Vec3h& a, const Vec3h& b) { return {a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]}; }
+inline const Vec3h operator-	(const Vec3h& a, const Vec3h& b) { return {a[0]-b[0], a[1]-b[1], a[2]-b[2]}; }
+inline const Vec3h operator+	(const Vec3h& a, const Vec3h& b) { return {a[0]+b[0], a[1]+b[1], a[2]+b[2]}; }
+inline const Vec3h operator*	(const Vec3h& a, const Vec3h& b) { return {a[0]*b[0], a[1]*b[1], a[2]*b[2]}; }
+inline const Vec3h operator*	(const half f,   const Vec3h& v) { return {f*v[0], f*v[1], f*v[2]}; }
+inline const Vec3h operator/	(const Vec3h& v, const half   f) { return {v[0]/f, v[1]/f, v[2]/f}; }
+inline const half  length		(const Vec3h& v) { return half_float::sqrt(dot(v, v)); }
+inline const Vec3h normalize	(const Vec3h& v) { return (half)(1.0 / length(v))*v; }
+
+inline std::ostream& operator<<(std::ostream& os, const Vec3h& v) {
+	return os << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
+}
+
+inline std::ostream& operator<<(std::ostream& os, Vec3h& v) {
 	return os << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
 }
 
