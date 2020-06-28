@@ -1,10 +1,18 @@
-#ifndef _RENDERDATA_HPP_
-#define _RENDERDATA_HPP_
+#ifndef _GATHERER_HPP_
+#define _GATHERER_HPP_
 
+#include "math.hpp"
 #include <vector>
-#include "path.hpp"
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+
+class Path
+{
+public:
+	Path();
+	Path(const size_t npoints);
+	std::vector<Vec3h> points;
+};
 
 class RenderData
 {

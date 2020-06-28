@@ -1,4 +1,4 @@
-#include "renderdata.hpp"
+#include "gatherer.hpp"
 
 RenderData::RenderData(const boost::filesystem::path& in_filepath)
 {

@@ -1,4 +1,4 @@
-#include "path.hpp"
+#include "gatherer.hpp"
 
 Path::Path() : Path(0) {}
 
