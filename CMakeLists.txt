@@ -19,7 +19,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include_directories(include)
 
 set( GATHERER_SOURCES 
-   
+  src/path.cpp
+  src/renderdata.cpp
 )
 
-add_executable(${PROJECT_NAME} ${GATHERER_SOURCES})
+find_package(Boost COMPONENTS log filesystem REQUIRED)
+
+add_library(${PROJECT_NAME} ${GATHERER_SOURCES})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})

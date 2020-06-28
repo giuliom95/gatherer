@@ -6,6 +6,9 @@
 
 class Path
 {
+public:
+	Path();
+	Path(const size_t npoints);
 	std::vector<Vec3h> points;
 };
 
