@@ -11,8 +11,11 @@ class Path
 public:
 	Path();
 	Path(const size_t npoints);
+	void add_point(const Vec3f& p);
 	std::vector<Vec3h> points;
 };
+
+using PathsGroup = std::vector<Path>;
 
 class RenderData
 {
@@ -21,9 +24,8 @@ public:
 	void disk_load_all();
 	void disk_store_all();
 
-private:
 	boost::filesystem::path	filepath;
-	std::vector<Path>		paths;
+	std::vector<PathsGroup>	pathgroups;
 };
 
 #endif

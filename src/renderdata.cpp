@@ -3,12 +3,14 @@
 RenderData::RenderData(const boost::filesystem::path& in_filepath)
 {
 	filepath = in_filepath;
-	paths = std::vector<Path>();
+	pathgroups = std::vector<PathsGroup>();
 }
 
 void RenderData::disk_load_all()
 {
 	std::ifstream filestream{filepath.string()};
+
+	pathgroups = std::vector<PathsGroup>(1);
 
 	while(filestream.eof())
 	{
@@ -27,30 +29,32 @@ void RenderData::disk_load_all()
 			npoints*sizeof(Vec3h)
 		);
 		
-		paths.push_back(path);
+		pathgroups[0].push_back(path);
 	}
 
 	filestream.close();
 
-	BOOST_LOG_TRIVIAL(info) << "Loaded " << paths.size() << " paths";
+	BOOST_LOG_TRIVIAL(info) << "Loaded";
 }
 
 void RenderData::disk_store_all()
 {
 	std::ofstream filestream{filepath.string()};
 
-	for(const Path& path : paths)
+	for(const PathsGroup pg : pathgroups)
 	{
-		uint8_t npoints = (uint8_t)path.points.size();
-		filestream.put(npoints);
-		filestream.write
-		(
-			reinterpret_cast<const char*>(path.points.data()),
-			npoints*sizeof(Vec3h)
-		);
+		for(const Path& path : pg)
+		{
+			uint8_t npoints = (uint8_t)path.points.size();
+			filestream.put(npoints);
+			filestream.write
+			(
+				reinterpret_cast<const char*>(path.points.data()),
+				npoints*sizeof(Vec3h)
+			);
+		}
 	}
-
 	filestream.close();
 
-	BOOST_LOG_TRIVIAL(info) << "Wrote " << paths.size() << " paths";
+	BOOST_LOG_TRIVIAL(info) << "Wrote paths";
 }
