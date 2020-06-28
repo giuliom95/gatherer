@@ -34,5 +34,5 @@ set( GATHERER_SOURCES
 
 find_package(Boost COMPONENTS log filesystem REQUIRED)
 
-add_library(${PROJECT_NAME} ${GATHERER_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${GATHERER_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
