@@ -12,7 +12,7 @@ void RenderData::disk_load_all()
 
 	pathgroups = std::vector<PathsGroup>(1);
 
-	while(filestream.eof())
+	while(!filestream.eof())
 	{
 		// Number of points in path 
 		uint8_t npoints;
@@ -26,7 +26,7 @@ void RenderData::disk_load_all()
 		filestream.read
 		(
 			reinterpret_cast<char*>(path.points.data()), 
-			npoints*sizeof(Vec3h)
+			npoints*sizeof(Vec3)
 		);
 		
 		pathgroups[0].push_back(path);
@@ -40,21 +40,24 @@ void RenderData::disk_load_all()
 void RenderData::disk_store_all()
 {
 	std::ofstream filestream{filepath.string()};
+	unsigned long npaths = 0;
 
 	for(const PathsGroup pg : pathgroups)
 	{
 		for(const Path& path : pg)
 		{
-			uint8_t npoints = (uint8_t)path.points.size();
-			filestream.put(npoints);
+			++npaths;
+			const uint8_t npoints = (uint8_t)path.points.size();
+			BOOST_LOG_TRIVIAL(info) << "Path npoints=" << (int)npoints;
+			filestream.write(reinterpret_cast<const char*>(&npoints), 1);
 			filestream.write
 			(
 				reinterpret_cast<const char*>(path.points.data()),
-				npoints*sizeof(Vec3h)
+				npoints*sizeof(Vec3)
 			);
 		}
 	}
 	filestream.close();
 
-	BOOST_LOG_TRIVIAL(info) << "Wrote paths";
+	BOOST_LOG_TRIVIAL(info) << "Wrote " << npaths << " paths";
 }

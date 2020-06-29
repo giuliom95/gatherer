@@ -6,13 +6,15 @@
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 
+using Vec3 = Vec3f;
+
 class Path
 {
 public:
 	Path();
 	Path(const size_t npoints);
-	void add_point(const Vec3f& p);
-	std::vector<Vec3h> points;
+	void add_point(const Vec3& p);
+	std::vector<Vec3> points;
 };
 
 using PathsGroup = std::vector<Path>;
