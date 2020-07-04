@@ -1,9 +1,14 @@
 #include "gatherer.hpp"
 
-RenderData::RenderData(const boost::filesystem::path& in_filepath)
-{
+RenderData::RenderData
+(
+	const boost::filesystem::path& in_filepath,
+	const unsigned nthreads
+) {
 	filepath = in_filepath;
-	pathgroups = std::vector<PathsGroup>();
+	pathgroups = std::vector<PathsGroup>(nthreads);
+	for(unsigned pgi = 0; pgi < nthreads; ++pgi)
+		pathgroups[pgi] = PathsGroup();
 }
 
 void RenderData::disk_load_all()
@@ -48,7 +53,6 @@ void RenderData::disk_store_all()
 		{
 			++npaths;
 			const uint8_t npoints = (uint8_t)path.points.size();
-			BOOST_LOG_TRIVIAL(info) << "Path npoints=" << (int)npoints;
 			filestream.write(reinterpret_cast<const char*>(&npoints), 1);
 			filestream.write
 			(
