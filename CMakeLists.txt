@@ -27,12 +27,21 @@ include_directories(
   ${MATH_INCLUDE_ABS}
 )
 
+find_package(Boost COMPONENTS log filesystem REQUIRED)
+find_package(glfw3 REQUIRED)
+include(FindOpenGL)
+
 set( GATHERER_SOURCES 
   src/path.cpp
   src/renderdata.cpp
 )
-
-find_package(Boost COMPONENTS log filesystem REQUIRED)
-
 add_library(${PROJECT_NAME} SHARED ${GATHERER_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+
+set( GATHERER_CLIENT_SOURCES 
+  src/client.cpp
+)
+add_executable(${PROJECT_NAME}client ${GATHERER_CLIENT_SOURCES})
+target_link_libraries(${PROJECT_NAME}client glfw)
+target_link_libraries(${PROJECT_NAME}client OpenGL::GL)
+target_link_libraries(${PROJECT_NAME}client ${PROJECT_NAME})
