@@ -30,6 +30,7 @@ include_directories(
 find_package(Boost COMPONENTS log filesystem REQUIRED)
 find_package(glfw3 REQUIRED)
 include(FindOpenGL)
+include(FindGLEW)
 
 set( GATHERER_SOURCES 
   src/path.cpp
@@ -44,4 +45,5 @@ set( GATHERER_CLIENT_SOURCES
 add_executable(${PROJECT_NAME}client ${GATHERER_CLIENT_SOURCES})
 target_link_libraries(${PROJECT_NAME}client glfw)
 target_link_libraries(${PROJECT_NAME}client OpenGL::GL)
+target_link_libraries(${PROJECT_NAME}client GLEW::glew)
 target_link_libraries(${PROJECT_NAME}client ${PROJECT_NAME})
