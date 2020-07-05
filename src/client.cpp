@@ -9,7 +9,7 @@ bool glfwCheckErrors()
 	int err_code = glfwGetError(&err_msg);
 	if(err_code != GLFW_NO_ERROR)
 	{
-		BOOST_LOG_TRIVIAL(error) << "GLEW: " << err_msg;
+		BOOST_LOG_TRIVIAL(error) << "GLFW: " << err_msg;
 		return false;
 	}
 	return true;
@@ -35,6 +35,12 @@ int main(void)
 	glfwCheckErrors();
 	BOOST_LOG_TRIVIAL(info) << "Created window";
 
+	GLenum glew_init_status = glewInit();
+	if (glew_init_status != GLEW_OK)
+	{
+		const GLubyte* err = glewGetErrorString(glew_init_status);
+		BOOST_LOG_TRIVIAL(error) << "GLEW: " << err;
+	}
 
 	const char *vtxsha_src = "#version 330 core\n"
 		"layout (location = 0) in vec3 aPos;\n"
