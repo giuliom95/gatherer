@@ -40,7 +40,7 @@ add_library(${PROJECT_NAME} SHARED ${GATHERER_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 set( GATHERER_CLIENT_SOURCES 
-  src/client.cpp
+  src/client/client.cpp
 )
 add_executable(${PROJECT_NAME}client ${GATHERER_CLIENT_SOURCES})
 target_link_libraries(${PROJECT_NAME}client glfw)

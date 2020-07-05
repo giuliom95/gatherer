@@ -95,15 +95,11 @@ int main(void)
 	glEnableVertexAttribArray(0);
 	BOOST_LOG_TRIVIAL(info) << "Loaded vertices on GPU";
 
-
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+		glDrawArrays(GL_LINE_STRIP, 0, 3);
 		glfwSwapBuffers(window);
-
 		glfwPollEvents();
 	}
 
