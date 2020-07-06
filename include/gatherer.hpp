@@ -22,15 +22,10 @@ using PathsGroup = std::vector<Path>;
 class RenderData
 {
 public:
-	RenderData
-	(
-		const boost::filesystem::path& in_filepath,
-		const unsigned nthreads=1
-	);
-	void disk_load_all();
-	void disk_store_all();
+	RenderData(const unsigned nthreads=1);
+	void disk_load_all (const boost::filesystem::path& dirpath);
+	void disk_store_all(const boost::filesystem::path& dirpath);
 
-	boost::filesystem::path	filepath;
 	std::vector<PathsGroup>	pathgroups;
 };
 

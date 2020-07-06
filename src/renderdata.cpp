@@ -1,18 +1,14 @@
 #include "gatherer.hpp"
 
-RenderData::RenderData
-(
-	const boost::filesystem::path& in_filepath,
-	const unsigned nthreads
-) {
-	filepath = in_filepath;
+RenderData::RenderData(const unsigned nthreads) {
 	pathgroups = std::vector<PathsGroup>(nthreads);
 	for(unsigned pgi = 0; pgi < nthreads; ++pgi)
 		pathgroups[pgi] = PathsGroup();
 }
 
-void RenderData::disk_load_all()
+void RenderData::disk_load_all(const boost::filesystem::path& dirpath)
 {
+	/*
 	std::ifstream filestream{filepath.string()};
 
 	pathgroups = std::vector<PathsGroup>(1);
@@ -40,11 +36,18 @@ void RenderData::disk_load_all()
 	filestream.close();
 
 	BOOST_LOG_TRIVIAL(info) << "Loaded";
+	*/
 }
 
-void RenderData::disk_store_all()
+void RenderData::disk_store_all(const boost::filesystem::path& dirpath)
 {
-	std::ofstream filestream{filepath.string()};
+	if(!boost::filesystem::create_directory(dirpath))
+	{
+		BOOST_LOG_TRIVIAL(warning) << "Directory already there, overwriting";
+	}
+	boost::filesystem::ofstream lenghts_ofs{dirpath / "lenghts.bin"};
+	boost::filesystem::ofstream paths_ofs{dirpath / "paths.bin"}; 
+	
 	unsigned long npaths = 0;
 
 	for(const PathsGroup pg : pathgroups)
@@ -53,15 +56,16 @@ void RenderData::disk_store_all()
 		{
 			++npaths;
 			const uint8_t npoints = (uint8_t)path.points.size();
-			filestream.write(reinterpret_cast<const char*>(&npoints), 1);
-			filestream.write
+			lenghts_ofs.write(reinterpret_cast<const char*>(&npoints), 1);
+			paths_ofs.write
 			(
 				reinterpret_cast<const char*>(path.points.data()),
 				npoints*sizeof(Vec3)
 			);
 		}
 	}
-	filestream.close();
+	lenghts_ofs.close();
+	paths_ofs.close();
 
 	BOOST_LOG_TRIVIAL(info) << "Wrote " << npaths << " paths";
 }
