@@ -47,7 +47,7 @@ public:
 		{
 			BOOST_LOG_TRIVIAL(warning) << "Directory already there, overwriting";
 		}
-		boost::filesystem::ofstream lenghts_ofs{dirpath / "lenghts.bin"};
+		boost::filesystem::ofstream lenghts_ofs{dirpath / "lengths.bin"};
 		boost::filesystem::ofstream paths_ofs{dirpath / "paths.bin"}; 
 		
 		unsigned long npaths = 0;
