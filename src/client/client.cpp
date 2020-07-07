@@ -46,46 +46,41 @@ disk_load_all_opengl(
 	return lengths;
 }
 
-GLuint create_shader_program()
+
+GLuint disk_load_shader(
+	const boost::filesystem::path&	path,
+	const GLenum 					type
+)
 {
 	GLint compile_status;
-
-	const char *vtxsha_src = "#version 330 core\n"
-		"layout (location = 0) in vec3 aPos;\n"
-		"void main()\n"
-		"{\n"
-		"	mat4 m = mat4(-4.37444448471, 0.0, 1.22467117936e-16, -1.22464679915e-16, 0.0, 4.37444448471, 0.0, 0.0, -5.35714943625e-16, 0.0, -1.00001990795, 1.0, 1216.09556675, -1194.22334433, -1186.37361909, 1186.54999929);\n"
-		"	gl_Position = m*vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-		"	gl_Position /= gl_Position.w;\n"
-		"}\0";
-	GLuint vtxsha_idx = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vtxsha_idx, 1, &vtxsha_src, NULL);
-	glCompileShader(vtxsha_idx);
-	glGetShaderiv(vtxsha_idx, GL_COMPILE_STATUS, &compile_status);
+	boost::filesystem::ifstream ifs{path};
+	std::string str(
+		(std::istreambuf_iterator<char>(ifs)),
+        (std::istreambuf_iterator<char>())
+	);
+	ifs.close();
+	const char* src = str.c_str();
+	GLuint idx = glCreateShader(type);
+	glShaderSource(idx, 1, &src, nullptr);
+	glCompileShader(idx);
+	glGetShaderiv(idx, GL_COMPILE_STATUS, &compile_status);
 	if(compile_status == GL_FALSE)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Vertex shader has errors!";
+		BOOST_LOG_TRIVIAL(error) << "Shader has errors!";
 		return -1;
 	}
-	BOOST_LOG_TRIVIAL(info) << "Compiled vertex shader";
+	BOOST_LOG_TRIVIAL(info) << "Compiled shader";
 
-	const char *fragsha_src = "#version 330 core\n"
-		"out vec4 out_color;\n"
-		"void main()\n"
-		"{\n"
-		"	out_color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-		"}\0";
-	GLuint fragsha_idx;
-	fragsha_idx = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragsha_idx, 1, &fragsha_src, NULL);
-	glCompileShader(fragsha_idx);
-	glGetShaderiv(fragsha_idx, GL_COMPILE_STATUS, &compile_status);
-	if(compile_status == GL_FALSE)
-	{
-		BOOST_LOG_TRIVIAL(error) << "Fragment shader has errors!";
-		return -1;
-	}
-	BOOST_LOG_TRIVIAL(info) << "Compiled fragment shader";
+	return idx;
+}
+
+GLuint disk_load_shader_program(
+	const boost::filesystem::path& vtxsha_path,
+	const boost::filesystem::path& fragsha_path
+)
+{
+	GLuint vtxsha_idx  = disk_load_shader(vtxsha_path,  GL_VERTEX_SHADER);
+	GLuint fragsha_idx = disk_load_shader(fragsha_path, GL_FRAGMENT_SHADER);
 
 	GLuint shaprog_idx;
 	shaprog_idx = glCreateProgram();
@@ -138,8 +133,13 @@ int main(void)
 	);
 	BOOST_LOG_TRIVIAL(info) << "Loaded vertices on GPU";
 
-	GLuint shaprog_idx = create_shader_program();
+	GLuint shaprog_idx = disk_load_shader_program(
+		"../src/client/shaders/pathvertex.glsl",
+		"../src/client/shaders/pathfragment.glsl"
+	);
 	glUseProgram(shaprog_idx);
+
+
 
 	while (!glfwWindowShouldClose(window))
 	{
