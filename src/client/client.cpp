@@ -109,7 +109,7 @@ int main(void)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(1024, 1024, "Hello World", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwCheckErrors();
 	BOOST_LOG_TRIVIAL(info) << "Created window";
@@ -139,14 +139,26 @@ int main(void)
 	);
 	glUseProgram(shaprog_idx);
 
+	GLint mat_locid = glGetUniformLocation(shaprog_idx, "view");
 
+	glEnablei(GL_BLEND, 0);
+	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		const Mat4f eye{};
+		glUniformMatrix4fv(
+			mat_locid, 1, GL_FALSE, 
+			reinterpret_cast<const GLfloat*>(&eye)
+		);
+
+		GLint off = 0;
 		for(const uint8_t len : lengths)
 		{
-			glDrawArrays(GL_LINE_STRIP, 0, len);
+			glDrawArrays(GL_LINE_STRIP, off, len);
+			off += len;
 		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
