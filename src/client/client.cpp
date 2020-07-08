@@ -40,7 +40,10 @@ disk_load_all_opengl(
 
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
 	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(
+		0, 3, GL_HALF_FLOAT, 
+		GL_FALSE, 3 * sizeof(half_float::half), (void*)0
+	);
 	glEnableVertexAttribArray(0);
 
 	return lengths;
