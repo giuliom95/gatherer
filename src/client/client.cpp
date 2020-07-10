@@ -18,7 +18,7 @@ bool glfwCheckErrors()
 }
 
 std::vector<uint8_t> 
-disk_load_all_opengl(
+disk_load_all_paths(
 	const GLuint					vboidx,
 	const boost::filesystem::path	dirpath
 )
@@ -48,7 +48,6 @@ disk_load_all_opengl(
 
 	return lengths;
 }
-
 
 GLuint disk_load_shader(
 	const boost::filesystem::path&	path,
@@ -97,9 +96,59 @@ GLuint disk_load_shader_program(
 	return shaprog_idx;
 }
 
+class Camera
+{
+public:
+	Vec3f focus;
+	float pitch;
+	float yaw;
+	float r;
+
+	float fov;
+	float aspect; 
+	float znear; 
+	float zfar;
+
+	Mat4f view()
+	{
+		const float a = r * cosf(pitch);
+		const Vec3f lpos{a*cosf(yaw), r*sinf(pitch), a*sinf(yaw)};
+		const Vec3f pos = lpos + focus;
+		const Vec3f z = normalize(-1*lpos);
+		const Vec3f up{0,1,0};
+		const Vec3f x = normalize(cross(up, z));
+		const Vec3f y = cross(z, x);
+		return {x, y, z, pos};
+	}
+
+	Mat4f persp()
+	{
+		const float xymax = znear * tanf(fov * PI / 360);
+		const float ymin = -xymax;
+		const float xmin = -xymax;
+
+		const float width = xymax - xmin;
+		const float height = xymax - ymin;
+
+		const float depth = zfar - znear;
+		const float q = -(zfar + znear) / depth;
+		const float qn = -2 * (zfar * znear) / depth;
+
+		const float w = (2 * znear / width) / aspect;
+		const float h = 2 * znear / height;
+
+		return {
+			w,  0,  0,  0,
+			0,  h,  0,  0,
+			0,  0,  q, -1,
+			0,  0, qn,  0
+		};
+	}
+};
+
 int main(void)
 {
-	GLFWwindow* window;
+	GLFWwindow* glfw_window;
 
 	const int glfw_init_status = glfwInit();
 	if(glfw_init_status != GLFW_TRUE)
@@ -112,8 +161,9 @@ int main(void)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(1024, 1024, "Hello World", NULL, NULL);
-	glfwMakeContextCurrent(window);
+	glfw_window = glfwCreateWindow(1024, 1024, "Hello World", NULL, NULL);
+	glfwMakeContextCurrent(glfw_window);
+
 	glfwCheckErrors();
 	BOOST_LOG_TRIVIAL(info) << "Created window";
 
@@ -131,7 +181,7 @@ int main(void)
 
 	GLuint vboidx;
 	glGenBuffers(1, &vboidx);
-	const std::vector<uint8_t> lengths = disk_load_all_opengl(
+	const std::vector<uint8_t> lengths = disk_load_all_paths(
 		vboidx, "../data/renderdata"
 	);
 	BOOST_LOG_TRIVIAL(info) << "Loaded vertices on GPU";
@@ -145,16 +195,35 @@ int main(void)
 	GLint mat_locid = glGetUniformLocation(shaprog_idx, "view");
 
 	glEnablei(GL_BLEND, 0);
-	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
-	while (!glfwWindowShouldClose(window))
+	Camera cam;
+	cam.aspect = 1;
+	cam.fov = 90;
+	cam.zfar = 500;
+	cam.znear = 1;
+
+	cam.focus = Vec3f{};
+	cam.pitch = 0;
+	cam.yaw = -45;
+	cam.r = 20;
+
+	const Mat4f m = cam.persp() * cam.view();
+	BOOST_LOG_TRIVIAL(info) << "[" << 
+		"[" << m(0,0) << ", " << m(0,1) << ", " << m(0,2) << ", " << m(0,3) << "], " <<
+		"[" << m(1,0) << ", " << m(1,1) << ", " << m(1,2) << ", " << m(1,3) << "], " <<
+		"[" << m(2,0) << ", " << m(2,1) << ", " << m(2,2) << ", " << m(2,3) << "], " <<
+		"[" << m(3,0) << ", " << m(3,1) << ", " << m(3,2) << ", " << m(3,3) << "] " << 
+	"]";
+
+	while (!glfwWindowShouldClose(glfw_window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		const Mat4f eye{};
+		const Mat4f m = cam.persp() * cam.view();
 		glUniformMatrix4fv(
 			mat_locid, 1, GL_FALSE, 
-			reinterpret_cast<const GLfloat*>(&eye)
+			reinterpret_cast<const GLfloat*>(&m)
 		);
 
 		GLint off = 0;
@@ -163,10 +232,19 @@ int main(void)
 			glDrawArrays(GL_LINE_STRIP, off, len);
 			off += len;
 		}
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
+		glfwSwapBuffers(glfw_window);
 
+		glfwWaitEvents();
+
+		const int glfw_lmb_state = 
+			glfwGetMouseButton(glfw_window, GLFW_MOUSE_BUTTON_LEFT);
+
+		if (glfw_lmb_state == GLFW_PRESS)
+		{
+
+		}
+	}
+	
 	glfwTerminate();
 	return 0;
 }
