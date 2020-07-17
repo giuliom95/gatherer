@@ -1,7 +1,7 @@
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
-uniform mat4 view;
+uniform mat4 mvp;
 
 void main()
 {
@@ -11,6 +11,5 @@ void main()
 	//	-5.35714943625e-16,   0.0,            -1.00001990795,      1.0, 
 	//	 1216.09556675,      -1194.22334433,  -1186.37361909,      1186.54999929
 	//);
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0)*view;
-	gl_Position /= gl_Position.w;
+	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0)*mvp;
 }

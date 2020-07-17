@@ -35,8 +35,20 @@ disk_load_all_paths(
 	lengths_ifs.read(reinterpret_cast<char*>(lengths.data()), lengths_bytes);
 
 	// Ignoring type because this data will be passed striaght to the GPU
-	std::vector<char> paths(paths_bytes);
-	paths_ifs.read(paths.data(), paths_bytes);
+	std::vector<Vec3h> paths(paths_bytes);
+	paths_ifs.read(reinterpret_cast<char*>(paths.data()), paths_bytes);
+
+	Vec3h minp, maxp;
+	for(Vec3h v : paths)
+	{
+		minp[0] = min(minp[0], v[0]);
+		minp[1] = min(minp[1], v[1]);
+		minp[2] = min(minp[2], v[2]);
+		maxp[0] = max(maxp[0], v[0]);
+		maxp[1] = max(maxp[1], v[1]);
+		maxp[2] = max(maxp[2], v[2]);
+	}
+	
 
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
 	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
@@ -69,6 +81,9 @@ GLuint disk_load_shader(
 	if(compile_status == GL_FALSE)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Shader has errors!";
+		char info[512];
+		glGetShaderInfoLog(idx, 512, NULL, info);
+    	BOOST_LOG_TRIVIAL(error) << info;
 		return -1;
 	}
 	BOOST_LOG_TRIVIAL(info) << "Compiled shader";
@@ -104,50 +119,48 @@ public:
 	float yaw;
 	float r;
 
-	float fov;
-	float aspect; 
-	float znear; 
-	float zfar;
-
 	Mat4f view()
 	{
-		const float a = r * cosf(pitch);
-		const Vec3f lpos{a*cosf(yaw), r*sinf(pitch), a*sinf(yaw)};
+		const float rad_pitch = pitch * PI_OVER_180;
+		const float rad_yaw   = yaw   * PI_OVER_180;
+		const float a = r * cosf(rad_pitch);
+		const Vec3f lpos{
+			a*cosf(rad_yaw), 
+			r*sinf(rad_pitch), 
+			a*sinf(rad_yaw)
+		};
 		const Vec3f pos = lpos + focus;
+		BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
 		const Vec3f z = normalize(-1*lpos);
 		const Vec3f up{0,1,0};
 		const Vec3f x = normalize(cross(up, z));
 		const Vec3f y = cross(z, x);
-		return {x, y, z, pos};
+		const Mat4f mrot{x, y, z, {}};
+		const Mat4f mpos{{1,0,0},{0,1,0},{0,0,1}, -1*pos};
+		return mpos*transpose(mrot);
 	}
 
 	Mat4f persp()
 	{
-		const float xymax = znear * tanf(fov * PI / 360);
-		const float ymin = -xymax;
-		const float xmin = -xymax;
-
-		const float width = xymax - xmin;
-		const float height = xymax - ymin;
-
-		const float depth = zfar - znear;
-		const float q = -(zfar + znear) / depth;
-		const float qn = -2 * (zfar * znear) / depth;
-
-		const float w = (2 * znear / width) / aspect;
-		const float h = 2 * znear / height;
-
 		return {
-			w,  0,  0,  0,
-			0,  h,  0,  0,
-			0,  0,  q, -1,
-			0,  0, qn,  0
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, .01, 0,
+			0, 0, 0, 1
 		};
 	}
 };
 
+Vec2f get_cursor_pos(GLFWwindow* window)
+{
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	return {(float)x, (float)y};
+}
+
 int main(void)
 {
+	
 	GLFWwindow* glfw_window;
 
 	const int glfw_init_status = glfwInit();
@@ -192,35 +205,26 @@ int main(void)
 	);
 	glUseProgram(shaprog_idx);
 
-	GLint mat_locid = glGetUniformLocation(shaprog_idx, "view");
+	GLint mat_locid = glGetUniformLocation(shaprog_idx, "mvp");
 
 	glEnablei(GL_BLEND, 0);
 	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
 	Camera cam;
-	cam.aspect = 1;
-	cam.fov = 90;
-	cam.zfar = 500;
-	cam.znear = 1;
-
 	cam.focus = Vec3f{};
 	cam.pitch = 0;
-	cam.yaw = -45;
+	cam.yaw = 0;
 	cam.r = 20;
 
-	const Mat4f m = cam.persp() * cam.view();
-	BOOST_LOG_TRIVIAL(info) << "[" << 
-		"[" << m(0,0) << ", " << m(0,1) << ", " << m(0,2) << ", " << m(0,3) << "], " <<
-		"[" << m(1,0) << ", " << m(1,1) << ", " << m(1,2) << ", " << m(1,3) << "], " <<
-		"[" << m(2,0) << ", " << m(2,1) << ", " << m(2,2) << ", " << m(2,3) << "], " <<
-		"[" << m(3,0) << ", " << m(3,1) << ", " << m(3,2) << ", " << m(3,3) << "] " << 
-	"]";
+	Vec2f cursor_old_pos = get_cursor_pos(glfw_window);
+	bool lmb_pressed = false;
+	bool rmb_pressed = false;
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		const Mat4f m = cam.persp() * cam.view();
+		const Mat4f m = cam.view() * cam.persp();
 		glUniformMatrix4fv(
 			mat_locid, 1, GL_FALSE, 
 			reinterpret_cast<const GLfloat*>(&m)
@@ -241,10 +245,52 @@ int main(void)
 
 		if (glfw_lmb_state == GLFW_PRESS)
 		{
+			Vec2f cursor_cur_pos = get_cursor_pos(glfw_window);
+			if(!lmb_pressed)
+			{
+				lmb_pressed = true;
+				cursor_old_pos = cursor_cur_pos;
+			}
 
+			Vec2f cursor_delta_pos = cursor_cur_pos - cursor_old_pos;
+
+			cam.yaw += 0.1*cursor_delta_pos[0];
+			cam.pitch += -0.1*cursor_delta_pos[1];
+			BOOST_LOG_TRIVIAL(info) << cam.yaw << " " << cam.pitch;
+
+			cursor_old_pos = cursor_cur_pos;
+		}
+		else
+		{
+			lmb_pressed = false;
+		}
+
+		const int glfw_rmb_state = 
+			glfwGetMouseButton(glfw_window, GLFW_MOUSE_BUTTON_RIGHT);
+
+		if (glfw_rmb_state == GLFW_PRESS)
+		{
+			Vec2f cursor_cur_pos = get_cursor_pos(glfw_window);
+			if(!rmb_pressed)
+			{
+				rmb_pressed = true;
+				cursor_old_pos = cursor_cur_pos;
+			}
+
+			Vec2f cursor_delta_pos = cursor_cur_pos - cursor_old_pos;
+
+			cam.r += cursor_delta_pos[1];
+			BOOST_LOG_TRIVIAL(info) << cam.r;
+
+			cursor_old_pos = cursor_cur_pos;
+		}
+		else
+		{
+			rmb_pressed = false;
 		}
 	}
 	
 	glfwTerminate();
 	return 0;
+	
 }
