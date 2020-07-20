@@ -119,6 +119,10 @@ public:
 	float yaw;
 	float r;
 
+	float fov;
+	float zfar;
+	float znear;
+
 	Mat4f view()
 	{
 		const float rad_pitch = pitch * PI_OVER_180;
@@ -126,11 +130,11 @@ public:
 		const float a = r * cosf(rad_pitch);
 		const Vec3f lpos{
 			a*cosf(rad_yaw), 
-			r*sinf(rad_pitch), 
+			-r*sinf(rad_pitch), 
 			a*sinf(rad_yaw)
 		};
 		const Vec3f pos = lpos + focus;
-		BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
+		//BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
 		const Vec3f z = normalize(-1*lpos);
 		const Vec3f up{0,1,0};
 		const Vec3f x = normalize(cross(up, z));
@@ -142,11 +146,15 @@ public:
 
 	Mat4f persp()
 	{
+		const float a = 1 / tanf(fov);
+		const float d = - zfar + znear;
+		const float b = (zfar + znear) / d;
+		const float c = -2 * zfar * znear / d;
 		return {
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, .01, 0,
-			0, 0, 0, 1
+			a, 0, 0, 0,
+			0,-a, 0, 0,
+			0, 0, b, c,
+			0, 0,-1, 0
 		};
 	}
 };
@@ -156,6 +164,50 @@ Vec2f get_cursor_pos(GLFWwindow* window)
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
 	return {(float)x, (float)y};
+}
+
+void mouse_camera_event(
+	int btn_id,
+	bool& btn_pressed,
+	GLFWwindow* glfw_window,
+	Vec2f& cursor_old_pos,
+	void (*f) (Vec2f, Camera&),
+	Camera& camera
+) {
+	const int btn_state = 
+		glfwGetMouseButton(glfw_window, btn_id);
+
+	if (btn_state == GLFW_PRESS)
+	{
+		Vec2f cursor_cur_pos = get_cursor_pos(glfw_window);
+		if(!btn_pressed)
+		{
+			btn_pressed = true;
+			cursor_old_pos = cursor_cur_pos;
+		}
+
+		Vec2f cursor_delta_pos = cursor_cur_pos - cursor_old_pos;
+
+		f(cursor_delta_pos, camera);
+
+		cursor_old_pos = cursor_cur_pos;
+	}
+	else
+	{
+		btn_pressed = false;
+	}
+}
+
+void rotate_camera(Vec2f cursor_delta, Camera& camera)
+{
+	camera.yaw   +=  0.5f * cursor_delta[0];
+	camera.pitch +=  0.5f * cursor_delta[1];
+}
+
+void dolly_camera(Vec2f cursor_delta, Camera& camera)
+{
+	camera.r +=  0.5f * cursor_delta[0];
+	camera.r +=  0.5f * cursor_delta[1];
 }
 
 int main(void)
@@ -205,7 +257,8 @@ int main(void)
 	);
 	glUseProgram(shaprog_idx);
 
-	GLint mat_locid = glGetUniformLocation(shaprog_idx, "mvp");
+	GLint cam_locid = glGetUniformLocation(shaprog_idx, "cam");
+	GLint persp_locid = glGetUniformLocation(shaprog_idx, "persp");
 
 	glEnablei(GL_BLEND, 0);
 	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
@@ -216,6 +269,10 @@ int main(void)
 	cam.yaw = 0;
 	cam.r = 20;
 
+	cam.znear = .1;
+	cam.zfar  = 2000;
+	cam.fov   = 10;
+
 	Vec2f cursor_old_pos = get_cursor_pos(glfw_window);
 	bool lmb_pressed = false;
 	bool rmb_pressed = false;
@@ -224,10 +281,15 @@ int main(void)
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		const Mat4f m = cam.view() * cam.persp();
+		const Mat4f mcam   = cam.view();
+		const Mat4f mpersp = cam.persp();
 		glUniformMatrix4fv(
-			mat_locid, 1, GL_FALSE, 
-			reinterpret_cast<const GLfloat*>(&m)
+			cam_locid, 1, GL_FALSE, 
+			reinterpret_cast<const GLfloat*>(&mcam)
+		);
+		glUniformMatrix4fv(
+			persp_locid, 1, GL_FALSE, 
+			reinterpret_cast<const GLfloat*>(&mpersp)
 		);
 
 		GLint off = 0;
@@ -240,54 +302,21 @@ int main(void)
 
 		glfwWaitEvents();
 
-		const int glfw_lmb_state = 
-			glfwGetMouseButton(glfw_window, GLFW_MOUSE_BUTTON_LEFT);
+		mouse_camera_event(
+			GLFW_MOUSE_BUTTON_LEFT,
+			lmb_pressed,
+			glfw_window,
+			cursor_old_pos,
+			rotate_camera, cam
+		);
 
-		if (glfw_lmb_state == GLFW_PRESS)
-		{
-			Vec2f cursor_cur_pos = get_cursor_pos(glfw_window);
-			if(!lmb_pressed)
-			{
-				lmb_pressed = true;
-				cursor_old_pos = cursor_cur_pos;
-			}
-
-			Vec2f cursor_delta_pos = cursor_cur_pos - cursor_old_pos;
-
-			cam.yaw += 0.1*cursor_delta_pos[0];
-			cam.pitch += -0.1*cursor_delta_pos[1];
-			BOOST_LOG_TRIVIAL(info) << cam.yaw << " " << cam.pitch;
-
-			cursor_old_pos = cursor_cur_pos;
-		}
-		else
-		{
-			lmb_pressed = false;
-		}
-
-		const int glfw_rmb_state = 
-			glfwGetMouseButton(glfw_window, GLFW_MOUSE_BUTTON_RIGHT);
-
-		if (glfw_rmb_state == GLFW_PRESS)
-		{
-			Vec2f cursor_cur_pos = get_cursor_pos(glfw_window);
-			if(!rmb_pressed)
-			{
-				rmb_pressed = true;
-				cursor_old_pos = cursor_cur_pos;
-			}
-
-			Vec2f cursor_delta_pos = cursor_cur_pos - cursor_old_pos;
-
-			cam.r += cursor_delta_pos[1];
-			BOOST_LOG_TRIVIAL(info) << cam.r;
-
-			cursor_old_pos = cursor_cur_pos;
-		}
-		else
-		{
-			rmb_pressed = false;
-		}
+		mouse_camera_event(
+			GLFW_MOUSE_BUTTON_RIGHT,
+			rmb_pressed,
+			glfw_window,
+			cursor_old_pos,
+			dolly_camera, cam
+		);
 	}
 	
 	glfwTerminate();
