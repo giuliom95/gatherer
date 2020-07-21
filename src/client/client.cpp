@@ -17,12 +17,27 @@ bool glfwCheckErrors()
 	return true;
 }
 
-std::vector<uint8_t> 
-disk_load_all_paths(
+class AABB {
+public:
+	Vec3f min, max;
+	Vec3f center() {
+		return 0.5f * (min + max);
+	}
+};
+
+class SceneInfo
+{
+public:
+	std::vector<uint8_t>	path_lenghts;
+	AABB					bounding_box;
+};
+
+SceneInfo disk_load_all_paths(
 	const GLuint					vboidx,
 	const boost::filesystem::path	dirpath
-)
-{
+) {
+	SceneInfo scene_info;
+
 	const boost::filesystem::path lengths_fp = dirpath / "lengths.bin";
 	const boost::filesystem::path paths_fp   = dirpath / "paths.bin";
 	boost::filesystem::ifstream lengths_ifs(lengths_fp);
@@ -31,8 +46,10 @@ disk_load_all_paths(
 	const uintmax_t lengths_bytes = boost::filesystem::file_size(lengths_fp);
 	const uintmax_t paths_bytes   = boost::filesystem::file_size(paths_fp);
 
-	std::vector<uint8_t> lengths(lengths_bytes);
-	lengths_ifs.read(reinterpret_cast<char*>(lengths.data()), lengths_bytes);
+	scene_info.path_lenghts = std::vector<uint8_t>(lengths_bytes);
+	lengths_ifs.read(
+		reinterpret_cast<char*>(scene_info.path_lenghts.data()), lengths_bytes
+	);
 
 	// Ignoring type because this data will be passed striaght to the GPU
 	std::vector<Vec3h> paths(paths_bytes);
@@ -48,8 +65,8 @@ disk_load_all_paths(
 		maxp[1] = max(maxp[1], v[1]);
 		maxp[2] = max(maxp[2], v[2]);
 	}
+	scene_info.bounding_box = AABB{fromVec3h(minp), fromVec3h(maxp)};
 	
-
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
 	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(
@@ -58,7 +75,7 @@ disk_load_all_paths(
 	);
 	glEnableVertexAttribArray(0);
 
-	return lengths;
+	return scene_info;
 }
 
 GLuint disk_load_shader(
@@ -166,7 +183,8 @@ Vec2f get_cursor_pos(GLFWwindow* window)
 	return {(float)x, (float)y};
 }
 
-void mouse_camera_event(
+// Returns true if a modify has been committed 
+bool mouse_camera_event(
 	int btn_id,
 	bool& btn_pressed,
 	GLFWwindow* glfw_window,
@@ -191,10 +209,12 @@ void mouse_camera_event(
 		f(cursor_delta_pos, camera);
 
 		cursor_old_pos = cursor_cur_pos;
+		return true;
 	}
 	else
 	{
 		btn_pressed = false;
+		return false;
 	}
 }
 
@@ -208,9 +228,32 @@ void dolly_camera(Vec2f cursor_delta, Camera& camera)
 {
 	camera.r +=  0.5f * cursor_delta[0];
 	camera.r +=  0.5f * cursor_delta[1];
+	if (camera.r < 1) camera.r = 1;
 }
 
-int main(void)
+void render_all(
+	GLFWwindow*	window,
+	Camera&		camera,
+	GLint		locid_camvpmat,
+	SceneInfo&	scene_info
+) {
+	const Mat4f vpmat = camera.view()*camera.persp();
+	glUniformMatrix4fv(
+		locid_camvpmat, 1, GL_FALSE, 
+		reinterpret_cast<const GLfloat*>(&vpmat)
+	);
+
+	GLint off = 0;
+	for(const uint8_t len : scene_info.path_lenghts)
+	{
+		glDrawArrays(GL_LINE_STRIP, off, len);
+		off += len;
+	}
+
+	glfwSwapBuffers(window);
+}
+
+int main()
 {
 	
 	GLFWwindow* glfw_window;
@@ -246,7 +289,7 @@ int main(void)
 
 	GLuint vboidx;
 	glGenBuffers(1, &vboidx);
-	const std::vector<uint8_t> lengths = disk_load_all_paths(
+	SceneInfo scene_info = disk_load_all_paths(
 		vboidx, "../data/renderdata"
 	);
 	BOOST_LOG_TRIVIAL(info) << "Loaded vertices on GPU";
@@ -257,14 +300,19 @@ int main(void)
 	);
 	glUseProgram(shaprog_idx);
 
-	GLint cam_locid = glGetUniformLocation(shaprog_idx, "cam");
-	GLint persp_locid = glGetUniformLocation(shaprog_idx, "persp");
+	GLint locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
 
 	glEnablei(GL_BLEND, 0);
 	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
+	glEnable(GL_LINE_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+	// Set camera focus to bbox center
+	Vec3f center = scene_info.bounding_box.center();
+
 	Camera cam;
-	cam.focus = Vec3f{};
+	cam.focus = center;
 	cam.pitch = 0;
 	cam.yaw = 0;
 	cam.r = 20;
@@ -277,32 +325,16 @@ int main(void)
 	bool lmb_pressed = false;
 	bool rmb_pressed = false;
 
+	// First render to show something on screen on startup
+	render_all(glfw_window, cam, locid_camvpmat, scene_info);
+
 	while (!glfwWindowShouldClose(glfw_window))
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		const Mat4f mcam   = cam.view();
-		const Mat4f mpersp = cam.persp();
-		glUniformMatrix4fv(
-			cam_locid, 1, GL_FALSE, 
-			reinterpret_cast<const GLfloat*>(&mcam)
-		);
-		glUniformMatrix4fv(
-			persp_locid, 1, GL_FALSE, 
-			reinterpret_cast<const GLfloat*>(&mpersp)
-		);
-
-		GLint off = 0;
-		for(const uint8_t len : lengths)
-		{
-			glDrawArrays(GL_LINE_STRIP, off, len);
-			off += len;
-		}
-		glfwSwapBuffers(glfw_window);
-
 		glfwWaitEvents();
 
-		mouse_camera_event(
+		bool hasToUpdate = false;
+
+		hasToUpdate |= mouse_camera_event(
 			GLFW_MOUSE_BUTTON_LEFT,
 			lmb_pressed,
 			glfw_window,
@@ -310,16 +342,22 @@ int main(void)
 			rotate_camera, cam
 		);
 
-		mouse_camera_event(
+		hasToUpdate |= mouse_camera_event(
 			GLFW_MOUSE_BUTTON_RIGHT,
 			rmb_pressed,
 			glfw_window,
 			cursor_old_pos,
 			dolly_camera, cam
 		);
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		if(hasToUpdate)
+		{
+			render_all(glfw_window, cam, locid_camvpmat, scene_info);
+		}
 	}
 	
 	glfwTerminate();
-	return 0;
-	
+	return 0;	
 }
