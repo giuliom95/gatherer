@@ -1,9 +1,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <boost/log/trivial.hpp>
-
 #include "gatherer.hpp"
+#include <boost/log/trivial.hpp>
 
 bool glfwCheckErrors()
 {
@@ -140,25 +139,20 @@ public:
 	float zfar;
 	float znear;
 
-	Mat4f view()
+	Mat4f w2c()
 	{
-		const float rad_pitch = pitch * PI_OVER_180;
-		const float rad_yaw   = yaw   * PI_OVER_180;
-		const float a = r * cosf(rad_pitch);
-		const Vec3f lpos{
-			a*cosf(rad_yaw), 
-			-r*sinf(rad_pitch), 
-			a*sinf(rad_yaw)
-		};
-		const Vec3f pos = lpos + focus;
-		//BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
-		const Vec3f z = normalize(-1*lpos);
-		const Vec3f up{0,1,0};
-		const Vec3f x = normalize(cross(up, z));
-		const Vec3f y = cross(z, x);
-		const Mat4f mrot{x, y, z, {}};
-		const Mat4f mpos{{1,0,0},{0,1,0},{0,0,1}, -1*pos};
-		return mpos*transpose(mrot);
+		Mat4f mrot;
+		Vec3f pos;
+		viewmatrices(pos, mrot);
+		return translationMatrix(-1*pos)*transpose(mrot);
+	}
+
+	Mat4f c2w()
+	{
+		Mat4f mrot;
+		Vec3f pos;
+		viewmatrices(pos, mrot);
+		return mrot*translationMatrix(pos);
 	}
 
 	Mat4f persp()
@@ -173,6 +167,25 @@ public:
 			0, 0, b, c,
 			0, 0,-1, 0
 		};
+	}
+private:
+	void viewmatrices(Vec3f& pos, Mat4f& mrot)
+	{
+		const float rad_pitch = pitch * PI_OVER_180;
+		const float rad_yaw   = yaw   * PI_OVER_180;
+		const float a = r * cosf(rad_pitch);
+		const Vec3f lpos{
+			a*cosf(rad_yaw), 
+			-r*sinf(rad_pitch), 
+			a*sinf(rad_yaw)
+		};
+		//BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
+		const Vec3f z = normalize(-1*lpos);
+		const Vec3f up{0,1,0};
+		const Vec3f x = normalize(cross(up, z));
+		const Vec3f y = cross(z, x);
+		mrot = Mat4f{x, y, z, {}};
+		pos = lpos + focus;
 	}
 };
 
@@ -189,7 +202,7 @@ bool mouse_camera_event(
 	bool& btn_pressed,
 	GLFWwindow* glfw_window,
 	Vec2f& cursor_old_pos,
-	void (*f) (Vec2f, Camera&),
+	std::function<void(Vec2f, Camera&)> f,
 	Camera& camera
 ) {
 	const int btn_state = 
@@ -221,7 +234,7 @@ bool mouse_camera_event(
 void rotate_camera(Vec2f cursor_delta, Camera& camera)
 {
 	camera.yaw   +=  0.5f * cursor_delta[0];
-	camera.pitch +=  0.5f * cursor_delta[1];
+	camera.pitch += -0.5f * cursor_delta[1];
 }
 
 void dolly_camera(Vec2f cursor_delta, Camera& camera)
@@ -231,13 +244,23 @@ void dolly_camera(Vec2f cursor_delta, Camera& camera)
 	if (camera.r < 1) camera.r = 1;
 }
 
+void truckboom_camera(Vec2f cursor_delta, Camera& camera)
+{
+	Vec3f p{
+		cursor_delta[0], 
+		cursor_delta[1], 
+		camera.r
+	};
+	camera.focus = transformPoint(camera.c2w(), p);
+}
+
 void render_all(
 	GLFWwindow*	window,
 	Camera&		camera,
 	GLint		locid_camvpmat,
 	SceneInfo&	scene_info
 ) {
-	const Mat4f vpmat = camera.view()*camera.persp();
+	const Mat4f vpmat = camera.w2c()*camera.persp();
 	glUniformMatrix4fv(
 		locid_camvpmat, 1, GL_FALSE, 
 		reinterpret_cast<const GLfloat*>(&vpmat)
@@ -324,6 +347,7 @@ int main()
 	Vec2f cursor_old_pos = get_cursor_pos(glfw_window);
 	bool lmb_pressed = false;
 	bool rmb_pressed = false;
+	bool mmb_pressed = false;
 
 	// First render to show something on screen on startup
 	render_all(glfw_window, cam, locid_camvpmat, scene_info);
@@ -348,6 +372,14 @@ int main()
 			glfw_window,
 			cursor_old_pos,
 			dolly_camera, cam
+		);
+
+		hasToUpdate |= mouse_camera_event(
+			GLFW_MOUSE_BUTTON_MIDDLE,
+			mmb_pressed,
+			glfw_window,
+			cursor_old_pos,
+			truckboom_camera, cam
 		);
 
 		glClear(GL_COLOR_BUFFER_BIT);
