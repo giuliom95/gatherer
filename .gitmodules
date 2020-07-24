@@ -1,0 +1,3 @@
+[submodule "deps/math"]
+	path = deps/math
+	url = https://github.com/giuliom95/math
