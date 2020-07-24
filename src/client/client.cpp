@@ -158,14 +158,14 @@ public:
 	Mat4f persp()
 	{
 		const float a = 1 / tanf(fov);
-		const float d = - zfar + znear;
-		const float b = (zfar + znear) / d;
+		const float d = zfar - znear;
+		const float b = -(zfar + znear) / d;
 		const float c = -2 * zfar * znear / d;
 		return {
 			a, 0, 0, 0,
-			0,-a, 0, 0,
+			0, a, 0, 0,
 			0, 0, b, c,
-			0, 0,-1, 0
+			0, 0, 1, 0
 		};
 	}
 private:
@@ -233,22 +233,24 @@ bool mouse_camera_event(
 
 void rotate_camera(Vec2f cursor_delta, Camera& camera)
 {
-	camera.yaw   +=  0.5f * cursor_delta[0];
+	camera.yaw   += -0.5f * cursor_delta[0];
 	camera.pitch += -0.5f * cursor_delta[1];
 }
 
 void dolly_camera(Vec2f cursor_delta, Camera& camera)
 {
-	camera.r +=  0.5f * cursor_delta[0];
-	camera.r +=  0.5f * cursor_delta[1];
+	float mult = .1*log(.3*camera.r + 2);
+	camera.r +=  mult * cursor_delta[0];
+	camera.r +=  mult * cursor_delta[1];
 	if (camera.r < 1) camera.r = 1;
 }
 
 void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 {
+	float mult = 1;
 	Vec3f p{
-		cursor_delta[0], 
-		cursor_delta[1], 
+		-mult * cursor_delta[0], 
+		 mult * cursor_delta[1], 
 		camera.r
 	};
 	camera.focus = transformPoint(camera.c2w(), p);
