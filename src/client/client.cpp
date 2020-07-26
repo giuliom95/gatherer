@@ -4,6 +4,9 @@
 #include "gatherer.hpp"
 #include <boost/log/trivial.hpp>
 
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+
 bool glfwCheckErrors()
 {
 	const char* err_msg;
@@ -262,6 +265,12 @@ void render_all(
 	GLint		locid_camvpmat,
 	SceneInfo&	scene_info
 ) {
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
 	const Mat4f vpmat = camera.w2c()*camera.persp();
 	glUniformMatrix4fv(
 		locid_camvpmat, 1, GL_FALSE, 
@@ -274,6 +283,11 @@ void render_all(
 		glDrawArrays(GL_LINE_STRIP, off, len);
 		off += len;
 	}
+
+	ImGui::Text("Hello, world!");
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 	glfwSwapBuffers(window);
 }
@@ -346,6 +360,11 @@ int main()
 	cam.zfar  = 2000;
 	cam.fov   = 10;
 
+	ImGui::CreateContext();
+	ImGuiIO& imgui_io = ImGui::GetIO();
+	ImGui_ImplOpenGL3_Init("#version 450 core");
+	ImGui_ImplGlfw_InitForOpenGL(glfw_window, false);
+
 	Vec2f cursor_old_pos = get_cursor_pos(glfw_window);
 	bool lmb_pressed = false;
 	bool rmb_pressed = false;
@@ -358,7 +377,7 @@ int main()
 	{
 		glfwWaitEvents();
 
-		bool hasToUpdate = false;
+		bool hasToUpdate = true;
 
 		hasToUpdate |= mouse_camera_event(
 			GLFW_MOUSE_BUTTON_LEFT,
@@ -384,14 +403,16 @@ int main()
 			truckboom_camera, cam
 		);
 
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		if(hasToUpdate)
 		{
 			render_all(glfw_window, cam, locid_camvpmat, scene_info);
 		}
 	}
 	
+	ImGui_ImplGlfw_Shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui::DestroyContext();
+
 	glfwTerminate();
 	return 0;	
 }

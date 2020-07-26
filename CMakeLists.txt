@@ -18,9 +18,23 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(MATH_INCLUDE "deps/math/include")
 
+set(IMGUI_DIR "deps/imgui")
+set(IMGUI_INCLUDE 
+  "${IMGUI_DIR}"
+  "${IMGUI_DIR}/examples"
+)
+set(IMGUI_SRCS
+  "${IMGUI_DIR}/imgui_draw.cpp"
+  "${IMGUI_DIR}/imgui_widgets.cpp"
+  "${IMGUI_DIR}/imgui.cpp"
+  "${IMGUI_DIR}/examples/imgui_impl_glfw.cpp"
+  "${IMGUI_DIR}/examples/imgui_impl_opengl3.cpp"
+)
+
 include_directories(
   include
   ${MATH_INCLUDE}
+  ${IMGUI_INCLUDE}
 )
 
 find_package(Boost COMPONENTS log filesystem REQUIRED)
@@ -30,6 +44,7 @@ include(FindGLEW)
 
 set( GATHERER_CLIENT_SOURCES 
   src/client/client.cpp
+  ${IMGUI_SRCS}
 )
 add_executable(${PROJECT_NAME}client ${GATHERER_CLIENT_SOURCES})
 target_link_libraries(${PROJECT_NAME}client glfw)
