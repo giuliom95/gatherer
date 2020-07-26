@@ -1,3 +1,6 @@
 [submodule "deps/math"]
 	path = deps/math
 	url = https://github.com/giuliom95/math
+[submodule "deps/imgui"]
+	path = deps/imgui
+	url = https://github.com/ocornut/imgui
