@@ -16,15 +16,11 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-if(NOT MATH_INCLUDE)
-  message(FATAL_ERROR "Please define MATH_INCLUDE")
-endif(NOT MATH_INCLUDE)
-get_filename_component(MATH_INCLUDE_ABS "${MATH_INCLUDE}"
-                       REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+set(MATH_INCLUDE "deps/math/include")
 
 include_directories(
   include
-  ${MATH_INCLUDE_ABS}
+  ${MATH_INCLUDE}
 )
 
 find_package(Boost COMPONENTS log filesystem REQUIRED)
