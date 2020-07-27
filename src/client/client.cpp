@@ -2,6 +2,9 @@
 #include <GLFW/glfw3.h>
 
 #include "gatherer.hpp"
+#include "pathsrenderer.hpp"
+#include "camera.hpp"
+
 #include <boost/log/trivial.hpp>
 
 #include "imgui_impl_opengl3.h"
@@ -130,67 +133,6 @@ GLuint disk_load_shader_program(
 	return shaprog_idx;
 }
 
-class Camera
-{
-public:
-	Vec3f focus;
-	float pitch;
-	float yaw;
-	float r;
-
-	float fov;
-	float zfar;
-	float znear;
-
-	Mat4f w2c()
-	{
-		Mat4f mrot;
-		Vec3f pos;
-		viewmatrices(pos, mrot);
-		return translationMatrix(-1*pos)*transpose(mrot);
-	}
-
-	Mat4f c2w()
-	{
-		Mat4f mrot;
-		Vec3f pos;
-		viewmatrices(pos, mrot);
-		return mrot*translationMatrix(pos);
-	}
-
-	Mat4f persp()
-	{
-		const float a = 1 / tanf(fov);
-		const float d = zfar - znear;
-		const float b = -(zfar + znear) / d;
-		const float c = -2 * zfar * znear / d;
-		return {
-			a, 0, 0, 0,
-			0, a, 0, 0,
-			0, 0, b, c,
-			0, 0, 1, 0
-		};
-	}
-private:
-	void viewmatrices(Vec3f& pos, Mat4f& mrot)
-	{
-		const float rad_pitch = pitch * PI_OVER_180;
-		const float rad_yaw   = yaw   * PI_OVER_180;
-		const float a = r * cosf(rad_pitch);
-		const Vec3f lpos{
-			a*cosf(rad_yaw), 
-			-r*sinf(rad_pitch), 
-			a*sinf(rad_yaw)
-		};
-		//BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
-		const Vec3f z = normalize(-1*lpos);
-		const Vec3f up{0,1,0};
-		const Vec3f x = normalize(cross(up, z));
-		const Vec3f y = cross(z, x);
-		mrot = Mat4f{x, y, z, {}};
-		pos = lpos + focus;
-	}
-};
 
 Vec2f get_cursor_pos(GLFWwindow* window)
 {
@@ -263,6 +205,7 @@ void render_all(
 	GLFWwindow*	window,
 	Camera&		camera,
 	GLint		locid_camvpmat,
+	GLuint		shaprog_idx,
 	SceneInfo&	scene_info
 ) {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -271,6 +214,7 @@ void render_all(
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	glUseProgram(shaprog_idx);
 	const Mat4f vpmat = camera.w2c()*camera.persp();
 	glUniformMatrix4fv(
 		locid_camvpmat, 1, GL_FALSE, 
@@ -283,8 +227,6 @@ void render_all(
 		glDrawArrays(GL_LINE_STRIP, off, len);
 		off += len;
 	}
-
-	ImGui::Text("Hello, world!");
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -337,7 +279,6 @@ int main()
 		"../src/client/shaders/pathvertex.glsl",
 		"../src/client/shaders/pathfragment.glsl"
 	);
-	glUseProgram(shaprog_idx);
 
 	GLint locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
 
@@ -356,7 +297,7 @@ int main()
 	cam.yaw = 0;
 	cam.r = 20;
 
-	cam.znear = .1;
+	cam.znear = 0;
 	cam.zfar  = 2000;
 	cam.fov   = 10;
 
@@ -371,42 +312,41 @@ int main()
 	bool mmb_pressed = false;
 
 	// First render to show something on screen on startup
-	render_all(glfw_window, cam, locid_camvpmat, scene_info);
+	render_all(glfw_window, cam, locid_camvpmat, shaprog_idx, scene_info);
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
 		glfwWaitEvents();
 
-		bool hasToUpdate = true;
-
-		hasToUpdate |= mouse_camera_event(
-			GLFW_MOUSE_BUTTON_LEFT,
-			lmb_pressed,
-			glfw_window,
-			cursor_old_pos,
-			rotate_camera, cam
-		);
-
-		hasToUpdate |= mouse_camera_event(
-			GLFW_MOUSE_BUTTON_RIGHT,
-			rmb_pressed,
-			glfw_window,
-			cursor_old_pos,
-			dolly_camera, cam
-		);
-
-		hasToUpdate |= mouse_camera_event(
-			GLFW_MOUSE_BUTTON_MIDDLE,
-			mmb_pressed,
-			glfw_window,
-			cursor_old_pos,
-			truckboom_camera, cam
-		);
-
-		if(hasToUpdate)
+		if(!imgui_io.WantCaptureMouse)
 		{
-			render_all(glfw_window, cam, locid_camvpmat, scene_info);
+			mouse_camera_event(
+				GLFW_MOUSE_BUTTON_LEFT,
+				lmb_pressed,
+				glfw_window,
+				cursor_old_pos,
+				rotate_camera, cam
+			);
+
+			mouse_camera_event(
+				GLFW_MOUSE_BUTTON_RIGHT,
+				rmb_pressed,
+				glfw_window,
+				cursor_old_pos,
+				dolly_camera, cam
+			);
+
+			mouse_camera_event(
+				GLFW_MOUSE_BUTTON_MIDDLE,
+				mmb_pressed,
+				glfw_window,
+				cursor_old_pos,
+				truckboom_camera, cam
+			);
 		}
+
+		render_all(glfw_window, cam, locid_camvpmat, shaprog_idx, scene_info);
+
 	}
 	
 	ImGui_ImplGlfw_Shutdown();
