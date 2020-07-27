@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "utils.hpp"
 #include "gatherer.hpp"
 #include "pathsrenderer.hpp"
 #include "camera.hpp"
@@ -21,118 +22,6 @@ bool glfwCheckErrors()
 	}
 	return true;
 }
-
-class AABB {
-public:
-	Vec3f min, max;
-	Vec3f center() {
-		return 0.5f * (min + max);
-	}
-};
-
-class SceneInfo
-{
-public:
-	std::vector<uint8_t>	path_lenghts;
-	AABB					bounding_box;
-};
-
-SceneInfo disk_load_all_paths(
-	const GLuint					vboidx,
-	const boost::filesystem::path	dirpath
-) {
-	SceneInfo scene_info;
-
-	const boost::filesystem::path lengths_fp = dirpath / "lengths.bin";
-	const boost::filesystem::path paths_fp   = dirpath / "paths.bin";
-	boost::filesystem::ifstream lengths_ifs(lengths_fp);
-	boost::filesystem::ifstream paths_ifs  (paths_fp);
-
-	const uintmax_t lengths_bytes = boost::filesystem::file_size(lengths_fp);
-	const uintmax_t paths_bytes   = boost::filesystem::file_size(paths_fp);
-
-	scene_info.path_lenghts = std::vector<uint8_t>(lengths_bytes);
-	lengths_ifs.read(
-		reinterpret_cast<char*>(scene_info.path_lenghts.data()), lengths_bytes
-	);
-
-	// Ignoring type because this data will be passed striaght to the GPU
-	std::vector<Vec3h> paths(paths_bytes);
-	paths_ifs.read(reinterpret_cast<char*>(paths.data()), paths_bytes);
-
-	Vec3h minp, maxp;
-	for(Vec3h v : paths)
-	{
-		minp[0] = min(minp[0], v[0]);
-		minp[1] = min(minp[1], v[1]);
-		minp[2] = min(minp[2], v[2]);
-		maxp[0] = max(maxp[0], v[0]);
-		maxp[1] = max(maxp[1], v[1]);
-		maxp[2] = max(maxp[2], v[2]);
-	}
-	scene_info.bounding_box = AABB{fromVec3h(minp), fromVec3h(maxp)};
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
-	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(
-		0, 3, GL_HALF_FLOAT, 
-		GL_FALSE, 3 * sizeof(half_float::half), (void*)0
-	);
-	glEnableVertexAttribArray(0);
-
-	return scene_info;
-}
-
-GLuint disk_load_shader(
-	const boost::filesystem::path&	path,
-	const GLenum 					type
-)
-{
-	GLint compile_status;
-	boost::filesystem::ifstream ifs{path};
-	std::string str(
-		(std::istreambuf_iterator<char>(ifs)),
-        (std::istreambuf_iterator<char>())
-	);
-	ifs.close();
-	const char* src = str.c_str();
-	GLuint idx = glCreateShader(type);
-	glShaderSource(idx, 1, &src, nullptr);
-	glCompileShader(idx);
-	glGetShaderiv(idx, GL_COMPILE_STATUS, &compile_status);
-	if(compile_status == GL_FALSE)
-	{
-		BOOST_LOG_TRIVIAL(error) << "Shader has errors!";
-		char info[512];
-		glGetShaderInfoLog(idx, 512, NULL, info);
-    	BOOST_LOG_TRIVIAL(error) << info;
-		return -1;
-	}
-	BOOST_LOG_TRIVIAL(info) << "Compiled shader";
-
-	return idx;
-}
-
-GLuint disk_load_shader_program(
-	const boost::filesystem::path& vtxsha_path,
-	const boost::filesystem::path& fragsha_path
-)
-{
-	GLuint vtxsha_idx  = disk_load_shader(vtxsha_path,  GL_VERTEX_SHADER);
-	GLuint fragsha_idx = disk_load_shader(fragsha_path, GL_FRAGMENT_SHADER);
-
-	GLuint shaprog_idx;
-	shaprog_idx = glCreateProgram();
-	glAttachShader(shaprog_idx, vtxsha_idx);
-	glAttachShader(shaprog_idx, fragsha_idx);
-	glLinkProgram(shaprog_idx);
-	glDeleteShader(vtxsha_idx);
-	glDeleteShader(fragsha_idx);
-	BOOST_LOG_TRIVIAL(info) << "Created shader program";
-
-	return shaprog_idx;
-}
-
 
 Vec2f get_cursor_pos(GLFWwindow* window)
 {
@@ -202,11 +91,9 @@ void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 }
 
 void render_all(
-	GLFWwindow*	window,
-	Camera&		camera,
-	GLint		locid_camvpmat,
-	GLuint		shaprog_idx,
-	SceneInfo&	scene_info
+	GLFWwindow*		window,
+	Camera&			camera,
+	PathsRenderer&	pathsrenderer
 ) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -214,19 +101,7 @@ void render_all(
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	glUseProgram(shaprog_idx);
-	const Mat4f vpmat = camera.w2c()*camera.persp();
-	glUniformMatrix4fv(
-		locid_camvpmat, 1, GL_FALSE, 
-		reinterpret_cast<const GLfloat*>(&vpmat)
-	);
-
-	GLint off = 0;
-	for(const uint8_t len : scene_info.path_lenghts)
-	{
-		glDrawArrays(GL_LINE_STRIP, off, len);
-		off += len;
-	}
+	pathsrenderer.render(camera);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -262,34 +137,18 @@ int main()
 		const GLubyte* err = glewGetErrorString(glew_init_status);
 		BOOST_LOG_TRIVIAL(error) << "GLEW: " << err;
 	}
-
-	GLuint vaoidx;
-	glGenVertexArrays(1, &vaoidx);
-	glBindVertexArray(vaoidx);
-	BOOST_LOG_TRIVIAL(info) << "Created VAO";
-
-	GLuint vboidx;
-	glGenBuffers(1, &vboidx);
-	SceneInfo scene_info = disk_load_all_paths(
-		vboidx, "../data/renderdata"
-	);
-	BOOST_LOG_TRIVIAL(info) << "Loaded vertices on GPU";
-
-	GLuint shaprog_idx = disk_load_shader_program(
-		"../src/client/shaders/pathvertex.glsl",
-		"../src/client/shaders/pathfragment.glsl"
-	);
-
-	GLint locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
-
+	
 	glEnablei(GL_BLEND, 0);
 	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
+	PathsRenderer pathsrenderer;
+	pathsrenderer.init();
+
 	// Set camera focus to bbox center
-	Vec3f center = scene_info.bounding_box.center();
+	Vec3f center = pathsrenderer.scene_info.bounding_box.center();
 
 	Camera cam;
 	cam.focus = center;
@@ -312,7 +171,7 @@ int main()
 	bool mmb_pressed = false;
 
 	// First render to show something on screen on startup
-	render_all(glfw_window, cam, locid_camvpmat, shaprog_idx, scene_info);
+	render_all(glfw_window, cam, pathsrenderer);
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
@@ -345,7 +204,7 @@ int main()
 			);
 		}
 
-		render_all(glfw_window, cam, locid_camvpmat, shaprog_idx, scene_info);
+		render_all(glfw_window, cam, pathsrenderer);
 
 	}
 	
