@@ -2,19 +2,17 @@
 
 void PathsRenderer::init()
 {
-	
 	glGenVertexArrays(1, &vaoidx);
 	glBindVertexArray(vaoidx);
 	BOOST_LOG_TRIVIAL(info) << "Created VAO";
-
 	
 	glGenBuffers(1, &vboidx);
 	disk_load_all_paths("../data/renderdata");
 	BOOST_LOG_TRIVIAL(info) << "Loaded vertices on GPU";
 
 	shaprog_idx = disk_load_shader_program(
-		"../src/client/shaders/pathvertex.glsl",
-		"../src/client/shaders/pathfragment.glsl"
+		"../src/client/shaders/paths.vert.glsl",
+		"../src/client/shaders/paths.frag.glsl"
 	);
 
 	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
