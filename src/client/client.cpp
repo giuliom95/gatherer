@@ -95,7 +95,8 @@ void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 void render_all(
 	GLFWwindow*		window,
 	Camera&			camera,
-	PathsRenderer&	pathsrenderer
+	PathsRenderer&	pathsrenderer,
+	AxesVisualizer& axesviz
 ) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -104,6 +105,7 @@ void render_all(
 	ImGui::NewFrame();
 
 	pathsrenderer.render(camera);
+	axesviz.render(camera);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -176,7 +178,7 @@ int main()
 	bool mmb_pressed = false;
 
 	// First render to show something on screen on startup
-	render_all(glfw_window, cam, pathsrenderer);
+	render_all(glfw_window, cam, pathsrenderer, axesvisualizer);
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
@@ -209,7 +211,7 @@ int main()
 			);
 		}
 
-		render_all(glfw_window, cam, pathsrenderer);
+		render_all(glfw_window, cam, pathsrenderer, axesvisualizer);
 
 	}
 	

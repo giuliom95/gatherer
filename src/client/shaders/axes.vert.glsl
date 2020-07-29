@@ -1,10 +1,14 @@
-#version 450 core
-layout (location = 0) in vec3 aPos;
-
-uniform mat4 vpmat;
+#version 460 core
+flat out uint axis;
 
 void main()
 {
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0)*vpmat;
-	gl_Position.w += .42;
+	uint i = gl_VertexID;
+	axis = i / 2;
+	gl_Position = vec4(
+		(i & 0x001) & uint(axis == 0),
+		(i & 0x001) & uint(axis == 1),
+		(i & 0x001) & uint(axis == 2),
+		1
+	);
 }

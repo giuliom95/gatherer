@@ -26,12 +26,15 @@ void AxesVisualizer::init()
 	);  
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		BOOST_LOG_TRIVIAL(error) << "Framebuffer is not complete!";
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);	
 }
 
 void AxesVisualizer::render(Camera& cam)
 {
+	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-	
+
+	glDrawArrays(GL_LINES, 0, 6);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

@@ -21,6 +21,8 @@ void PathsRenderer::init()
 void PathsRenderer::render(Camera& cam)
 {
 	glUseProgram(shaprog_idx);
+	glBindVertexArray(vaoidx);
+
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(
 		locid_camvpmat, 1, GL_FALSE, 
@@ -28,6 +30,7 @@ void PathsRenderer::render(Camera& cam)
 	);
 
 	GLint off = 0;
+	//TODO: glMultiDrawArrays
 	for(const uint8_t len : scene_info.path_lenghts)
 	{
 		glDrawArrays(GL_LINE_STRIP, off, len);
@@ -71,7 +74,7 @@ void PathsRenderer::disk_load_all_paths(
 	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(
 		0, 3, GL_HALF_FLOAT, 
-		GL_FALSE, 3 * sizeof(half_float::half), (void*)0
+		GL_FALSE, 3 * sizeof(half), (void*)0
 	);
 	glEnableVertexAttribArray(0);
 }
