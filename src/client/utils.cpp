@@ -5,7 +5,6 @@ GLuint disk_load_shader(
 	const GLenum 					type
 )
 {
-	GLint compile_status;
 	boost::filesystem::ifstream ifs{path};
 	std::string str(
 		(std::istreambuf_iterator<char>(ifs)),
@@ -16,6 +15,8 @@ GLuint disk_load_shader(
 	GLuint idx = glCreateShader(type);
 	glShaderSource(idx, 1, &src, nullptr);
 	glCompileShader(idx);
+
+	GLint compile_status;
 	glGetShaderiv(idx, GL_COMPILE_STATUS, &compile_status);
 	if(compile_status == GL_FALSE)
 	{
@@ -25,7 +26,7 @@ GLuint disk_load_shader(
     	BOOST_LOG_TRIVIAL(error) << info;
 		return -1;
 	}
-	BOOST_LOG_TRIVIAL(info) << "Compiled shader";
+	BOOST_LOG_TRIVIAL(info) << "Compiled shader " << idx;
 
 	return idx;
 }
@@ -43,9 +44,21 @@ GLuint disk_load_shader_program(
 	glAttachShader(shaprog_idx, vtxsha_idx);
 	glAttachShader(shaprog_idx, fragsha_idx);
 	glLinkProgram(shaprog_idx);
+
+	GLint link_status;
+	glGetProgramiv(shaprog_idx, GL_LINK_STATUS, &link_status);
+	if(link_status == GL_FALSE)
+	{
+		BOOST_LOG_TRIVIAL(error) << "Shader program has errors!";
+		char info[512];
+		glGetProgramInfoLog(shaprog_idx, 512, NULL, info);
+    	BOOST_LOG_TRIVIAL(error) << info;
+		return -1;
+	}
+	BOOST_LOG_TRIVIAL(info) << "Created shader program " << shaprog_idx;
+
 	glDeleteShader(vtxsha_idx);
 	glDeleteShader(fragsha_idx);
-	BOOST_LOG_TRIVIAL(info) << "Created shader program";
 
 	return shaprog_idx;
 }
