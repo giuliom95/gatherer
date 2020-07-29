@@ -12,5 +12,5 @@ void main()
 	//	 1216.09556675,      -1194.22334433,  -1186.37361909,      1186.54999929
 	//);
 	gl_Position = vec4(vtx_in.x, vtx_in.y, vtx_in.z, 1.0)*vpmat;
-	gl_Position.w += .42;
+	//gl_Position.w += .42;
 }

@@ -26,13 +26,22 @@ void AxesVisualizer::init()
 	);  
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		BOOST_LOG_TRIVIAL(error) << "Framebuffer is not complete!";
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	locid_camvpmat = glGetUniformLocation(shaprog_id, "vpmat");
 }
 
 void AxesVisualizer::render(Camera& cam)
 {
 	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+	glLineWidth(3);
+
+	const Mat4f vpmat = cam.w2c();
+	glUniformMatrix4fv(
+		locid_camvpmat, 1, GL_FALSE, 
+		reinterpret_cast<const GLfloat*>(&vpmat)
+	);
 
 	glDrawArrays(GL_LINES, 0, 6);
 

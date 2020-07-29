@@ -22,6 +22,7 @@ void PathsRenderer::render(Camera& cam)
 {
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
+	glLineWidth(1);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(

@@ -18,6 +18,7 @@ private:
 	GLuint shaprog_id;
 	GLuint fbo_id;
 	GLuint fbotex_id;
+	GLint  locid_camvpmat;
 };
 
 #endif
