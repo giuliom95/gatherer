@@ -3,8 +3,10 @@
 
 #include "utils.hpp"
 #include "gatherer.hpp"
-#include "pathsrenderer.hpp"
 #include "camera.hpp"
+
+#include "pathsrenderer.hpp"
+#include "axesvisualizer.hpp"
 
 #include <boost/log/trivial.hpp>
 
@@ -146,6 +148,9 @@ int main()
 
 	PathsRenderer pathsrenderer;
 	pathsrenderer.init();
+
+	AxesVisualizer axesvisualizer;
+	axesvisualizer.init();
 
 	// Set camera focus to bbox center
 	Vec3f center = pathsrenderer.scene_info.bounding_box.center();
