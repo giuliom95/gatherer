@@ -116,6 +116,17 @@ void render_all(
 		{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
 		{0,1}, {1,0}
 	);
+	ImGui::DragFloat3(
+		"Focus point", 
+		reinterpret_cast<float*>(&(camera.focus))
+	);
+	ImGui::DragFloat("Pitch", &(camera.pitch));
+	ImGui::DragFloat("Yaw", &(camera.yaw));
+	ImGui::DragFloat("R", &(camera.r));
+	ImGui::DragFloat("FOV", &(camera.fov));
+	ImGui::DragFloat("Near plane", &(camera.znear));
+	ImGui::DragFloat("Far plane", &(camera.zfar));
+	
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
