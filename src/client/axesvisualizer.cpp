@@ -14,7 +14,8 @@ void AxesVisualizer::init()
 	glBindTexture(GL_TEXTURE_2D, fbotex_id);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGBA, 
-		250, 250, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		AXESVISUZLIZER_W, AXESVISUZLIZER_H, 
+		0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
 	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -35,7 +36,9 @@ void AxesVisualizer::render(Camera& cam)
 {
 	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+	glClear(GL_COLOR_BUFFER_BIT);
 	glLineWidth(3);
+	glViewport(0, 0, AXESVISUZLIZER_W, AXESVISUZLIZER_H);
 
 	const Mat4f vpmat = cam.w2c();
 	glUniformMatrix4fv(

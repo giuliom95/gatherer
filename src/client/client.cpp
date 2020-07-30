@@ -13,6 +13,9 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
+#define WINDOW_W 1024
+#define WINDOW_H 1024
+
 bool glfwCheckErrors()
 {
 	const char* err_msg;
@@ -99,6 +102,7 @@ void render_all(
 	AxesVisualizer& axesviz
 ) {
 	glClear(GL_COLOR_BUFFER_BIT);
+	glViewport(0, 0, WINDOW_W, WINDOW_H);
 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -106,6 +110,12 @@ void render_all(
 
 	pathsrenderer.render(camera);
 	axesviz.render(camera);
+
+	ImGui::Image(
+		(void*)(intptr_t)axesviz.fbotex_id, 
+		{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
+		{0,1}, {1,0}
+	);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -129,7 +139,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfw_window = glfwCreateWindow(1024, 1024, "Hello World", NULL, NULL);
+	glfw_window = glfwCreateWindow(WINDOW_W, WINDOW_H, "Gatherer", NULL, NULL);
 	glfwMakeContextCurrent(glfw_window);
 
 	glfwCheckErrors();

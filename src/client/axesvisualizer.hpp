@@ -1,6 +1,9 @@
 #ifndef _AXESVISUALIZER_HPP_
 #define _AXESVISUALIZER_HPP_
 
+#define AXESVISUZLIZER_W 128
+#define AXESVISUZLIZER_H 128
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -14,10 +17,10 @@ class AxesVisualizer
 public:
 	void init();
 	void render(Camera& cam);
+	GLuint fbotex_id;
 private:
 	GLuint shaprog_id;
 	GLuint fbo_id;
-	GLuint fbotex_id;
 	GLint  locid_camvpmat;
 };
 
