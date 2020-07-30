@@ -101,8 +101,8 @@ void render_all(
 	PathsRenderer&	pathsrenderer,
 	AxesVisualizer& axesviz
 ) {
-	glClear(GL_COLOR_BUFFER_BIT);
 	glViewport(0, 0, WINDOW_W, WINDOW_H);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
