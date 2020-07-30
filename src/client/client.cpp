@@ -111,7 +111,13 @@ void render_all(
 	pathsrenderer.render(camera);
 	axesviz.render(camera);
 
-	ImGui::Begin("Axes", NULL);
+	ImGui::SetNextWindowSize({0,0});
+	ImGui::Begin(
+		"Axes", nullptr, 
+		ImGuiWindowFlags_NoResize | 
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoTitleBar
+	);
 	ImGui::Image(
 		(void*)(intptr_t)axesviz.fbotex_id, 
 		{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
