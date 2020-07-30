@@ -1,8 +1,8 @@
 #ifndef _AXESVISUALIZER_HPP_
 #define _AXESVISUALIZER_HPP_
 
-#define AXESVISUZLIZER_W 128
-#define AXESVISUZLIZER_H 128
+#define AXESVISUZLIZER_W 64
+#define AXESVISUZLIZER_H 64
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
