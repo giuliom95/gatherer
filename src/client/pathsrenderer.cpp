@@ -16,6 +16,9 @@ void PathsRenderer::init()
 	);
 
 	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
+
+	pathsalpha = PATHSRENDERER_DEFPATHSALPHA;
+	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
 }
 
 void PathsRenderer::render(Camera& cam)
@@ -30,6 +33,8 @@ void PathsRenderer::render(Camera& cam)
 		locid_camvpmat, 1, GL_FALSE, 
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
+
+	glUniform1f(locid_pathsalpha, pathsalpha);
 
 	GLint off = 0;
 	//TODO: glMultiDrawArrays

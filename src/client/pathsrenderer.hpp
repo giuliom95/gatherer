@@ -10,6 +10,8 @@
 #include "utils.hpp"
 #include "camera.hpp"
 
+#define PATHSRENDERER_DEFPATHSALPHA 0.2f
+
 class SceneInfo
 {
 public:
@@ -24,6 +26,7 @@ public:
 	void render(Camera& cam);
 	
 	SceneInfo scene_info;
+	float pathsalpha;
 private:
 	void disk_load_all_paths(
 		const boost::filesystem::path dirpath
@@ -33,6 +36,7 @@ private:
 	GLuint vboidx;
 	GLuint shaprog_idx;
 	GLint  locid_camvpmat;
+	GLint  locid_pathsalpha;
 };
 
 #endif
