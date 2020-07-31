@@ -55,7 +55,7 @@ private:
 			-r*sinf(rad_pitch), 
 			a*sinf(rad_yaw)
 		};
-		//BOOST_LOG_TRIVIAL(info) << pos[0] << " " << pos[1] << " " << pos[2];
+		//BOOST_LOG_TRIVIAL(info) << pitch;
 		const Vec3f z = normalize(-1*lpos);
 		const Vec3f up{0,1,0};
 		const Vec3f x = normalize(cross(up, z));

@@ -74,6 +74,8 @@ void rotate_camera(Vec2f cursor_delta, Camera& camera)
 {
 	camera.yaw   +=  0.5f * cursor_delta[0];
 	camera.pitch += -0.5f * cursor_delta[1];
+	if(camera.pitch >=  90) camera.pitch =  89.9f;
+	if(camera.pitch <= -90) camera.pitch = -89.9f;
 }
 
 void dolly_camera(Vec2f cursor_delta, Camera& camera)
@@ -164,7 +166,6 @@ void render_all(
 		}
 	}
 	
-
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
