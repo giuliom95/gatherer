@@ -120,11 +120,17 @@ void render_all(
 		ImGuiWindowFlags_NoCollapse |
 		ImGuiWindowFlags_NoTitleBar
 	);
-	ImGui::Image(
-		(void*)(intptr_t)axesviz.fbotex_id, 
-		{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
-		{0,1}, {1,0}
-	);
+		ImGui::Image(
+			(void*)(intptr_t)axesviz.fbotex_id, 
+			{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
+			{0,1}, {1,0}
+		);
+	ImGui::End();
+
+	ImGui::Begin("Paths options");
+		ImGui::SliderFloat(
+			"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
+		);
 	ImGui::End();
 
 	if(ImGui::CollapsingHeader("Camera controls"))
