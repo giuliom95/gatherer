@@ -36,13 +36,12 @@ void PathsRenderer::render(Camera& cam)
 
 	glUniform1f(locid_pathsalpha, pathsalpha);
 
-	GLint off = 0;
-	//TODO: glMultiDrawArrays
-	for(const uint8_t len : scene_info.path_lenghts)
-	{
-		glDrawArrays(GL_LINE_STRIP, off, len);
-		off += len;
-	}
+	glMultiDrawArrays(
+		GL_LINE_STRIP, 
+		scene_info.paths_firsts.data(),
+		scene_info.paths_lenghts.data(),
+		scene_info.paths_number
+	);
 }
 
 void PathsRenderer::disk_load_all_paths(
@@ -53,13 +52,24 @@ void PathsRenderer::disk_load_all_paths(
 	boost::filesystem::ifstream lengths_ifs(lengths_fp);
 	boost::filesystem::ifstream paths_ifs  (paths_fp);
 
-	const uintmax_t lengths_bytes = boost::filesystem::file_size(lengths_fp);
+	scene_info.paths_number = boost::filesystem::file_size(lengths_fp);
 	const uintmax_t paths_bytes   = boost::filesystem::file_size(paths_fp);
 
-	scene_info.path_lenghts = std::vector<uint8_t>(lengths_bytes);
+	std::vector<uint8_t> lenghts(scene_info.paths_number);
 	lengths_ifs.read(
-		reinterpret_cast<char*>(scene_info.path_lenghts.data()), lengths_bytes
+		reinterpret_cast<char*>(lenghts.data()), scene_info.paths_number
 	);
+
+	scene_info.paths_firsts  = std::vector<GLint>  (scene_info.paths_number);
+	scene_info.paths_lenghts = std::vector<GLsizei>(scene_info.paths_number);
+	uintmax_t offset = 0;
+	for(uintmax_t i = 0; i < scene_info.paths_number; ++i)
+	{
+		uint8_t len = lenghts[i];
+		scene_info.paths_firsts[i] = offset;
+		scene_info.paths_lenghts[i] = len;
+		offset += len;
+	}
 
 	// Ignoring type because this data will be passed striaght to the GPU
 	std::vector<Vec3h> paths(paths_bytes);

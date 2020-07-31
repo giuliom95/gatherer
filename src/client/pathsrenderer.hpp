@@ -15,7 +15,9 @@
 class SceneInfo
 {
 public:
-	std::vector<uint8_t>	path_lenghts;
+	uintmax_t				paths_number;
+	std::vector<GLint>		paths_firsts;
+	std::vector<GLsizei>	paths_lenghts;
 	AABB					bounding_box;
 };
 
