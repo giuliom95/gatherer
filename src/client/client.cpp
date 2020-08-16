@@ -7,6 +7,7 @@
 
 #include "pathsrenderer.hpp"
 #include "axesvisualizer.hpp"
+#include "scenerenderer.hpp"
 
 #include <boost/log/trivial.hpp>
 
@@ -101,6 +102,7 @@ void render_all(
 	GLFWwindow*		window,
 	Camera&			camera,
 	PathsRenderer&	pathsrenderer,
+	SceneRenderer&  scenerenderer,
 	AxesVisualizer& axesviz
 ) {
 	glViewport(0, 0, WINDOW_W, WINDOW_H);
@@ -110,6 +112,7 @@ void render_all(
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	scenerenderer.render(camera);
 	pathsrenderer.render(camera);
 	axesviz.render(camera);
 
@@ -219,6 +222,9 @@ int main()
 	AxesVisualizer axesvisualizer;
 	axesvisualizer.init();
 
+	SceneRenderer scenerenderer;
+	scenerenderer.init();
+
 	// Set camera focus to bbox center
 	Vec3f center = pathsrenderer.scene_info.bounding_box.center();
 
@@ -243,7 +249,7 @@ int main()
 	bool mmb_pressed = false;
 
 	// First render to show something on screen on startup
-	render_all(glfw_window, cam, pathsrenderer, axesvisualizer);
+	render_all(glfw_window, cam, pathsrenderer, scenerenderer, axesvisualizer);
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
@@ -276,7 +282,10 @@ int main()
 			);
 		}
 
-		render_all(glfw_window, cam, pathsrenderer, axesvisualizer);
+		render_all(
+			glfw_window, cam, 
+			pathsrenderer, scenerenderer, axesvisualizer
+		);
 
 	}
 	

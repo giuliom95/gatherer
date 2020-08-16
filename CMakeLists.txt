@@ -18,6 +18,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(MATH_INCLUDE "deps/math/include")
 
+set(JSON_INCLUDE "deps/nlohmann")
+
 set(IMGUI_DIR "deps/imgui")
 set(IMGUI_INCLUDE 
   "${IMGUI_DIR}"
@@ -34,6 +36,7 @@ set(IMGUI_SRCS
 include_directories(
   include
   ${MATH_INCLUDE}
+  ${JSON_INCLUDE}
   ${IMGUI_INCLUDE}
 )
 
@@ -46,6 +49,7 @@ set( GATHERER_CLIENT_SOURCES
   src/client/utils.cpp
   src/client/pathsrenderer.cpp
   src/client/axesvisualizer.cpp
+  src/client/scenerenderer.cpp
   src/client/client.cpp
   ${IMGUI_SRCS}
 )

@@ -38,7 +38,34 @@ public:
 			pathgroups[pgi] = PathsGroup<Vec3>();
 	}
 
-	//void disk_load_all (const boost::filesystem::path& dirpath);
+	/*
+	void disk_load_all (
+		const boost::filesystem::path& dirpath
+	) {
+		boost::filesystem::ifstream lenghts_ofs{dirpath / "lengths.bin"};
+		boost::filesystem::ifstream paths_ofs{dirpath / "paths.bin"}; 
+
+		while(lenghts_ofs.eof())
+		{
+			// Number of points in path 
+			uint8_t npoints;
+			lenghts_ofs.read((char*)&npoints, sizeof(uint8_t));
+
+			Path path(npoints);
+			paths_ofs.read
+			(
+				(char*)path.points.data(), 
+				npoints*sizeof(Vec3h)
+			);
+
+			paths.push_back(path);
+		}
+
+		filestream.close();
+
+		BOOST_LOG_TRIVIAL(info) << "Loaded " << paths.size() << " paths";
+	}
+	*/
 	
 	void disk_store_all(
 		const boost::filesystem::path& dirpath
