@@ -17,9 +17,7 @@ public:
 	void render(Camera& cam);
 
 private:
-	GLuint vaoidx;
-	GLuint vboidx;
-	GLuint eboidx;
+	std::vector<GLuint> vaoidxs;
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
 };

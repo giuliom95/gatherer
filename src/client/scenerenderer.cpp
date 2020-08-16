@@ -4,11 +4,8 @@
 
 void SceneRenderer::init()
 {
-	boost::filesystem::path json_path =
-		"/home/gmartell/Development/bouncer/scenes/simplecube/simplecube.json";
-
-	boost::filesystem::path bin_path = json_path;
-	bin_path.replace_extension(".bin");
+	boost::filesystem::path json_path = "../data/renderdata/scene.json";
+	boost::filesystem::path bin_path = "../data/renderdata/scene.bin";
 
 	nlohmann::json json_data;
 	boost::filesystem::ifstream json_file{json_path};
@@ -21,9 +18,6 @@ void SceneRenderer::init()
 	json_file >> json_data;
 	json_file.close();
 
-	glGenVertexArrays(1, &vaoidx);
-	glBindVertexArray(vaoidx);
-
 	boost::filesystem::ifstream bin_ifs{bin_path};
 	const unsigned int bin_size = boost::filesystem::file_size(bin_path);
 	std::vector<char> bin_data(bin_size);
@@ -31,15 +25,21 @@ void SceneRenderer::init()
 
 	for(const nlohmann::json json_geom : json_data["geometries"]) 
 	{
+		GLuint vaoidx;
+		glGenVertexArrays(1, &vaoidx);
+		glBindVertexArray(vaoidx);
+
 		for(const nlohmann::json json_buf : json_geom["buffers"])
 		{
+
 			std::string type = json_buf["type"];
 			unsigned int buf_size = json_buf["size"];
 			unsigned int buf_off  = json_buf["offset"];
 			if(type == "vertices")
 			{
-				glGenBuffers(1, &vboidx);
-				glBindBuffer(GL_ARRAY_BUFFER, vboidx);
+				GLuint vbo;
+				glGenBuffers(1, &vbo);
+				glBindBuffer(GL_ARRAY_BUFFER, vbo);
 				glBufferData(
 					GL_ARRAY_BUFFER, 
 					buf_size, bin_data.data() + buf_off, 
@@ -50,24 +50,28 @@ void SceneRenderer::init()
 					GL_FALSE, 3 * sizeof(float), (void*)0
 				);
 				glEnableVertexAttribArray(0);
-				BOOST_LOG_TRIVIAL(info) << "Loading vertices";
+				glBindBuffer(GL_ARRAY_BUFFER, 0); 
+				BOOST_LOG_TRIVIAL(info) << "Loaded vertices";
 			}
 			else if(type == "indices")
 			{
-				glGenBuffers(1, &eboidx);
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboidx);
+				GLuint ebo;
+				glGenBuffers(1, &ebo);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 				glBufferData(
 					GL_ELEMENT_ARRAY_BUFFER, 
 					buf_size, bin_data.data() + buf_off, 
 					GL_STATIC_DRAW
 				);
-				BOOST_LOG_TRIVIAL(info) << "Loading indices";
+				BOOST_LOG_TRIVIAL(info) << "Loaded indices";
 			}
 		}
-	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0); 
-	glBindVertexArray(0); 
+		glBindVertexArray(0);
+		vaoidxs.push_back(vaoidx);
+
+		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
+	}
 
 	shaprog_idx = disk_load_shader_program(
 		"../src/client/shaders/scene.vert.glsl",
@@ -80,7 +84,6 @@ void SceneRenderer::init()
 void SceneRenderer::render(Camera& cam)
 {
 	glUseProgram(shaprog_idx);
-	glBindVertexArray(vaoidx);
 	glEnable(GL_DEPTH_TEST);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
@@ -89,5 +92,9 @@ void SceneRenderer::render(Camera& cam)
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
 
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+	for(GLuint vao : vaoidxs)
+	{
+		glBindVertexArray(vao);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+	}
 }
