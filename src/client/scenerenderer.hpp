@@ -15,6 +15,7 @@ class Geometry
 public:
 	GLuint vaoidx;
 	unsigned nelems;
+	Vec3f color;
 };
 
 class SceneRenderer
@@ -27,5 +28,6 @@ private:
 	std::vector<Geometry> geometries;
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
+	GLuint locid_geomcolor;
 };
 #endif

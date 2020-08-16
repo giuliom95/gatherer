@@ -234,7 +234,9 @@ int main()
 	cam.yaw = 0;
 	cam.r = 20;
 
-	cam.znear = 0;
+	// HACK: must fix persp
+	cam.znear = -1;
+	
 	cam.zfar  = 2000;
 	cam.fov   = 10;
 

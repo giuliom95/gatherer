@@ -29,7 +29,15 @@ void SceneRenderer::init()
 		glGenVertexArrays(1, &vaoidx);
 		glBindVertexArray(vaoidx);
 
-		unsigned nelems = 0;
+		Geometry geom;
+		geom.vaoidx = vaoidx;
+		geom.nelems = 0;	// Will be filled later. If it stays zero something went wrong.
+		nlohmann::json json_albedo = json_geom["material"]["albedo"];
+		geom.color = Vec3f{
+			json_albedo[0],
+			json_albedo[1],
+			json_albedo[2]
+		};
 
 		for(const nlohmann::json json_buf : json_geom["buffers"])
 		{
@@ -64,13 +72,13 @@ void SceneRenderer::init()
 					buf_size, bin_data.data() + buf_off, 
 					GL_STATIC_DRAW
 				);
-				nelems = buf_size / 4;
+				geom.nelems = buf_size / 4;
 				BOOST_LOG_TRIVIAL(info) << "Loaded indices";
 			}
 		}
 
 		glBindVertexArray(0);
-		geometries.push_back({vaoidx, nelems});
+		geometries.push_back(geom);
 
 		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
 	}
@@ -81,6 +89,7 @@ void SceneRenderer::init()
 	);
 
 	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
+	locid_geomcolor = glGetUniformLocation(shaprog_idx, "color");
 }
 
 void SceneRenderer::render(Camera& cam)
@@ -97,6 +106,7 @@ void SceneRenderer::render(Camera& cam)
 	for(Geometry geo : geometries)
 	{
 		glBindVertexArray(geo.vaoidx);
+		glUniform3f(locid_geomcolor, geo.color[0], geo.color[1], geo.color[2]);
 		glDrawElements(GL_TRIANGLES, geo.nelems, GL_UNSIGNED_INT, NULL);
 	}
 }
