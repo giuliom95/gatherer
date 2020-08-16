@@ -10,6 +10,13 @@
 #include "utils.hpp"
 #include "camera.hpp"
 
+class Geometry
+{
+public:
+	GLuint vaoidx;
+	unsigned nelems;
+};
+
 class SceneRenderer
 {
 public:
@@ -17,9 +24,8 @@ public:
 	void render(Camera& cam);
 
 private:
-	std::vector<GLuint> vaoidxs;
+	std::vector<Geometry> geometries;
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
 };
-
 #endif

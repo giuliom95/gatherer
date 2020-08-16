@@ -29,9 +29,10 @@ void SceneRenderer::init()
 		glGenVertexArrays(1, &vaoidx);
 		glBindVertexArray(vaoidx);
 
+		unsigned nelems = 0;
+
 		for(const nlohmann::json json_buf : json_geom["buffers"])
 		{
-
 			std::string type = json_buf["type"];
 			unsigned int buf_size = json_buf["size"];
 			unsigned int buf_off  = json_buf["offset"];
@@ -63,12 +64,13 @@ void SceneRenderer::init()
 					buf_size, bin_data.data() + buf_off, 
 					GL_STATIC_DRAW
 				);
+				nelems = buf_size / 4;
 				BOOST_LOG_TRIVIAL(info) << "Loaded indices";
 			}
 		}
 
 		glBindVertexArray(0);
-		vaoidxs.push_back(vaoidx);
+		geometries.push_back({vaoidx, nelems});
 
 		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
 	}
@@ -92,9 +94,9 @@ void SceneRenderer::render(Camera& cam)
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
 
-	for(GLuint vao : vaoidxs)
+	for(Geometry geo : geometries)
 	{
-		glBindVertexArray(vao);
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+		glBindVertexArray(geo.vaoidx);
+		glDrawElements(GL_TRIANGLES, geo.nelems, GL_UNSIGNED_INT, NULL);
 	}
 }
