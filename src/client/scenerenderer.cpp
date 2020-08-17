@@ -31,7 +31,7 @@ void SceneRenderer::init()
 
 		Geometry geom;
 		geom.vaoidx = vaoidx;
-		geom.nelems = 0;	// Will be filled later. If it stays zero something went wrong.
+		geom.nelems = 0;	// Will be filled later. If it stays zero, something went wrong.
 		nlohmann::json json_albedo = json_geom["material"]["albedo"];
 		geom.color = Vec3f{
 			json_albedo[0],

@@ -33,6 +33,7 @@ public:
 
 	Mat4f persp()
 	{
+		/*
 		const float a = 1 / tanf(fov);
 		const float d = zfar - znear;
 		const float b = -(zfar + znear) / d;
@@ -42,6 +43,19 @@ public:
 			0, a, 0, 0,
 			0, 0, b, c,
 			0, 0, 1, 0
+		};
+		*/
+		const float ctg = 1 / tanf(fov);
+		const float s = 2*(znear / ctg);
+		const float det = zfar - znear;
+		const float c = - (zfar + znear) / det;
+		const float d = - (2*zfar*znear) / det;
+
+		return {
+			s, 0,  0, 0,
+			0, s,  0, 0,
+			0, 0,  c, d,
+			0, 0, -1, 0
 		};
 	}
 private:
