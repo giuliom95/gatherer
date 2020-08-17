@@ -81,10 +81,13 @@ void rotate_camera(Vec2f cursor_delta, Camera& camera)
 
 void dolly_camera(Vec2f cursor_delta, Camera& camera)
 {
-	float mult = .1*log(.3*camera.r + 2);
-	camera.r +=  mult * cursor_delta[0];
-	camera.r +=  mult * cursor_delta[1];
-	if (camera.r < 1) camera.r = 1;
+	float mult = 1;
+	Vec3f p{
+		0, 
+		0, 
+		camera.r + mult*(cursor_delta[1])
+	};
+	camera.focus = transformPoint(camera.c2w(), p);
 }
 
 void truckboom_camera(Vec2f cursor_delta, Camera& camera)
