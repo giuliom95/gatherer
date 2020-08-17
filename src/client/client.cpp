@@ -137,6 +137,7 @@ void render_all(
 		ImGui::SliderFloat(
 			"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
 		);
+		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
 
 	if(ImGui::CollapsingHeader("Camera controls"))

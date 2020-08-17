@@ -26,7 +26,10 @@ void PathsRenderer::render(Camera& cam)
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
 	glLineWidth(1);
-	glDisable(GL_DEPTH_TEST);
+	if(enabledepth)
+		glEnable(GL_DEPTH_TEST);
+	else
+		glDisable(GL_DEPTH_TEST);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(

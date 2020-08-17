@@ -29,6 +29,7 @@ public:
 	
 	SceneInfo scene_info;
 	float pathsalpha;
+	bool enabledepth;
 private:
 	void disk_load_all_paths(
 		const boost::filesystem::path dirpath
