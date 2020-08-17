@@ -73,7 +73,7 @@ bool mouse_camera_event(
 
 void rotate_camera(Vec2f cursor_delta, Camera& camera)
 {
-	camera.yaw   += -0.5f * cursor_delta[0];
+	camera.yaw   +=  0.5f * cursor_delta[0];
 	camera.pitch +=  0.5f * cursor_delta[1];
 	if(camera.pitch >=  90) camera.pitch =  89.9f;
 	if(camera.pitch <= -90) camera.pitch = -89.9f;
@@ -235,7 +235,7 @@ int main()
 	cam.r = 20;
 
 	cam.znear = 1;
-	cam.zfar  = 1000;
+	cam.zfar  = 2000;
 	cam.fov   = 10;
 
 	ImGui::CreateContext();

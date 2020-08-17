@@ -1,12 +1,14 @@
 #version 450 core
+in vec3 n_frag;
+
 out vec4 out_color;
 
 uniform vec3 color;
 
 void main()
 {
-	out_color = vec4(color.r, color.g, color.b, 1);
-
-	// HACK. Must fix persp 
-	//gl_FragDepth = 1 - gl_FragCoord.z;
+	vec3 l = vec3(0.707106781, 0.707106781, 0);
+	vec3 d = dot(l, n_frag)*color;
+	out_color = vec4(d, 1);
+	
 }

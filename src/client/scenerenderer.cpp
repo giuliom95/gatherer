@@ -39,13 +39,18 @@ void SceneRenderer::init()
 			json_albedo[2]
 		};
 
+		unsigned vtxbuf_off  = 0;
+		unsigned idxbuf_off  = 0;
+		unsigned nvtx = 0;
+
 		for(const nlohmann::json json_buf : json_geom["buffers"])
 		{
 			std::string type = json_buf["type"];
-			unsigned int buf_size = json_buf["size"];
 			unsigned int buf_off  = json_buf["offset"];
+			unsigned int buf_size = json_buf["size"];
 			if(type == "vertices")
 			{
+				vtxbuf_off  = buf_off;
 				GLuint vbo;
 				glGenBuffers(1, &vbo);
 				glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -59,11 +64,13 @@ void SceneRenderer::init()
 					GL_FALSE, 3 * sizeof(float), (void*)0
 				);
 				glEnableVertexAttribArray(0);
-				glBindBuffer(GL_ARRAY_BUFFER, 0); 
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+				nvtx = buf_size / 12;
 				BOOST_LOG_TRIVIAL(info) << "Loaded vertices";
 			}
 			else if(type == "indices")
 			{
+				idxbuf_off  = buf_off;
 				GLuint ebo;
 				glGenBuffers(1, &ebo);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -77,9 +84,47 @@ void SceneRenderer::init()
 			}
 		}
 
+		std::vector<Vec3f> normals(nvtx);
+		for(Vec3f& n : normals) n = Vec3f();
+
+		unsigned ntris = (geom.nelems / 3);
+		// Compute normals
+		for(unsigned ti = 0; ti < ntris; ++ti)
+		{
+			const uint32_t i0 = *(uint32_t*)&(bin_data[4*(3*ti+0) + idxbuf_off]);
+			const uint32_t i1 = *(uint32_t*)&(bin_data[4*(3*ti+1) + idxbuf_off]);
+			const uint32_t i2 = *(uint32_t*)&(bin_data[4*(3*ti+2) + idxbuf_off]);
+			const Vec3f v0 = *(Vec3f*)&(bin_data[i0*3*4 + vtxbuf_off]);
+			const Vec3f v1 = *(Vec3f*)&(bin_data[i1*3*4 + vtxbuf_off]);
+			const Vec3f v2 = *(Vec3f*)&(bin_data[i2*3*4 + vtxbuf_off]);
+
+			const Vec3f v01 = v1 - v0;
+			const Vec3f v02 = v2 - v0;
+			const Vec3f n = normalize(cross(v01, v02));
+			normals[i0] = normals[i0] + n;
+			normals[i1] = normals[i1] + n;
+			normals[i2] = normals[i2] + n;
+		}
+
+		for(Vec3f& n : normals) n = normalize(n);
+
+		GLuint vbo;
+		glGenBuffers(1, &vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(
+			GL_ARRAY_BUFFER, 
+			nvtx*sizeof(Vec3f), normals.data(), 
+			GL_STATIC_DRAW
+		);
+		glVertexAttribPointer(
+			1, 3, GL_FLOAT,
+			GL_FALSE, 3 * sizeof(float), (void*)0
+		);
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 		glBindVertexArray(0);
 		geometries.push_back(geom);
-
 		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
 	}
 

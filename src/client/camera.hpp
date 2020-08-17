@@ -74,7 +74,7 @@ private:
 		const Vec3f up{0,1,0};
 		const Vec3f x = normalize(cross(up, z));
 		const Vec3f y = cross(z, x);
-		mrot = Mat4f{-1*x, y, z, {}};
+		mrot = Mat4f{x, y, z, {}};
 		pos = lpos + focus;
 	}
 };
