@@ -31,6 +31,14 @@ public:
 		return mrot*translationMatrix(pos);
 	}
 
+	Vec3f eye()
+	{
+		Mat4f mrot;
+		Vec3f pos;
+		viewmatrices(pos, mrot);
+		return pos;
+	}
+
 	Mat4f persp()
 	{
 		/*

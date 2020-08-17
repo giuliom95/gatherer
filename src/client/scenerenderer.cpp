@@ -135,6 +135,7 @@ void SceneRenderer::init()
 
 	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
 	locid_geomcolor = glGetUniformLocation(shaprog_idx, "color");
+	locid_eye = glGetUniformLocation(shaprog_idx, "eye");
 }
 
 void SceneRenderer::render(Camera& cam)
@@ -147,6 +148,9 @@ void SceneRenderer::render(Camera& cam)
 		locid_camvpmat, 1, GL_FALSE, 
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
+
+	const Vec3f eye = cam.eye();
+	glUniform3f(locid_eye, eye[0], eye[1], eye[2]);
 
 	for(Geometry geo : geometries)
 	{

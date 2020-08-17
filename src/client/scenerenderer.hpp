@@ -29,5 +29,6 @@ private:
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
 	GLuint locid_geomcolor;
+	GLuint locid_eye;
 };
 #endif
