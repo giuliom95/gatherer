@@ -82,30 +82,73 @@ void SceneRenderer::init()
 		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
 	}
 
-	shaprog_idx = disk_load_shader_program(
-		"../src/client/shaders/scene.vert.glsl",
-		"../src/client/shaders/scene.frag.glsl"
+	shaprog1_idx = disk_load_shader_program(
+		"../src/client/shaders/scene1.vert.glsl",
+		"../src/client/shaders/scene1.frag.glsl"
 	);
 
-	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
-	locid_geomcolor = glGetUniformLocation(shaprog_idx, "color");
+	locid1_camvpmat = glGetUniformLocation(shaprog1_idx, "vpmat");
+	locid1_geomcolor = glGetUniformLocation(shaprog1_idx, "color");
+
+
+	glGenFramebuffers(1, &fbo_idx);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_idx);
+
+	glGenTextures(1, &fbocolortex_idx);
+	glBindTexture(GL_TEXTURE_2D, fbocolortex_idx);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA, 
+		WINDOW_W, WINDOW_H, 0, 
+		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+	);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+		GL_TEXTURE_2D, fbocolortex_idx, 0
+	);  
+
+	glGenTextures(1, &fbodepthtex_idx);
+	glBindTexture(GL_TEXTURE_2D, fbodepthtex_idx);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
+		WINDOW_W, WINDOW_H, 0, 
+		GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
+	);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 1);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
+		GL_TEXTURE_2D, fbodepthtex_idx, 0
+	);
+
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		BOOST_LOG_TRIVIAL(error) << "Framebuffer is not complete!";
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void SceneRenderer::render(Camera& cam)
+void SceneRenderer::render1(Camera& cam)
 {
-	glUseProgram(shaprog_idx);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_idx);
+
+	glUseProgram(shaprog1_idx);
 	glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(
-		locid_camvpmat, 1, GL_FALSE, 
+		locid1_camvpmat, 1, GL_FALSE, 
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
 
 	for(Geometry geo : geometries)
 	{
 		glBindVertexArray(geo.vaoidx);
-		glUniform3f(locid_geomcolor, geo.color[0], geo.color[1], geo.color[2]);
+		glUniform3f(locid1_geomcolor, geo.color[0], geo.color[1], geo.color[2]);
 		glDrawElements(GL_TRIANGLES, geo.nelems, GL_UNSIGNED_INT, NULL);
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

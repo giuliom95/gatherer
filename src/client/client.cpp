@@ -14,9 +14,6 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
-#define WINDOW_W 1024
-#define WINDOW_H 1024
-
 bool glfwCheckErrors()
 {
 	const char* err_msg;
@@ -115,8 +112,8 @@ void render_all(
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	scenerenderer.render(camera);
 	pathsrenderer.render(camera);
+	scenerenderer.render1(camera);
 	axesviz.render(camera);
 
 	ImGui::SetNextWindowSize({0,0});

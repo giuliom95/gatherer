@@ -22,12 +22,17 @@ class SceneRenderer
 {
 public:
 	void init();
-	void render(Camera& cam);
+	void render1(Camera& cam);
+	void render2();
 
 private:
 	std::vector<Geometry> geometries;
-	GLuint shaprog_idx;
-	GLuint locid_camvpmat;
-	GLuint locid_geomcolor;
+	GLuint shaprog1_idx;
+	GLuint locid1_camvpmat;
+	GLuint locid1_geomcolor;
+
+	GLuint fbo_idx;
+	GLuint fbocolortex_idx;
+	GLuint fbodepthtex_idx;
 };
 #endif

@@ -9,6 +9,9 @@
 
 #include "math.hpp"
 
+#define WINDOW_W 1024
+#define WINDOW_H 1024
+
 class AABB {
 public:
 	Vec3f min, max;
