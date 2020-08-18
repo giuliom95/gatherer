@@ -32,6 +32,7 @@ private:
 	GLuint locid1_geomcolor;
 
 	GLuint shaprog2_idx;
+	GLuint locid2_colortex;
 
 	GLuint fbo_idx;
 	GLuint fbocolortex_idx;

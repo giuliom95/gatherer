@@ -3,7 +3,10 @@ in vec2 uv;
 
 out vec4 out_color;
 
+uniform sampler2D colortex;
+
 void main()
 {
-	out_color = vec4(uv, 0, 1);
+
+	out_color = texture(colortex, uv);
 }

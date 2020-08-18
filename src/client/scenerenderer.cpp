@@ -118,7 +118,7 @@ void SceneRenderer::init()
 	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 1);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
 		GL_TEXTURE_2D, fbodepthtex_idx, 0
@@ -132,6 +132,8 @@ void SceneRenderer::init()
 		"../src/client/shaders/scene2.vert.glsl",
 		"../src/client/shaders/scene2.frag.glsl"
 	);
+
+	locid2_colortex = glGetUniformLocation(shaprog2_idx, "colortex");
 }
 
 void SceneRenderer::render1(Camera& cam)
@@ -162,6 +164,10 @@ void SceneRenderer::render2()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(shaprog2_idx);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, fbocolortex_idx);
+	glUniform1i(locid2_colortex, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
