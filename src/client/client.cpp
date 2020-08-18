@@ -8,6 +8,7 @@
 #include "pathsrenderer.hpp"
 #include "axesvisualizer.hpp"
 #include "scenerenderer.hpp"
+#include "selectionvolume.hpp"
 
 #include <boost/log/trivial.hpp>
 
@@ -214,7 +215,7 @@ int main()
 	
 	glEnablei(GL_BLEND, 0);
 	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
