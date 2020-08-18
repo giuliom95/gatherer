@@ -33,16 +33,23 @@ GLuint disk_load_shader(
 
 GLuint disk_load_shader_program(
 	const boost::filesystem::path& vtxsha_path,
-	const boost::filesystem::path& fragsha_path
+	const boost::filesystem::path& fragsha_path,
+	const boost::filesystem::path& geomsha_path
 )
 {
+	bool geomsha = !geomsha_path.empty();
+
 	GLuint vtxsha_idx  = disk_load_shader(vtxsha_path,  GL_VERTEX_SHADER);
 	GLuint fragsha_idx = disk_load_shader(fragsha_path, GL_FRAGMENT_SHADER);
+	GLuint geomsha_idx = -1;
+	if(geomsha)
+		geomsha_idx = disk_load_shader(geomsha_path, GL_GEOMETRY_SHADER);
 
 	GLuint shaprog_idx;
 	shaprog_idx = glCreateProgram();
 	glAttachShader(shaprog_idx, vtxsha_idx);
 	glAttachShader(shaprog_idx, fragsha_idx);
+	if(geomsha) glAttachShader(shaprog_idx, geomsha_idx);
 	glLinkProgram(shaprog_idx);
 
 	GLint link_status;

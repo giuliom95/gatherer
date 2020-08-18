@@ -24,7 +24,8 @@ GLuint disk_load_shader(
 
 GLuint disk_load_shader_program(
 	const boost::filesystem::path& vtxsha_path,
-	const boost::filesystem::path& fragsha_path
+	const boost::filesystem::path& fragsha_path,
+	const boost::filesystem::path& geomsha_path = ""
 );
 
 #endif
