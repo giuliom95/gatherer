@@ -2,8 +2,12 @@
 out vec4 out_color;
 
 uniform float pathsalpha;
+uniform sampler2D scenedepth;
 
 void main()
 {
-	out_color = vec4(1.0f, 1.0f, 1.0f, pathsalpha);
+	vec2 uv = gl_FragCoord.xy / 1024;
+	float sd = texture(scenedepth, uv).r;
+	if(gl_FragCoord.z > sd) discard;
+	out_color = vec4(vec3(1), pathsalpha);
 }

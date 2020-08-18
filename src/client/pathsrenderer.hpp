@@ -24,7 +24,7 @@ public:
 class PathsRenderer
 {
 public:
-	void init();
+	void init(GLuint scenedepthtex);
 	void render(Camera& cam);
 	
 	SceneInfo scene_info;
@@ -38,8 +38,10 @@ private:
 	GLuint vaoidx;
 	GLuint vboidx;
 	GLuint shaprog_idx;
-	GLint  locid_camvpmat;
-	GLint  locid_pathsalpha;
+	GLuint locid_camvpmat;
+	GLuint locid_pathsalpha;
+	GLuint locid_scenedepth;
+	GLuint texid_scenedepth;
 };
 
 #endif

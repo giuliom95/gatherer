@@ -213,19 +213,19 @@ int main()
 	}
 	
 	glEnablei(GL_BLEND, 0);
-	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-
+	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-
-	PathsRenderer pathsrenderer;
-	pathsrenderer.init();
 
 	AxesVisualizer axesvisualizer;
 	axesvisualizer.init();
 
 	SceneRenderer scenerenderer;
 	scenerenderer.init();
+
+	PathsRenderer pathsrenderer;
+	pathsrenderer.init(scenerenderer.texid_fbodepthtex);
 
 	// Set camera focus to bbox center
 	Vec3f center = pathsrenderer.scene_info.bounding_box.center();

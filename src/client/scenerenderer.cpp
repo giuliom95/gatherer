@@ -94,8 +94,8 @@ void SceneRenderer::init()
 	glGenFramebuffers(1, &fbo_idx);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_idx);
 
-	glGenTextures(1, &fbocolortex_idx);
-	glBindTexture(GL_TEXTURE_2D, fbocolortex_idx);
+	glGenTextures(1, &texid_fbocolortex);
+	glBindTexture(GL_TEXTURE_2D, texid_fbocolortex);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGBA, 
 		WINDOW_W, WINDOW_H, 0, 
@@ -106,11 +106,11 @@ void SceneRenderer::init()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-		GL_TEXTURE_2D, fbocolortex_idx, 0
+		GL_TEXTURE_2D, texid_fbocolortex, 0
 	);  
 
-	glGenTextures(1, &fbodepthtex_idx);
-	glBindTexture(GL_TEXTURE_2D, fbodepthtex_idx);
+	glGenTextures(1, &texid_fbodepthtex);
+	glBindTexture(GL_TEXTURE_2D, texid_fbodepthtex);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
 		WINDOW_W, WINDOW_H, 0, 
@@ -121,7 +121,7 @@ void SceneRenderer::init()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
-		GL_TEXTURE_2D, fbodepthtex_idx, 0
+		GL_TEXTURE_2D, texid_fbodepthtex, 0
 	);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -166,7 +166,7 @@ void SceneRenderer::render2()
 	glUseProgram(shaprog2_idx);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, fbocolortex_idx);
+	glBindTexture(GL_TEXTURE_2D, texid_fbocolortex);
 	glUniform1i(locid2_colortex, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
