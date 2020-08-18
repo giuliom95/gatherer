@@ -40,6 +40,7 @@ private:
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
 	GLuint locid_pathsalpha;
+	GLuint locid_enabledepth;
 	GLuint locid_scenedepth;
 	GLuint texid_scenedepth;
 };

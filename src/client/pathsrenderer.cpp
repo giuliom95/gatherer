@@ -19,6 +19,7 @@ void PathsRenderer::init(GLuint scenedepthtex)
 
 	pathsalpha = PATHSRENDERER_DEFPATHSALPHA;
 	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
+	locid_enabledepth = glGetUniformLocation(shaprog_idx, "enabledepth");
 
 	texid_scenedepth = scenedepthtex;
 	locid_scenedepth = glGetUniformLocation(shaprog_idx, "scenedepth");
@@ -29,10 +30,7 @@ void PathsRenderer::render(Camera& cam)
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
 	glLineWidth(1);
-	if(enabledepth)
-		glEnable(GL_DEPTH_TEST);
-	else
-		glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(
@@ -41,6 +39,7 @@ void PathsRenderer::render(Camera& cam)
 	);
 
 	glUniform1f(locid_pathsalpha, pathsalpha);
+	glUniform1i(locid_enabledepth, enabledepth);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texid_scenedepth);
