@@ -127,6 +127,11 @@ void SceneRenderer::init()
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		BOOST_LOG_TRIVIAL(error) << "Framebuffer is not complete!";
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	shaprog2_idx = disk_load_shader_program(
+		"../src/client/shaders/scene2.vert.glsl",
+		"../src/client/shaders/scene2.frag.glsl"
+	);
 }
 
 void SceneRenderer::render1(Camera& cam)
@@ -151,4 +156,12 @@ void SceneRenderer::render1(Camera& cam)
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void SceneRenderer::render2()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(shaprog2_idx);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

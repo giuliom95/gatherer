@@ -31,6 +31,8 @@ private:
 	GLuint locid1_camvpmat;
 	GLuint locid1_geomcolor;
 
+	GLuint shaprog2_idx;
+
 	GLuint fbo_idx;
 	GLuint fbocolortex_idx;
 	GLuint fbodepthtex_idx;

@@ -112,8 +112,9 @@ void render_all(
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	pathsrenderer.render(camera);
 	scenerenderer.render1(camera);
+	scenerenderer.render2();
+	pathsrenderer.render(camera);
 	axesviz.render(camera);
 
 	ImGui::SetNextWindowSize({0,0});
