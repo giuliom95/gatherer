@@ -100,11 +100,12 @@ void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 }
 
 void render_all(
-	GLFWwindow*		window,
-	Camera&			camera,
-	PathsRenderer&	pathsrenderer,
-	SceneRenderer&  scenerenderer,
-	AxesVisualizer& axesviz
+	GLFWwindow*			window,
+	Camera&				camera,
+	PathsRenderer&		pathsrenderer,
+	SceneRenderer&		scenerenderer,
+	AxesVisualizer&		axesviz,
+	SelectionVolume&	selectionvolume
 ) {
 	glViewport(0, 0, WINDOW_W, WINDOW_H);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -115,6 +116,9 @@ void render_all(
 
 	scenerenderer.render1(camera);
 	scenerenderer.render2();
+	selectionvolume.render(
+		camera,  scenerenderer.texid_fbodepthtex
+	);
 	pathsrenderer.render(camera);
 	axesviz.render(camera);
 
@@ -228,6 +232,9 @@ int main()
 	PathsRenderer pathsrenderer;
 	pathsrenderer.init(scenerenderer.texid_fbodepthtex);
 
+	SelectionVolume selectionvolume;
+	selectionvolume.init();
+
 	// Set camera focus to bbox center
 	Vec3f center = pathsrenderer.scene_info.bounding_box.center();
 
@@ -252,7 +259,11 @@ int main()
 	bool mmb_pressed = false;
 
 	// First render to show something on screen on startup
-	render_all(glfw_window, cam, pathsrenderer, scenerenderer, axesvisualizer);
+	render_all(
+		glfw_window, cam, 
+		pathsrenderer, scenerenderer, 
+		axesvisualizer, selectionvolume
+	);
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
@@ -287,7 +298,8 @@ int main()
 
 		render_all(
 			glfw_window, cam, 
-			pathsrenderer, scenerenderer, axesvisualizer
+			pathsrenderer, scenerenderer, 
+			axesvisualizer,selectionvolume
 		);
 
 	}

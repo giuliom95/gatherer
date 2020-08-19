@@ -53,8 +53,8 @@ public:
 			0, 0, 1, 0
 		};
 		*/
-		const float ctg = 1 / tanf(fov);
-		const float s = 2*(znear / ctg);
+		const float tg = tanf(fov);
+		const float s = 1 / tg;
 		const float det = zfar - znear;
 		const float c = - (zfar + znear) / det;
 		const float d = - (2*zfar*znear) / det;
