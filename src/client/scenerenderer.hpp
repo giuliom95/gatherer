@@ -26,6 +26,7 @@ public:
 	void render2();
 
 	GLuint texid_fbodepthtex;
+	GLuint fbo_id;
 private:
 	std::vector<Geometry> geometries;
 	GLuint shaprog1_idx;
@@ -35,7 +36,6 @@ private:
 	GLuint shaprog2_idx;
 	GLuint locid2_colortex;
 
-	GLuint fbo_idx;
 	GLuint texid_fbocolortex;
 };
 #endif

@@ -91,8 +91,8 @@ void SceneRenderer::init()
 	locid1_geomcolor = glGetUniformLocation(shaprog1_idx, "color");
 
 
-	glGenFramebuffers(1, &fbo_idx);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_idx);
+	glGenFramebuffers(1, &fbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
 	glGenTextures(1, &texid_fbocolortex);
 	glBindTexture(GL_TEXTURE_2D, texid_fbocolortex);
@@ -138,7 +138,7 @@ void SceneRenderer::init()
 
 void SceneRenderer::render1(Camera& cam)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_idx);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
 	glUseProgram(shaprog1_idx);
 	glEnable(GL_DEPTH_TEST);

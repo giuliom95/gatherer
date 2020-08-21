@@ -12,14 +12,13 @@
 class SelectionVolume {
 public:
 	void init();
-	void render(Camera& cam, GLuint texid_scenedepth);
+	void render(Camera& cam, GLuint fbo_id);
 private:
 	Vec3f location;
 	float radius;
 
 	GLuint shaprog_id;
 	GLuint locid_camvpmat;
-	GLuint locid_plane2w;
 	GLuint locid_radius;
 	GLuint locid_scenedepth;
 };
