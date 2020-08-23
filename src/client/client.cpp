@@ -115,9 +115,12 @@ void render_all(
 	ImGui::NewFrame();
 
 	scenerenderer.render1(camera);
-	//selectionvolume.render(
-	//	camera,  scenerenderer.fbo_id
-	//);
+	selectionvolume.render(
+		camera,  
+		scenerenderer.fbo_id, 
+		scenerenderer.texid_fbodepth,
+		scenerenderer.texid_fbobeauty
+	);
 	scenerenderer.render2();
 	//pathsrenderer.render(camera);
 	axesviz.render(camera);

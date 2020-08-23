@@ -27,6 +27,7 @@ public:
 
 	GLuint texid_fboworldpos;
 	GLuint texid_fbobeauty;
+	GLuint texid_fbodepth;
 	GLuint fbo_id;
 private:
 	std::vector<Geometry> geometries;
@@ -38,6 +39,5 @@ private:
 	GLuint shaprog2_idx;
 	GLuint locid2_beautytex;
 
-	GLuint texid_fbodepth;
 };
 #endif

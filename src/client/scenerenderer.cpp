@@ -144,7 +144,7 @@ void SceneRenderer::init()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	shaprog2_idx = disk_load_shader_program(
-		"../src/client/shaders/scene2.vert.glsl",
+		"../src/client/shaders/screenquad.vert.glsl",
 		"../src/client/shaders/scene2.frag.glsl"
 	);
 
