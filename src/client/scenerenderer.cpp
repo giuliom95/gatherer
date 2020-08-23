@@ -88,7 +88,7 @@ void SceneRenderer::init()
 	);
 
 	locid1_camvpmat = glGetUniformLocation(shaprog1_idx, "vpmat");
-	locid1_geomcolor = glGetUniformLocation(shaprog1_idx, "color");
+	locid1_geomcolor = glGetUniformLocation(shaprog1_idx, "albedo");
 	locid1_eye = glGetUniformLocation(shaprog1_idx, "eye");
 
 	glGenFramebuffers(1, &fbo_id);
@@ -97,9 +97,9 @@ void SceneRenderer::init()
 	glGenTextures(1, &texid_fboalbedo);
 	glBindTexture(GL_TEXTURE_2D, texid_fboalbedo);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, 
+		GL_TEXTURE_2D, 0, GL_RGB, 
 		WINDOW_W, WINDOW_H, 0, 
-		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		GL_RGB, GL_UNSIGNED_BYTE, nullptr
 	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
