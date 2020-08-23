@@ -1,6 +1,6 @@
 #include "pathsrenderer.hpp"
 
-void PathsRenderer::init(GLuint scenedepthtex)
+void PathsRenderer::init()
 {
 	glGenVertexArrays(1, &vaoidx);
 	glBindVertexArray(vaoidx);
@@ -20,12 +20,10 @@ void PathsRenderer::init(GLuint scenedepthtex)
 	pathsalpha = PATHSRENDERER_DEFPATHSALPHA;
 	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
 	locid_enabledepth = glGetUniformLocation(shaprog_idx, "enabledepth");
-
-	texid_scenedepth = scenedepthtex;
 	locid_scenedepth = glGetUniformLocation(shaprog_idx, "scenedepth");
 }
 
-void PathsRenderer::render(Camera& cam)
+void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(shaprog_idx);
@@ -44,7 +42,7 @@ void PathsRenderer::render(Camera& cam)
 	glUniform1i(locid_enabledepth, enabledepth);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texid_scenedepth);
+	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
 	glUniform1i(locid_scenedepth, 0);
 
 	glMultiDrawArrays(

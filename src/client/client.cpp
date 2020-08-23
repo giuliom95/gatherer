@@ -122,7 +122,7 @@ void render_all(
 		scenerenderer.texid_fbobeauty
 	);
 	scenerenderer.render2();
-	//pathsrenderer.render(camera);
+	pathsrenderer.render(camera, scenerenderer.texid_fbodepth);
 	axesviz.render(camera);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -234,7 +234,7 @@ int main()
 	scenerenderer.init();
 
 	PathsRenderer pathsrenderer;
-	pathsrenderer.init(scenerenderer.texid_fboworldpos);
+	pathsrenderer.init();
 
 	SelectionVolume selectionvolume;
 	selectionvolume.init();

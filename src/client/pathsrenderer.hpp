@@ -24,8 +24,8 @@ public:
 class PathsRenderer
 {
 public:
-	void init(GLuint scenedepthtex);
-	void render(Camera& cam);
+	void init();
+	void render(Camera& cam, GLuint scenedepthtex);
 	
 	SceneInfo scene_info;
 	float pathsalpha;
@@ -42,7 +42,6 @@ private:
 	GLuint locid_pathsalpha;
 	GLuint locid_enabledepth;
 	GLuint locid_scenedepth;
-	GLuint texid_scenedepth;
 };
 
 #endif

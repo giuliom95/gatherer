@@ -75,8 +75,10 @@ void SelectionVolume::render(
 
 	glDrawArrays(GL_PATCHES, 0, 24);
 
+
 	glUseProgram(shaprog2_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, scenefbo_id);
+	glDepthMask(GL_FALSE);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, scenebeautytex);
@@ -87,4 +89,5 @@ void SelectionVolume::render(
 	glUniform1i(locid2_mask, 1);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glDepthMask(GL_TRUE);
 }
