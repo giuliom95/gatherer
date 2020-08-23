@@ -7,5 +7,5 @@ uniform sampler2D scenedepth;
 
 void main() 
 {
-	out_color = vec4(uv,0,1);
+	out_color = vec4(.2f,.2f,1,.4f);
 }

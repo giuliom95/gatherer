@@ -115,12 +115,14 @@ void render_all(
 	ImGui::NewFrame();
 
 	scenerenderer.render1(camera);
-	selectionvolume.render(
-		camera,  scenerenderer.fbo_id
-	);
+	//selectionvolume.render(
+	//	camera,  scenerenderer.fbo_id
+	//);
 	scenerenderer.render2();
-	pathsrenderer.render(camera);
+	//pathsrenderer.render(camera);
 	axesviz.render(camera);
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	ImGui::SetNextWindowSize({0,0});
 	ImGui::Begin(
@@ -217,8 +219,7 @@ int main()
 		BOOST_LOG_TRIVIAL(error) << "GLEW: " << err;
 	}
 	
-	glEnablei(GL_BLEND, 0);
-	glBlendFunci(0, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -230,7 +231,7 @@ int main()
 	scenerenderer.init();
 
 	PathsRenderer pathsrenderer;
-	pathsrenderer.init(scenerenderer.texid_fbodepthtex);
+	pathsrenderer.init(scenerenderer.texid_fboworldpos);
 
 	SelectionVolume selectionvolume;
 	selectionvolume.init();

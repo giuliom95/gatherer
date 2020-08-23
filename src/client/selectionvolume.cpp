@@ -20,6 +20,7 @@ void SelectionVolume::render(Camera& cam, GLuint fbo_id)
 {
 	glUseProgram(shaprog_id);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
 	glPatchParameteri(GL_PATCH_VERTICES, 4);

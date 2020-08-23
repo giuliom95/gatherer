@@ -50,6 +50,7 @@ void AxesVisualizer::render(Camera& cam)
 	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 	glViewport(0, 0, AXESVISUZLIZER_W, AXESVISUZLIZER_H);
+	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLineWidth(3);
@@ -61,6 +62,4 @@ void AxesVisualizer::render(Camera& cam)
 	);
 
 	glDrawArrays(GL_LINES, 0, 6);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

@@ -27,9 +27,11 @@ void PathsRenderer::init(GLuint scenedepthtex)
 
 void PathsRenderer::render(Camera& cam)
 {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
 	glLineWidth(1);
+	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
