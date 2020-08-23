@@ -15,7 +15,7 @@ class Geometry
 public:
 	GLuint vaoidx;
 	unsigned nelems;
-	Vec3f color;
+	Vec3f albedo;
 };
 
 class SceneRenderer
@@ -26,6 +26,7 @@ public:
 	void render2();
 
 	GLuint texid_fboworldpos;
+	GLuint texid_fbobeauty;
 	GLuint fbo_id;
 private:
 	std::vector<Geometry> geometries;
@@ -35,9 +36,8 @@ private:
 	GLuint locid1_eye;
 
 	GLuint shaprog2_idx;
-	GLuint locid2_colortex;
+	GLuint locid2_beautytex;
 
 	GLuint texid_fbodepth;
-	GLuint texid_fbocolor;
 };
 #endif

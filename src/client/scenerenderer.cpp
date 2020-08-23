@@ -33,7 +33,7 @@ void SceneRenderer::init()
 		geom.vaoidx = vaoidx;
 		geom.nelems = 0;	// Will be filled later. If it stays zero, something went wrong.
 		nlohmann::json json_albedo = json_geom["material"]["albedo"];
-		geom.color = Vec3f{
+		geom.albedo = Vec3f{
 			json_albedo[0],
 			json_albedo[1],
 			json_albedo[2]
@@ -94,8 +94,8 @@ void SceneRenderer::init()
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
-	glGenTextures(1, &texid_fbocolor);
-	glBindTexture(GL_TEXTURE_2D, texid_fbocolor);
+	glGenTextures(1, &texid_fbobeauty);
+	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGBA, 
 		WINDOW_W, WINDOW_H, 0, 
@@ -106,7 +106,7 @@ void SceneRenderer::init()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-		GL_TEXTURE_2D, texid_fbocolor, 0
+		GL_TEXTURE_2D, texid_fbobeauty, 0
 	);  
 
 	glGenTextures(1, &texid_fboworldpos);
@@ -148,7 +148,7 @@ void SceneRenderer::init()
 		"../src/client/shaders/scene2.frag.glsl"
 	);
 
-	locid2_colortex = glGetUniformLocation(shaprog2_idx, "colortex");
+	locid2_beautytex = glGetUniformLocation(shaprog2_idx, "beautytex");
 }
 
 void SceneRenderer::render1(Camera& cam)
@@ -173,7 +173,7 @@ void SceneRenderer::render1(Camera& cam)
 	for(Geometry geo : geometries)
 	{
 		glBindVertexArray(geo.vaoidx);
-		glUniform3f(locid1_geomalbedo, geo.color[0], geo.color[1], geo.color[2]);
+		glUniform3f(locid1_geomalbedo, geo.albedo[0], geo.albedo[1], geo.albedo[2]);
 		glDrawElements(GL_TRIANGLES, geo.nelems, GL_UNSIGNED_INT, NULL);
 	}
 
@@ -186,8 +186,8 @@ void SceneRenderer::render2()
 	glUseProgram(shaprog2_idx);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texid_fbocolor);
-	glUniform1i(locid2_colortex, 0);
+	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
+	glUniform1i(locid2_beautytex, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
