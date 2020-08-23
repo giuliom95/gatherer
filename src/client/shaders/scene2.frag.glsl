@@ -7,6 +7,5 @@ uniform sampler2D colortex;
 
 void main()
 {
-
 	out_color = texture(colortex, uv);
 }

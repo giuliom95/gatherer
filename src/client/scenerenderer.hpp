@@ -31,12 +31,13 @@ private:
 	std::vector<Geometry> geometries;
 	GLuint shaprog1_idx;
 	GLuint locid1_camvpmat;
-	GLuint locid1_geomcolor;
+	GLuint locid1_geomalbedo;
 	GLuint locid1_eye;
 
 	GLuint shaprog2_idx;
-	GLuint locid2_albedotex;
+	GLuint locid2_colortex;
 
-	GLuint texid_fboalbedo;
+	GLuint texid_fbodepth;
+	GLuint texid_fbocolor;
 };
 #endif
