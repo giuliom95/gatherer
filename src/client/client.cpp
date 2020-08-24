@@ -186,7 +186,7 @@ void render_all(
 			ImGui::Text(fmt, w2c(3,3));
 		}
 	}
-	
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -211,6 +211,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfw_window = glfwCreateWindow(WINDOW_W, WINDOW_H, "Gatherer", NULL, NULL);
 	glfwMakeContextCurrent(glfw_window);
+	glfwSwapInterval(1);
 
 	glfwCheckErrors();
 	BOOST_LOG_TRIVIAL(info) << "Created window";
@@ -254,8 +255,8 @@ int main()
 
 	ImGui::CreateContext();
 	ImGuiIO& imgui_io = ImGui::GetIO();
+	ImGui_ImplGlfw_InitForOpenGL(glfw_window, true);
 	ImGui_ImplOpenGL3_Init("#version 450 core");
-	ImGui_ImplGlfw_InitForOpenGL(glfw_window, false);
 
 	Vec2f cursor_old_pos = get_cursor_pos(glfw_window);
 	bool lmb_pressed = false;
@@ -271,7 +272,7 @@ int main()
 
 	while (!glfwWindowShouldClose(glfw_window))
 	{
-		glfwWaitEvents();
+		glfwPollEvents();
 
 		if(!imgui_io.WantCaptureMouse)
 		{
@@ -308,10 +309,12 @@ int main()
 
 	}
 	
+	BOOST_LOG_TRIVIAL(info) << "Exiting";
 	ImGui_ImplGlfw_Shutdown();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui::DestroyContext();
 
+	glfwDestroyWindow(glfw_window);
 	glfwTerminate();
 	return 0;	
 }
