@@ -10,10 +10,11 @@ void SelectionVolume::init()
 
 	locid1_camvpmat   = glGetUniformLocation(shaprog1_id, "vpmat");
 	locid1_radius     = glGetUniformLocation(shaprog1_id, "radius");
+	locid1_location   = glGetUniformLocation(shaprog1_id, "location");
 	locid1_scenedepth = glGetUniformLocation(shaprog1_id, "scenedepth");
 
 	location = Vec3f{0,0,0};
-	radius = 100;
+	radius = 10;
 
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -68,6 +69,11 @@ void SelectionVolume::render(
 	);
 
 	glUniform1f(locid1_radius, radius);
+
+	glUniform3f(
+		locid1_location,
+		location[0], location[1], location[2]
+	);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, scenedepthtex);

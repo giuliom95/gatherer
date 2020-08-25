@@ -1,5 +1,4 @@
 #version 450 core
-uniform mat4  vpmat;
 
 void main()
 {

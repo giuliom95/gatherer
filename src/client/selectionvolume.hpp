@@ -18,13 +18,15 @@ public:
 		GLuint scenedepthtex,
 		GLuint scenebeautytex
 	);
-private:
+
 	Vec3f location;
 	float radius;
+private:
 
 	GLuint shaprog1_id;
 	GLuint locid1_camvpmat;
 	GLuint locid1_radius;
+	GLuint locid1_location;
 	GLuint locid1_scenedepth;
 
 	GLuint shaprog2_id;

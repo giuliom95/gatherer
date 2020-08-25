@@ -2,6 +2,7 @@
 layout(quads) in;
 
 uniform float radius;
+uniform vec3 location;
 uniform mat4 vpmat;
 
 void main() 
@@ -18,7 +19,7 @@ void main()
 	vec4 b = p3*(1-v) + p2*v;
 	vec3 p = (a*(1-u) + b*u).xyz;
 
-	gl_Position.xyz = radius*normalize(p);
+	gl_Position.xyz = radius*normalize(p) + location;
 	gl_Position.w = 1;
 	gl_Position *= vpmat;
 }

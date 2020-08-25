@@ -339,6 +339,8 @@ int main()
 						&clicked_worldpoint
 					);
 					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+					if(length(clicked_worldpoint) != 0)
+						selectionvolume.location = clicked_worldpoint;
 				}
 			}
 			
