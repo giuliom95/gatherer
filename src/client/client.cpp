@@ -111,9 +111,6 @@ void render_all(
 	glViewport(0, 0, WINDOW_W, WINDOW_H);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
 
 	scenerenderer.render1(camera);
 	selectionvolume.render(
@@ -127,6 +124,10 @@ void render_all(
 	axesviz.render(camera);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
 
 	ImGui::SetNextWindowSize({0,0});
 	ImGui::Begin(

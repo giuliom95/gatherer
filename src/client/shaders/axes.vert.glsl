@@ -14,5 +14,6 @@ void main()
 		0
 	);
 	gl_Position = gl_Position*vpmat;
+	gl_Position.z *= -1;
 	gl_Position.w = 1;
 }
