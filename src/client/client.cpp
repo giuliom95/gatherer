@@ -148,6 +148,11 @@ void render_all(
 		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
 
+	ImGui::Begin("Selection volume");
+		ImGui::Button("Create");
+		
+	ImGui::End();
+
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{
 		ImGui::DragFloat3(
@@ -263,6 +268,8 @@ int main()
 	bool rmb_pressed = false;
 	bool mmb_pressed = false;
 
+	bool camera_key_pressed = false;
+
 	// First render to show something on screen on startup
 	render_all(
 		glfw_window, cam, 
@@ -274,31 +281,39 @@ int main()
 	{
 		glfwPollEvents();
 
+		if(!imgui_io.WantCaptureKeyboard)
+		{
+			camera_key_pressed = glfwGetKey(glfw_window, GLFW_KEY_LEFT_ALT);
+		}
+
 		if(!imgui_io.WantCaptureMouse)
 		{
-			mouse_camera_event(
-				GLFW_MOUSE_BUTTON_LEFT,
-				lmb_pressed,
-				glfw_window,
-				cursor_old_pos,
-				rotate_camera, cam
-			);
+			if(camera_key_pressed)
+			{
+				mouse_camera_event(
+					GLFW_MOUSE_BUTTON_LEFT,
+					lmb_pressed,
+					glfw_window,
+					cursor_old_pos,
+					rotate_camera, cam
+				);
 
-			mouse_camera_event(
-				GLFW_MOUSE_BUTTON_RIGHT,
-				rmb_pressed,
-				glfw_window,
-				cursor_old_pos,
-				dolly_camera, cam
-			);
+				mouse_camera_event(
+					GLFW_MOUSE_BUTTON_RIGHT,
+					rmb_pressed,
+					glfw_window,
+					cursor_old_pos,
+					dolly_camera, cam
+				);
 
-			mouse_camera_event(
-				GLFW_MOUSE_BUTTON_MIDDLE,
-				mmb_pressed,
-				glfw_window,
-				cursor_old_pos,
-				truckboom_camera, cam
-			);
+				mouse_camera_event(
+					GLFW_MOUSE_BUTTON_MIDDLE,
+					mmb_pressed,
+					glfw_window,
+					cursor_old_pos,
+					truckboom_camera, cam
+				);
+			}
 		}
 
 		render_all(
