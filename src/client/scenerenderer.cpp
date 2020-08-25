@@ -94,21 +94,6 @@ void SceneRenderer::init()
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
-	glGenTextures(1, &texid_fbobeauty);
-	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, 
-		WINDOW_W, WINDOW_H, 0, 
-		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
-	);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glFramebufferTexture2D(
-		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-		GL_TEXTURE_2D, texid_fbobeauty, 0
-	);  
-
 	glGenTextures(1, &texid_fboworldpos);
 	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
 	glTexImage2D(
@@ -120,9 +105,24 @@ void SceneRenderer::init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
-		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
 		GL_TEXTURE_2D, texid_fboworldpos, 0
 	);
+
+	glGenTextures(1, &texid_fbobeauty);
+	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA, 
+		WINDOW_W, WINDOW_H, 0, 
+		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+	);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
+		GL_TEXTURE_2D, texid_fbobeauty, 0
+	);  
 
 	glGenTextures(1, &texid_fbodepth);
 	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
@@ -156,10 +156,10 @@ void SceneRenderer::render1(Camera& cam)
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
 	glUseProgram(shaprog1_idx);
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	GLenum bufs[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glDrawBuffers(2, bufs);
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(

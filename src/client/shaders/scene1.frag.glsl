@@ -1,8 +1,8 @@
 #version 450 core
 in vec3 worldpos;
 
-layout(location = 0) out vec4 out_beauty;
-layout(location = 1) out vec3 out_worldpos;
+layout(location = 0) out vec3 out_worldpos;
+layout(location = 1) out vec4 out_beauty;
 
 uniform vec3 albedo;
 uniform vec3 eye;

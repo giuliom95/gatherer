@@ -80,6 +80,9 @@ void SelectionVolume::render(
 	glBindFramebuffer(GL_FRAMEBUFFER, scenefbo_id);
 	glDepthMask(GL_FALSE);
 
+	GLenum buf[]{GL_COLOR_ATTACHMENT1};
+	glDrawBuffers(1, buf);
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, scenebeautytex);
 	glUniform1i(locid2_scenebeauty, 0);

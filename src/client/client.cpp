@@ -105,7 +105,8 @@ void render_all(
 	PathsRenderer&		pathsrenderer,
 	SceneRenderer&		scenerenderer,
 	AxesVisualizer&		axesviz,
-	SelectionVolume&	selectionvolume
+	SelectionVolume&	selectionvolume,
+	Vec3f&				selected_worldpos
 ) {
 	glViewport(0, 0, WINDOW_W, WINDOW_H);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -149,8 +150,13 @@ void render_all(
 	ImGui::End();
 
 	ImGui::Begin("Selection volume");
-		ImGui::Button("Create");
-		
+		ImGui::LabelText(
+			"World position",
+			"%.02f, %.02f, %.02f", 
+			selected_worldpos[0],
+			selected_worldpos[1],
+			selected_worldpos[2]
+		);
 	ImGui::End();
 
 	if(ImGui::CollapsingHeader("Camera controls"))
@@ -270,11 +276,14 @@ int main()
 
 	bool camera_key_pressed = false;
 
+	Vec3f clicked_worldpoint{};
+
 	// First render to show something on screen on startup
 	render_all(
 		glfw_window, cam, 
 		pathsrenderer, scenerenderer, 
-		axesvisualizer, selectionvolume
+		axesvisualizer, selectionvolume,
+		clicked_worldpoint
 	);
 
 	while (!glfwWindowShouldClose(glfw_window))
@@ -314,12 +323,32 @@ int main()
 					truckboom_camera, cam
 				);
 			}
+			else
+			{
+				const int btn_state = 
+					glfwGetMouseButton(glfw_window, GLFW_MOUSE_BUTTON_LEFT);
+
+				if (btn_state == GLFW_PRESS)
+				{
+					// Find out world position
+					glBindFramebuffer(GL_FRAMEBUFFER, scenerenderer.fbo_id);
+					Vec2f p = get_cursor_pos(glfw_window);
+					glReadPixels(
+						(int)p[0],(int)(1024-p[1]), 1, 1, 
+						GL_RGB, GL_FLOAT, 
+						&clicked_worldpoint
+					);
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				}
+			}
+			
 		}
 
 		render_all(
 			glfw_window, cam, 
 			pathsrenderer, scenerenderer, 
-			axesvisualizer,selectionvolume
+			axesvisualizer,selectionvolume,
+			clicked_worldpoint
 		);
 
 	}
