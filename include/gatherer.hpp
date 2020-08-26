@@ -6,66 +6,66 @@
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 
-template <class Vec3>
 class Path
 {
 public:
 	Path() : Path(0) {}
 	Path(const size_t npoints)
 	{
-		points = std::vector<Vec3>(npoints);
+		points = std::vector<Vec3h>(npoints);
 	}
 
-	void add_point(const Vec3& p)
+	void add_point(const Vec3h& p)
 	{
 		points.push_back(p);
 	}
 	
-	std::vector<Vec3> points;
+	std::vector<Vec3h> points;
 };
 
-template <class Vec3>
-using PathsGroup = std::vector<Path<Vec3>>;
+using PathsGroup = std::vector<Path>;
 
-template <class Vec3>
+
 class RenderData
 {
 public:
 	RenderData(const unsigned nthreads=1)
 	{
-		pathgroups = std::vector<PathsGroup<Vec3>>(nthreads);
+		pathgroups = std::vector<PathsGroup>(nthreads);
 		for(unsigned pgi = 0; pgi < nthreads; ++pgi)
-			pathgroups[pgi] = PathsGroup<Vec3>();
+			pathgroups[pgi] = PathsGroup();
 	}
 
-	/*
 	void disk_load_all (
 		const boost::filesystem::path& dirpath
 	) {
-		boost::filesystem::ifstream lenghts_ofs{dirpath / "lengths.bin"};
-		boost::filesystem::ifstream paths_ofs{dirpath / "paths.bin"}; 
+		boost::filesystem::ifstream lenghts_ifs{dirpath / "lengths.bin"};
+		boost::filesystem::ifstream paths_ifs{dirpath / "paths.bin"}; 
 
-		while(lenghts_ofs.eof())
+		pathgroups = std::vector<PathsGroup>(1);
+		pathgroups[0] = PathsGroup();
+
+		while(lenghts_ifs.eof())
 		{
 			// Number of points in path 
 			uint8_t npoints;
-			lenghts_ofs.read((char*)&npoints, sizeof(uint8_t));
+			lenghts_ifs.read((char*)&npoints, sizeof(uint8_t));
 
 			Path path(npoints);
-			paths_ofs.read
+			paths_ifs.read
 			(
 				(char*)path.points.data(), 
 				npoints*sizeof(Vec3h)
 			);
 
-			paths.push_back(path);
+			pathgroups[0].push_back(path);
 		}
+		lenghts_ifs.close();
+		paths_ifs.close();
 
-		filestream.close();
-
-		BOOST_LOG_TRIVIAL(info) << "Loaded " << paths.size() << " paths";
+		BOOST_LOG_TRIVIAL(info) << "Loaded " << pathgroups[0].size() << " paths";
 	}
-	*/
+
 	
 	void disk_store_all(
 		const boost::filesystem::path& dirpath
@@ -79,9 +79,9 @@ public:
 		
 		unsigned long npaths = 0;
 
-		for(const PathsGroup<Vec3> pg : pathgroups)
+		for(const PathsGroup pg : pathgroups)
 		{
-			for(const Path<Vec3>& path : pg)
+			for(const Path& path : pg)
 			{
 				++npaths;
 				const uint8_t npoints = (uint8_t)path.points.size();
@@ -89,7 +89,7 @@ public:
 				paths_ofs.write
 				(
 					reinterpret_cast<const char*>(path.points.data()),
-					npoints*sizeof(Vec3)
+					npoints*sizeof(Vec3h)
 				);
 			}
 		}
@@ -99,7 +99,7 @@ public:
 		BOOST_LOG_TRIVIAL(info) << "Wrote " << npaths << " paths";
 	}
 
-	std::vector<PathsGroup<Vec3>> pathgroups;
+	std::vector<PathsGroup> pathgroups;
 };
 
 #endif
