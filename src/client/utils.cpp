@@ -1,5 +1,33 @@
 #include "utils.hpp"
 
+AABB::AABB()
+: minpt{ INFINITY,  INFINITY,  INFINITY}, 
+  maxpt{-INFINITY, -INFINITY, -INFINITY} {}
+
+AABB::AABB(Vec3f min, Vec3f max)
+: minpt{min}, maxpt{max} {}
+
+AABB::AABB(std::vector<Vec3f>& points)
+{
+	for(Vec3f p : points)
+		addpt(p);
+}
+
+void AABB::addpt(Vec3f pt)
+{
+	minpt[0] = min(minpt[0], pt[0]);
+	minpt[1] = min(minpt[1], pt[1]);
+	minpt[2] = min(minpt[2], pt[2]);
+	maxpt[0] = max(maxpt[0], pt[0]);
+	maxpt[1] = max(maxpt[1], pt[1]);
+	maxpt[2] = max(maxpt[2], pt[2]);
+}
+
+Vec3f AABB::center()
+{
+		return 0.5f * (minpt + maxpt);
+}
+
 GLuint disk_load_shader(
 	const boost::filesystem::path&	path,
 	const GLenum 					type
@@ -74,4 +102,11 @@ GLuint disk_load_shader_program(
 	glDeleteShader(fragsha_idx);
 
 	return shaprog_idx;
+}
+
+Vec2f get_cursor_pos(GLFWwindow* window)
+{
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	return {(float)x, (float)y};
 }

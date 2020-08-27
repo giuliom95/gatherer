@@ -2,7 +2,7 @@
 
 #include "json.hpp"
 
-void SceneRenderer::init()
+SceneRenderer::SceneRenderer()
 {
 	boost::filesystem::path json_path = "../data/renderdata/scene.json";
 	boost::filesystem::path bin_path = "../data/renderdata/scene.bin";
@@ -60,6 +60,16 @@ void SceneRenderer::init()
 				);
 				glEnableVertexAttribArray(0);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				Vec3f* buf = reinterpret_cast<Vec3f*>(bin_data.data());
+				for(
+					Vec3f* p = buf + buf_off;
+					p < buf + buf_off + buf_size;
+					p += sizeof(Vec3f)
+				) {
+					bbox.addpt(*p);
+				}
+
 				BOOST_LOG_TRIVIAL(info) << "Loaded vertices";
 			}
 			else if(type == "indices")

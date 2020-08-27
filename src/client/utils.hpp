@@ -14,10 +14,14 @@
 
 class AABB {
 public:
-	Vec3f min, max;
-	Vec3f center() {
-		return 0.5f * (min + max);
-	}
+	AABB();
+	AABB(std::vector<Vec3f>& points);
+	AABB(Vec3f min, Vec3f max);
+
+	Vec3f minpt, maxpt;
+
+	void addpt(Vec3f pt);
+	Vec3f center();
 };
 
 GLuint disk_load_shader(
@@ -31,5 +35,7 @@ GLuint disk_load_shader_program(
 	const boost::filesystem::path& tessha_path = "",
 	const boost::filesystem::path& geomsha_path = ""
 );
+
+Vec2f get_cursor_pos(GLFWwindow* window);
 
 #endif

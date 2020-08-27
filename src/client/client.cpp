@@ -5,7 +5,6 @@
 #include "gatherer.hpp"
 #include "camera.hpp"
 
-#include "pathsrenderer.hpp"
 #include "axesvisualizer.hpp"
 #include "scenerenderer.hpp"
 #include "selectionvolume.hpp"
@@ -25,13 +24,6 @@ bool glfwCheckErrors()
 		return false;
 	}
 	return true;
-}
-
-Vec2f get_cursor_pos(GLFWwindow* window)
-{
-	double x, y;
-	glfwGetCursorPos(window, &x, &y);
-	return {(float)x, (float)y};
 }
 
 // Returns true if a modify has been committed 
@@ -102,7 +94,6 @@ void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 void render_all(
 	GLFWwindow*			window,
 	Camera&				camera,
-	PathsRenderer&		pathsrenderer,
 	SceneRenderer&		scenerenderer,
 	AxesVisualizer&		axesviz,
 	SelectionVolume&	selectionvolume,
@@ -120,7 +111,6 @@ void render_all(
 		scenerenderer.texid_fbobeauty
 	);
 	scenerenderer.render2();
-	pathsrenderer.render(camera, scenerenderer.texid_fbodepth);
 	axesviz.render(camera);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -143,12 +133,14 @@ void render_all(
 		);
 	ImGui::End();
 
+	/*
 	ImGui::Begin("Paths options");
 		ImGui::SliderFloat(
 			"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
 		);
 		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
+	*/
 
 	ImGui::Begin("Selection volume");
 		ImGui::LabelText(
@@ -244,16 +236,12 @@ int main()
 	axesvisualizer.init();
 
 	SceneRenderer scenerenderer;
-	scenerenderer.init();
-
-	PathsRenderer pathsrenderer;
-	pathsrenderer.init();
 
 	SelectionVolume selectionvolume;
 	selectionvolume.init();
 
-	// Set camera focus to bbox center
-	Vec3f center = pathsrenderer.scene_info.bounding_box.center();
+	// Set camera focus to scene center
+	Vec3f center = scenerenderer.bbox.center();
 
 	Camera cam;
 	cam.focus = center;
@@ -282,7 +270,7 @@ int main()
 	// First render to show something on screen on startup
 	render_all(
 		glfw_window, cam, 
-		pathsrenderer, scenerenderer, 
+		scenerenderer, 
 		axesvisualizer, selectionvolume,
 		clicked_worldpoint
 	);
@@ -348,8 +336,8 @@ int main()
 		}
 
 		render_all(
-			glfw_window, cam, 
-			pathsrenderer, scenerenderer, 
+			glfw_window, cam,
+			scenerenderer, 
 			axesvisualizer,selectionvolume,
 			clicked_worldpoint
 		);

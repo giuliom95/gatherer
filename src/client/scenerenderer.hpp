@@ -21,9 +21,11 @@ public:
 class SceneRenderer
 {
 public:
-	void init();
+	SceneRenderer();
 	void render1(Camera& cam);
 	void render2();
+
+	AABB bbox;
 
 	GLuint texid_fboworldpos;
 	GLuint texid_fbobeauty;
