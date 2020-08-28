@@ -34,7 +34,6 @@ private:
 	bool rmb_pressed;
 	bool mmb_pressed;
 	bool camera_key_pressed;
-	Vec3f clicked_worldpoint;
 
 	void render();
 	void renderui();

@@ -160,6 +160,7 @@ bool Application::loop()
 				// Find out world position
 				glBindFramebuffer(GL_FRAMEBUFFER, scenerenderer.fbo_id);
 				Vec2f p = get_cursor_pos(window);
+				Vec3f clicked_worldpoint;
 				glReadPixels(
 					(int)p[0],(int)(1024-p[1]), 1, 1, 
 					GL_RGB, GL_FLOAT, 
@@ -229,16 +230,6 @@ void Application::renderui()
 		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
 	*/
-
-	ImGui::Begin("Selection volume");
-		ImGui::LabelText(
-			"World position",
-			"%.02f, %.02f, %.02f", 
-			clicked_worldpoint[0],
-			clicked_worldpoint[1],
-			clicked_worldpoint[2]
-		);
-	ImGui::End();
 
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{
