@@ -2,7 +2,7 @@
 
 #include "json.hpp"
 
-SceneRenderer::SceneRenderer()
+void SceneRenderer::init()
 {
 	boost::filesystem::path json_path = "../data/renderdata/scene.json";
 	boost::filesystem::path bin_path = "../data/renderdata/scene.bin";
@@ -61,13 +61,11 @@ SceneRenderer::SceneRenderer()
 				glEnableVertexAttribArray(0);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-				Vec3f* buf = reinterpret_cast<Vec3f*>(bin_data.data());
-				for(
-					Vec3f* p = buf + buf_off;
-					p < buf + buf_off + buf_size;
-					p += sizeof(Vec3f)
-				) {
-					bbox.addpt(*p);
+				for(unsigned i = 0; i < buf_size / sizeof(Vec3f); ++i) {
+					Vec3f p = *reinterpret_cast<Vec3f*>(
+						bin_data.data() + buf_off + i*sizeof(Vec3f)
+					);
+					bbox.addpt(p);
 				}
 
 				BOOST_LOG_TRIVIAL(info) << "Loaded vertices";
@@ -91,6 +89,7 @@ SceneRenderer::SceneRenderer()
 		geometries.push_back(geom);
 		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
 	}
+	LOG(info) << bbox.maxpt << " " << bbox.minpt;
 
 	shaprog1_idx = disk_load_shader_program(
 		"../src/client/shaders/scene1.vert.glsl",

@@ -69,15 +69,16 @@ void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 
 
 Application::Application()
-: imgui_io{createimguicontext()}
 {
+	LOG(info) << "Starting application";
+
 	initglfw();
 	createglfwwindow();
 	
 	// Enable vsync
 	glfwSwapInterval(1);
 
-	bool error = glfwCheckErrors();
+	bool error = !glfwCheckErrors();
 	if (error) exit(1);
 
 	BOOST_LOG_TRIVIAL(info) << "Created window";
@@ -86,21 +87,20 @@ Application::Application()
 	
 	configureogl();
 
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 450 core");
+	initimgui();
 
+	scenerenderer.init();
 	axesvisualizer.init();
 	selectionvolume.init();
 
-	Camera cam;
-	cam.focus = scenerenderer.bbox.center();
-	cam.pitch = 0;
-	cam.yaw = 0;
-	cam.r = 20;
+	camera.focus = scenerenderer.bbox.center();
+	camera.pitch = 0;
+	camera.yaw = 0;
+	camera.r = 20;
 
-	cam.znear = 1;
-	cam.zfar  = 2000;
-	cam.fov   = 10;
+	camera.znear = 1;
+	camera.zfar  = 2000;
+	camera.fov   = 10;
 
 	cursor_old_pos = get_cursor_pos(window);
 	lmb_pressed = false;
@@ -126,12 +126,12 @@ bool Application::loop()
 
 	glfwPollEvents();
 
-	if(!imgui_io.WantCaptureKeyboard)
+	if(!imgui_io->WantCaptureKeyboard)
 	{
 		camera_key_pressed = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
 	}
 
-	if(!imgui_io.WantCaptureMouse)
+	if(!imgui_io->WantCaptureMouse)
 	{
 		if(camera_key_pressed)
 		{
@@ -193,7 +193,14 @@ void Application::render()
 	);
 	scenerenderer.render2();
 	axesvisualizer.render(camera);
-	
+
+	renderui();
+
+	glfwSwapBuffers(window);
+}
+
+void Application::renderui()
+{
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	ImGui_ImplOpenGL3_NewFrame();
@@ -274,8 +281,6 @@ void Application::render()
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	glfwSwapBuffers(window);
 }
 
 void Application::initglfw()
@@ -319,8 +324,10 @@ void Application::configureogl()
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
-ImGuiIO& Application::createimguicontext()
+void Application::initimgui()
 {
 	ImGui::CreateContext();
-	return ImGui::GetIO();
+	imgui_io = &(ImGui::GetIO());
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 450 core");
 }

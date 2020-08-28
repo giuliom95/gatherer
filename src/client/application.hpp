@@ -10,8 +10,6 @@
 
 #include "camera.hpp"
 
-#include <boost/log/trivial.hpp>
-
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
@@ -29,7 +27,7 @@ private:
 	SelectionVolume	selectionvolume;
 
 	Camera camera;
-	ImGuiIO& imgui_io;
+	ImGuiIO* imgui_io;
 
 	Vec2f cursor_old_pos;
 	bool lmb_pressed;
@@ -39,12 +37,13 @@ private:
 	Vec3f clicked_worldpoint;
 
 	void render();
+	void renderui();
 
 	void initglfw();
 	void createglfwwindow();
 	void initglew();
 	void configureogl();
-	ImGuiIO& createimguicontext();
+	void initimgui();
 
 };
 

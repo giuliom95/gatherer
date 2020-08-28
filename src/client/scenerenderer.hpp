@@ -21,7 +21,7 @@ public:
 class SceneRenderer
 {
 public:
-	SceneRenderer();
+	void init();
 	void render1(Camera& cam);
 	void render2();
 
