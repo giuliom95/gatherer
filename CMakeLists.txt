@@ -51,6 +51,7 @@ set( GATHERER_CLIENT_SOURCES
   src/client/axesvisualizer.cpp
   src/client/scenerenderer.cpp
   src/client/selectionvolume.cpp
+  src/client/application.cpp
   src/client/client.cpp
   ${IMGUI_SRCS}
 )

@@ -104,6 +104,18 @@ GLuint disk_load_shader_program(
 	return shaprog_idx;
 }
 
+bool glfwCheckErrors()
+{
+	const char* err_msg;
+	int err_code = glfwGetError(&err_msg);
+	if(err_code != GLFW_NO_ERROR)
+	{
+		BOOST_LOG_TRIVIAL(error) << "GLFW: " << err_msg;
+		return false;
+	}
+	return true;
+}
+
 Vec2f get_cursor_pos(GLFWwindow* window)
 {
 	double x, y;

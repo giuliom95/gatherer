@@ -36,6 +36,8 @@ GLuint disk_load_shader_program(
 	const boost::filesystem::path& geomsha_path = ""
 );
 
+bool glfwCheckErrors();
+
 Vec2f get_cursor_pos(GLFWwindow* window);
 
 #endif
