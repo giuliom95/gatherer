@@ -39,7 +39,7 @@ void AxesVisualizer::init()
 	);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		BOOST_LOG_TRIVIAL(error) << "Framebuffer is not complete!";
+		LOG(error) << "Framebuffer is not complete!";
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	locid_camvpmat = glGetUniformLocation(shaprog_id, "vpmat");

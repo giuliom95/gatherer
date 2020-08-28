@@ -11,7 +11,7 @@ void SceneRenderer::init()
 	boost::filesystem::ifstream json_file{json_path};
 	if(!json_file) 
 	{
-		BOOST_LOG_TRIVIAL(fatal) <<
+		LOG(fatal) <<
 			"Could not open \"" << json_path.string() << "\"";
 		throw std::runtime_error("Could not open scene file");
 	}
@@ -68,7 +68,7 @@ void SceneRenderer::init()
 					bbox.addpt(p);
 				}
 
-				BOOST_LOG_TRIVIAL(info) << "Loaded vertices";
+				LOG(info) << "Loaded vertices";
 			}
 			else if(type == "indices")
 			{
@@ -81,13 +81,13 @@ void SceneRenderer::init()
 					GL_STATIC_DRAW
 				);
 				geom.nelems = buf_size / 4;
-				BOOST_LOG_TRIVIAL(info) << "Loaded indices";
+				LOG(info) << "Loaded indices";
 			}
 		}
 
 		glBindVertexArray(0);
 		geometries.push_back(geom);
-		BOOST_LOG_TRIVIAL(info) << "Loaded geometry";
+		LOG(info) << "Loaded geometry";
 	}
 	LOG(info) << bbox.maxpt << " " << bbox.minpt;
 
@@ -149,7 +149,7 @@ void SceneRenderer::init()
 	);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		BOOST_LOG_TRIVIAL(error) << "Framebuffer is not complete!";
+		LOG(error) << "Framebuffer is not complete!";
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	shaprog2_idx = disk_load_shader_program(

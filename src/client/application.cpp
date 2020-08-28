@@ -81,7 +81,7 @@ Application::Application()
 	bool error = !glfwCheckErrors();
 	if (error) exit(1);
 
-	BOOST_LOG_TRIVIAL(info) << "Created window";
+	LOG(info) << "Created window";
 
 	initglew();
 	
@@ -111,7 +111,7 @@ Application::Application()
 
 Application::~Application()
 {
-	BOOST_LOG_TRIVIAL(info) << "Exiting";
+	LOG(info) << "Exiting";
 	ImGui_ImplGlfw_Shutdown();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui::DestroyContext();
@@ -288,12 +288,12 @@ void Application::initglfw()
 	const int glfw_init_status = glfwInit();
 	if(glfw_init_status != GLFW_TRUE)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Impossible to init GLFW";
+		LOG(error) << "Impossible to init GLFW";
 		exit(1);
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(info) << "Initialized GLFW";
+		LOG(info) << "Initialized GLFW";
 	}
 }
 
@@ -312,7 +312,7 @@ void Application::initglew()
 	if (glew_init_status != GLEW_OK)
 	{
 		const GLubyte* err = glewGetErrorString(glew_init_status);
-		BOOST_LOG_TRIVIAL(error) << "GLEW: " << err;
+		LOG(error) << "GLEW: " << err;
 	}
 }
 

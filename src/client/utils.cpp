@@ -48,13 +48,13 @@ GLuint disk_load_shader(
 	glGetShaderiv(idx, GL_COMPILE_STATUS, &compile_status);
 	if(compile_status == GL_FALSE)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Shader has errors!";
+		LOG(error) << "Shader has errors!";
 		char info[512];
 		glGetShaderInfoLog(idx, 512, NULL, info);
-    	BOOST_LOG_TRIVIAL(error) << info;
+    	LOG(error) << info;
 		return -1;
 	}
-	BOOST_LOG_TRIVIAL(info) << "Compiled shader " << idx;
+	LOG(info) << "Compiled shader " << idx;
 
 	return idx;
 }
@@ -90,13 +90,13 @@ GLuint disk_load_shader_program(
 	glGetProgramiv(shaprog_idx, GL_LINK_STATUS, &link_status);
 	if(link_status == GL_FALSE)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Shader program has errors!";
+		LOG(error) << "Shader program has errors!";
 		char info[512];
 		glGetProgramInfoLog(shaprog_idx, 512, NULL, info);
-    	BOOST_LOG_TRIVIAL(error) << info;
+    	LOG(error) << info;
 		return -1;
 	}
-	BOOST_LOG_TRIVIAL(info) << "Created shader program " << shaprog_idx;
+	LOG(info) << "Created shader program " << shaprog_idx;
 
 	glDeleteShader(vtxsha_idx);
 	glDeleteShader(fragsha_idx);
@@ -110,7 +110,7 @@ bool glfwCheckErrors()
 	int err_code = glfwGetError(&err_msg);
 	if(err_code != GLFW_NO_ERROR)
 	{
-		BOOST_LOG_TRIVIAL(error) << "GLFW: " << err_msg;
+		LOG(error) << "GLFW: " << err_msg;
 		return false;
 	}
 	return true;

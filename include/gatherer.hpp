@@ -63,7 +63,7 @@ public:
 		lenghts_ifs.close();
 		paths_ifs.close();
 
-		BOOST_LOG_TRIVIAL(info) << "Loaded " << pathgroups[0].size() << " paths";
+		LOG(info) << "Loaded " << pathgroups[0].size() << " paths";
 	}
 
 	
@@ -72,7 +72,7 @@ public:
 	) {
 		if(!boost::filesystem::create_directory(dirpath))
 		{
-			BOOST_LOG_TRIVIAL(warning) << "Directory already there, overwriting";
+			LOG(warning) << "Directory already there, overwriting";
 		}
 		boost::filesystem::ofstream lenghts_ofs{dirpath / "lengths.bin"};
 		boost::filesystem::ofstream paths_ofs{dirpath / "paths.bin"}; 
@@ -96,7 +96,7 @@ public:
 		lenghts_ofs.close();
 		paths_ofs.close();
 
-		BOOST_LOG_TRIVIAL(info) << "Wrote " << npaths << " paths";
+		LOG(info) << "Wrote " << npaths << " paths";
 	}
 
 	std::vector<PathsGroup> pathgroups;
