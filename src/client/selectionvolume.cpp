@@ -14,7 +14,7 @@ void SelectionVolume::init()
 	locid1_scenedepth = glGetUniformLocation(shaprog1_id, "scenedepth");
 
 	location = Vec3f{0,0,0};
-	radius = 10;
+	radius = 50;
 
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);

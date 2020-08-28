@@ -7,6 +7,7 @@
 #include "axesvisualizer.hpp"
 #include "scenerenderer.hpp"
 #include "selectionvolume.hpp"
+#include "pathsrenderer.hpp"
 
 #include "camera.hpp"
 
@@ -25,6 +26,7 @@ private:
 	AxesVisualizer	axesvisualizer;
 	SceneRenderer	scenerenderer;
 	SelectionVolume	selectionvolume;
+	PathsRenderer	pathsrenderer;
 
 	Camera camera;
 	ImGuiIO* imgui_io;

@@ -10,16 +10,9 @@
 #include "utils.hpp"
 #include "camera.hpp"
 
-#define PATHSRENDERER_DEFPATHSALPHA 0.2f
+#include "gatherer.hpp"
 
-class SceneInfo
-{
-public:
-	uintmax_t				paths_number;
-	std::vector<GLint>		paths_firsts;
-	std::vector<GLsizei>	paths_lenghts;
-	AABB					bounding_box;
-};
+#define PATHSRENDERER_DEFPATHSALPHA 0.2f
 
 class PathsRenderer
 {
@@ -27,9 +20,10 @@ public:
 	void init();
 	void render(Camera& cam, GLuint scenedepthtex);
 	
-	SceneInfo scene_info;
 	float pathsalpha;
 	bool enabledepth;
+
+	void pathsbouncinginsphere(Vec3f center, float radius);
 private:
 	void disk_load_all_paths(
 		const boost::filesystem::path dirpath
@@ -42,6 +36,11 @@ private:
 	GLuint locid_pathsalpha;
 	GLuint locid_enabledepth;
 	GLuint locid_scenedepth;
+
+	RenderData renderdata;
+	unsigned				paths_number;
+	std::vector<GLint>		paths_firsts;
+	std::vector<GLsizei>	paths_lenghts;
 };
 
 #endif

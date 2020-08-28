@@ -2,6 +2,7 @@
 #define _GATHERER_HPP_
 
 #include "math.hpp"
+
 #include <vector>
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -39,17 +40,20 @@ public:
 	void disk_load_all (
 		const boost::filesystem::path& dirpath
 	) {
-		boost::filesystem::ifstream lenghts_ifs{dirpath / "lengths.bin"};
-		boost::filesystem::ifstream paths_ifs{dirpath / "paths.bin"}; 
+		BOOST_LOG_TRIVIAL(info) << "+ Loading paths";
+		const boost::filesystem::path lengths_fp = dirpath / "lengths.bin";
+		const boost::filesystem::path paths_fp   = dirpath / "paths.bin";
+		boost::filesystem::ifstream lengths_ifs(lengths_fp);
+		boost::filesystem::ifstream paths_ifs  (paths_fp);
 
 		pathgroups = std::vector<PathsGroup>(1);
 		pathgroups[0] = PathsGroup();
 
-		while(lenghts_ifs.eof())
+		while(!lengths_ifs.eof())
 		{
 			// Number of points in path 
 			uint8_t npoints;
-			lenghts_ifs.read((char*)&npoints, sizeof(uint8_t));
+			lengths_ifs.read((char*)&npoints, sizeof(uint8_t));
 
 			Path path(npoints);
 			paths_ifs.read
@@ -60,10 +64,10 @@ public:
 
 			pathgroups[0].push_back(path);
 		}
-		lenghts_ifs.close();
+		lengths_ifs.close();
 		paths_ifs.close();
 
-		LOG(info) << "Loaded " << pathgroups[0].size() << " paths";
+		BOOST_LOG_TRIVIAL(info) << "Loaded " << pathgroups[0].size() << " paths";
 	}
 
 	
@@ -72,7 +76,7 @@ public:
 	) {
 		if(!boost::filesystem::create_directory(dirpath))
 		{
-			LOG(warning) << "Directory already there, overwriting";
+			BOOST_LOG_TRIVIAL(warning) << "Directory already there, overwriting";
 		}
 		boost::filesystem::ofstream lenghts_ofs{dirpath / "lengths.bin"};
 		boost::filesystem::ofstream paths_ofs{dirpath / "paths.bin"}; 
@@ -96,7 +100,7 @@ public:
 		lenghts_ofs.close();
 		paths_ofs.close();
 
-		LOG(info) << "Wrote " << npaths << " paths";
+		BOOST_LOG_TRIVIAL(info) << "Wrote " << npaths << " paths";
 	}
 
 	std::vector<PathsGroup> pathgroups;

@@ -89,7 +89,6 @@ void SceneRenderer::init()
 		geometries.push_back(geom);
 		LOG(info) << "Loaded geometry";
 	}
-	LOG(info) << bbox.maxpt << " " << bbox.minpt;
 
 	shaprog1_idx = disk_load_shader_program(
 		"../src/client/shaders/scene1.vert.glsl",

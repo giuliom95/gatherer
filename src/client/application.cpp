@@ -92,6 +92,7 @@ Application::Application()
 	scenerenderer.init();
 	axesvisualizer.init();
 	selectionvolume.init();
+	pathsrenderer.init();
 
 	camera.focus = scenerenderer.bbox.center();
 	camera.pitch = 0;
@@ -168,7 +169,13 @@ bool Application::loop()
 				);
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				if(length(clicked_worldpoint) != 0)
+				{
 					selectionvolume.location = clicked_worldpoint;
+					pathsrenderer.pathsbouncinginsphere(
+						selectionvolume.location,
+						selectionvolume.radius
+					);
+				}
 			}
 		}
 		
@@ -184,7 +191,6 @@ void Application::render()
 	glViewport(0, 0, WINDOW_W, WINDOW_H);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 	scenerenderer.render1(camera);
 	selectionvolume.render(
 		camera,  
@@ -193,6 +199,8 @@ void Application::render()
 		scenerenderer.texid_fbobeauty
 	);
 	scenerenderer.render2();
+	pathsrenderer.render(camera, scenerenderer.texid_fbodepth);
+
 	axesvisualizer.render(camera);
 
 	renderui();
@@ -222,14 +230,14 @@ void Application::renderui()
 		);
 	ImGui::End();
 
-	/*
+	
 	ImGui::Begin("Paths options");
 		ImGui::SliderFloat(
 			"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
 		);
 		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
-	*/
+	
 
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{

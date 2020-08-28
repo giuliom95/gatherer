@@ -4,12 +4,16 @@ void PathsRenderer::init()
 {
 	glGenVertexArrays(1, &vaoidx);
 	glBindVertexArray(vaoidx);
+	glGenBuffers(1, &vboidx);
+	glEnableVertexAttribArray(0);
 	LOG(info) << "Created VAO";
 	
-	glGenBuffers(1, &vboidx);
-	disk_load_all_paths("../data/renderdata");
-	LOG(info) << "Loaded vertices on GPU";
+	paths_number = 0;
 
+	renderdata.disk_load_all("../data/renderdata");
+
+	//disk_load_all_paths("../data/renderdata");
+	
 	shaprog_idx = disk_load_shader_program(
 		"../src/client/shaders/paths.vert.glsl",
 		"../src/client/shaders/paths.frag.glsl"
@@ -47,10 +51,68 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 
 	glMultiDrawArrays(
 		GL_LINE_STRIP, 
-		scene_info.paths_firsts.data(),
-		scene_info.paths_lenghts.data(),
-		scene_info.paths_number
+		paths_firsts.data(),
+		paths_lenghts.data(),
+		paths_number
 	);
+}
+
+void PathsRenderer::pathsbouncinginsphere(Vec3f center, float radius)
+{
+	std::vector<Path*> selectedpaths;
+	LOG(info) << "==START==";
+	for(PathsGroup& pg : renderdata.pathgroups)
+	{
+		for(Path& path : pg)
+		{
+			LOG(info) << "** path **";
+			for(Vec3h bounceh : path.points)
+			{
+				Vec3f bouncef = fromVec3h(bounceh);
+				float d = length(bouncef - center);
+				if(d <= radius)
+				{
+					selectedpaths.push_back(&path);
+					break;
+				}
+			}
+		}
+	}
+	LOG(info) << "==END==";
+
+	paths_number = selectedpaths.size();
+
+	paths_firsts  = std::vector<GLint>(paths_number);
+	paths_lenghts = std::vector<GLsizei>(paths_number);
+
+	GLint off = 0; 
+	for(unsigned i = 0; i < paths_number; ++i)
+	{
+		unsigned npoints = selectedpaths[i]->points.size();
+		paths_firsts[i] = off;
+		paths_lenghts[i] = npoints;
+		off += npoints;
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
+
+	unsigned totalbytes = off * sizeof(Vec3h);
+	glBufferData(GL_ARRAY_BUFFER, totalbytes, NULL,  GL_DYNAMIC_DRAW);
+
+	for(unsigned i = 0; i < paths_number; ++i)
+	{
+		glBufferSubData(
+			GL_ARRAY_BUFFER, 
+			paths_firsts[i] * sizeof(Vec3h), 
+			paths_lenghts[i] * sizeof(Vec3h), 
+			selectedpaths[i]->points.data()
+		);
+	}
+	glVertexAttribPointer(
+		0, 3, GL_HALF_FLOAT, 
+		GL_FALSE, 3 * sizeof(half), (void*)0
+	);
+
 }
 
 void PathsRenderer::disk_load_all_paths(
@@ -61,22 +123,22 @@ void PathsRenderer::disk_load_all_paths(
 	boost::filesystem::ifstream lengths_ifs(lengths_fp);
 	boost::filesystem::ifstream paths_ifs  (paths_fp);
 
-	scene_info.paths_number = boost::filesystem::file_size(lengths_fp);
+	paths_number = boost::filesystem::file_size(lengths_fp);
 	const uintmax_t paths_bytes   = boost::filesystem::file_size(paths_fp);
 
-	std::vector<uint8_t> lenghts(scene_info.paths_number);
+	std::vector<uint8_t> lenghts(paths_number);
 	lengths_ifs.read(
-		reinterpret_cast<char*>(lenghts.data()), scene_info.paths_number
+		reinterpret_cast<char*>(lenghts.data()), paths_number
 	);
 
-	scene_info.paths_firsts  = std::vector<GLint>  (scene_info.paths_number);
-	scene_info.paths_lenghts = std::vector<GLsizei>(scene_info.paths_number);
+	paths_firsts  = std::vector<GLint>  (paths_number);
+	paths_lenghts = std::vector<GLsizei>(paths_number);
 	uintmax_t offset = 0;
-	for(uintmax_t i = 0; i < scene_info.paths_number; ++i)
+	for(uintmax_t i = 0; i < paths_number; ++i)
 	{
 		uint8_t len = lenghts[i];
-		scene_info.paths_firsts[i] = offset;
-		scene_info.paths_lenghts[i] = len;
+		paths_firsts[i] = offset;
+		paths_lenghts[i] = len;
 		offset += len;
 	}
 
@@ -84,23 +146,11 @@ void PathsRenderer::disk_load_all_paths(
 	std::vector<Vec3h> paths(paths_bytes);
 	paths_ifs.read(reinterpret_cast<char*>(paths.data()), paths_bytes);
 
-	Vec3h minp, maxp;
-	for(Vec3h v : paths)
-	{
-		minp[0] = min(minp[0], v[0]);
-		minp[1] = min(minp[1], v[1]);
-		minp[2] = min(minp[2], v[2]);
-		maxp[0] = max(maxp[0], v[0]);
-		maxp[1] = max(maxp[1], v[1]);
-		maxp[2] = max(maxp[2], v[2]);
-	}
-	scene_info.bounding_box = AABB{fromVec3h(minp), fromVec3h(maxp)};
-	
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
 	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(
 		0, 3, GL_HALF_FLOAT, 
 		GL_FALSE, 3 * sizeof(half), (void*)0
 	);
-	glEnableVertexAttribArray(0);
+	
 }
