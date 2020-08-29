@@ -40,7 +40,6 @@ public:
 	void disk_load_all (
 		const boost::filesystem::path& dirpath
 	) {
-		BOOST_LOG_TRIVIAL(info) << "+ Loading paths";
 		const boost::filesystem::path lengths_fp = dirpath / "lengths.bin";
 		const boost::filesystem::path paths_fp   = dirpath / "paths.bin";
 		boost::filesystem::ifstream lengths_ifs(lengths_fp);

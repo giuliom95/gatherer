@@ -108,6 +108,8 @@ Application::Application()
 	rmb_pressed = false;
 	mmb_pressed = false;
 	camera_key_pressed = false;
+
+	renderdata.disk_load_all("../data/renderdata");
 }
 
 Application::~Application()
@@ -172,6 +174,7 @@ bool Application::loop()
 				{
 					selectionvolume.location = clicked_worldpoint;
 					pathsrenderer.pathsbouncinginsphere(
+						renderdata,
 						selectionvolume.location,
 						selectionvolume.radius
 					);
@@ -238,6 +241,9 @@ void Application::renderui()
 		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
 	
+	ImGui::Begin("Filters");
+		ImGui::Button("Add");
+	ImGui::End();
 
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{
@@ -321,6 +327,9 @@ void Application::configureogl()
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 }
 
 void Application::initimgui()

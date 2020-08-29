@@ -53,6 +53,8 @@ void SelectionVolume::render(
 	GLuint scenedepthtex,
 	GLuint scenebeautytex
 ) {
+	glDisable(GL_CULL_FACE);
+
 	glUseProgram(shaprog1_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -99,4 +101,5 @@ void SelectionVolume::render(
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDepthMask(GL_TRUE);
+	glEnable(GL_CULL_FACE);
 }

@@ -21,6 +21,8 @@ public:
 	~Application();
 	bool loop();
 private:
+	RenderData renderdata;
+
 	GLFWwindow* window;
 
 	AxesVisualizer	axesvisualizer;

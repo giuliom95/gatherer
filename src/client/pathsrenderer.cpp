@@ -10,10 +10,6 @@ void PathsRenderer::init()
 	
 	paths_number = 0;
 
-	renderdata.disk_load_all("../data/renderdata");
-
-	//disk_load_all_paths("../data/renderdata");
-	
 	shaprog_idx = disk_load_shader_program(
 		"../src/client/shaders/paths.vert.glsl",
 		"../src/client/shaders/paths.frag.glsl"
@@ -57,15 +53,14 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 	);
 }
 
-void PathsRenderer::pathsbouncinginsphere(Vec3f center, float radius)
-{
+void PathsRenderer::pathsbouncinginsphere(
+	RenderData& renderdata, Vec3f center, float radius
+) {
 	std::vector<Path*> selectedpaths;
-	LOG(info) << "==START==";
 	for(PathsGroup& pg : renderdata.pathgroups)
 	{
 		for(Path& path : pg)
 		{
-			LOG(info) << "** path **";
 			for(Vec3h bounceh : path.points)
 			{
 				Vec3f bouncef = fromVec3h(bounceh);
@@ -78,7 +73,6 @@ void PathsRenderer::pathsbouncinginsphere(Vec3f center, float radius)
 			}
 		}
 	}
-	LOG(info) << "==END==";
 
 	paths_number = selectedpaths.size();
 
