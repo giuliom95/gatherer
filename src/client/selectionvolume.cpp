@@ -103,3 +103,26 @@ void SelectionVolume::render(
 	glDepthMask(GL_TRUE);
 	glEnable(GL_CULL_FACE);
 }
+
+void SelectionVolume::selectpaths(RenderData& rd)
+{
+	selectedpaths.clear();
+	
+	PathsGroup& paths = rd.pathgroups[0];
+	unsigned npaths = paths.size();
+	
+	for(unsigned i = 0; i < npaths; ++i)
+	{
+		Path& path = paths[i];
+		for(Vec3h bounceh : path.points)
+		{
+			Vec3f bouncef = fromVec3h(bounceh);
+			float d = length(bouncef - location);
+			if(d <= radius)
+			{
+				selectedpaths.insert(i);
+				break;
+			}
+		}
+	}
+}

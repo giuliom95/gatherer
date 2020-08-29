@@ -25,11 +25,11 @@ public:
 	float pathsalpha;
 	bool enabledepth;
 
-	void pathsbouncinginsphere(
-		RenderData& renderdata, Vec3f center, float radius
-	);
+	void addpaths(std::set<unsigned>& paths);
 
 	void clearpaths();
+
+	void updaterenderlist(RenderData& rd);
 private:
 	GLuint vaoidx;
 	GLuint vboidx;

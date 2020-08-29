@@ -173,11 +173,10 @@ bool Application::loop()
 				if(length(clicked_worldpoint) != 0)
 				{
 					selectionvolume.location = clicked_worldpoint;
-					pathsrenderer.pathsbouncinginsphere(
-						renderdata,
-						selectionvolume.location,
-						selectionvolume.radius
-					);
+					selectionvolume.selectpaths(renderdata);
+					pathsrenderer.clearpaths();
+					pathsrenderer.addpaths(selectionvolume.selectedpaths);
+					pathsrenderer.updaterenderlist(renderdata);
 				}
 			}
 		}

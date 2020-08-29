@@ -1,6 +1,8 @@
 #ifndef _SELECTIONVOLUME_HPP_
 #define _SELECTIONVOLUME_HPP_
 
+#include <set>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -8,6 +10,7 @@
 
 #include "utils.hpp"
 #include "camera.hpp"
+#include "gatherer.hpp"
 
 class SelectionVolume {
 public:
@@ -21,6 +24,10 @@ public:
 
 	Vec3f location;
 	float radius;
+	std::set<unsigned> selectedpaths;
+
+	void selectpaths(RenderData& rd);
+
 private:
 
 	GLuint shaprog1_id;

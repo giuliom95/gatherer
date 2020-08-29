@@ -53,28 +53,14 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 	);
 }
 
-void PathsRenderer::pathsbouncinginsphere(
-	RenderData& renderdata, Vec3f center, float radius
-) {
-	PathsGroup& paths = renderdata.pathgroups[0];
-	unsigned npaths = paths.size();
-	
-	for(unsigned i = 0; i < npaths; ++i)
-	{
-		Path& path = paths[i];
-		for(Vec3h bounceh : path.points)
-		{
-			Vec3f bouncef = fromVec3h(bounceh);
-			float d = length(bouncef - center);
-			if(d <= radius)
-			{
-				selectedpaths.insert(i);
-				break;
-			}
-		}
-	}
+void PathsRenderer::addpaths(std::set<unsigned>& newpaths)
+{
+	selectedpaths.insert(newpaths.begin(), newpaths.end());
+}
 
-
+void PathsRenderer::updaterenderlist(RenderData& rd)
+{
+	PathsGroup& paths = rd.pathgroups[0];
 	unsigned paths_number = selectedpaths.size();
 
 	std::vector<Path*> spaths(paths_number);
