@@ -1,6 +1,8 @@
 #ifndef _PATHSRENDERER_HPP_
 #define _PATHSRENDERER_HPP_
 
+#include <set>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -26,11 +28,9 @@ public:
 	void pathsbouncinginsphere(
 		RenderData& renderdata, Vec3f center, float radius
 	);
-private:
-	void disk_load_all_paths(
-		const boost::filesystem::path dirpath
-	);
 
+	void clearpaths();
+private:
 	GLuint vaoidx;
 	GLuint vboidx;
 	GLuint shaprog_idx;
@@ -39,7 +39,8 @@ private:
 	GLuint locid_enabledepth;
 	GLuint locid_scenedepth;
 
-	unsigned				paths_number;
+	std::set<unsigned> selectedpaths;
+
 	std::vector<GLint>		paths_firsts;
 	std::vector<GLsizei>	paths_lenghts;
 };

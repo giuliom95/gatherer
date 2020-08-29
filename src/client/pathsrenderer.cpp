@@ -8,7 +8,7 @@ void PathsRenderer::init()
 	glEnableVertexAttribArray(0);
 	LOG(info) << "Created VAO";
 	
-	paths_number = 0;
+	selectedpaths = std::set<unsigned>();
 
 	shaprog_idx = disk_load_shader_program(
 		"../src/client/shaders/paths.vert.glsl",
@@ -49,40 +49,50 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 		GL_LINE_STRIP, 
 		paths_firsts.data(),
 		paths_lenghts.data(),
-		paths_number
+		selectedpaths.size()
 	);
 }
 
 void PathsRenderer::pathsbouncinginsphere(
 	RenderData& renderdata, Vec3f center, float radius
 ) {
-	std::vector<Path*> selectedpaths;
-	for(PathsGroup& pg : renderdata.pathgroups)
+	PathsGroup& paths = renderdata.pathgroups[0];
+	unsigned npaths = paths.size();
+	
+	for(unsigned i = 0; i < npaths; ++i)
 	{
-		for(Path& path : pg)
+		Path& path = paths[i];
+		for(Vec3h bounceh : path.points)
 		{
-			for(Vec3h bounceh : path.points)
+			Vec3f bouncef = fromVec3h(bounceh);
+			float d = length(bouncef - center);
+			if(d <= radius)
 			{
-				Vec3f bouncef = fromVec3h(bounceh);
-				float d = length(bouncef - center);
-				if(d <= radius)
-				{
-					selectedpaths.push_back(&path);
-					break;
-				}
+				selectedpaths.insert(i);
+				break;
 			}
 		}
 	}
 
-	paths_number = selectedpaths.size();
 
+	unsigned paths_number = selectedpaths.size();
+
+	std::vector<Path*> spaths(paths_number);
+	{
+		unsigned i = 0;
+		for(unsigned pi : selectedpaths)
+		{
+			spaths[i] = &paths[pi]; 
+			++i;
+		}
+	}
 	paths_firsts  = std::vector<GLint>(paths_number);
 	paths_lenghts = std::vector<GLsizei>(paths_number);
 
 	GLint off = 0; 
 	for(unsigned i = 0; i < paths_number; ++i)
 	{
-		unsigned npoints = selectedpaths[i]->points.size();
+		unsigned npoints = spaths[i]->points.size();
 		paths_firsts[i] = off;
 		paths_lenghts[i] = npoints;
 		off += npoints;
@@ -99,7 +109,7 @@ void PathsRenderer::pathsbouncinginsphere(
 			GL_ARRAY_BUFFER, 
 			paths_firsts[i] * sizeof(Vec3h), 
 			paths_lenghts[i] * sizeof(Vec3h), 
-			selectedpaths[i]->points.data()
+			spaths[i]->points.data()
 		);
 	}
 	glVertexAttribPointer(
@@ -109,42 +119,7 @@ void PathsRenderer::pathsbouncinginsphere(
 
 }
 
-void PathsRenderer::disk_load_all_paths(
-	const boost::filesystem::path dirpath
-) {
-	const boost::filesystem::path lengths_fp = dirpath / "lengths.bin";
-	const boost::filesystem::path paths_fp   = dirpath / "paths.bin";
-	boost::filesystem::ifstream lengths_ifs(lengths_fp);
-	boost::filesystem::ifstream paths_ifs  (paths_fp);
-
-	paths_number = boost::filesystem::file_size(lengths_fp);
-	const uintmax_t paths_bytes   = boost::filesystem::file_size(paths_fp);
-
-	std::vector<uint8_t> lenghts(paths_number);
-	lengths_ifs.read(
-		reinterpret_cast<char*>(lenghts.data()), paths_number
-	);
-
-	paths_firsts  = std::vector<GLint>  (paths_number);
-	paths_lenghts = std::vector<GLsizei>(paths_number);
-	uintmax_t offset = 0;
-	for(uintmax_t i = 0; i < paths_number; ++i)
-	{
-		uint8_t len = lenghts[i];
-		paths_firsts[i] = offset;
-		paths_lenghts[i] = len;
-		offset += len;
-	}
-
-	// Ignoring type because this data will be passed striaght to the GPU
-	std::vector<Vec3h> paths(paths_bytes);
-	paths_ifs.read(reinterpret_cast<char*>(paths.data()), paths_bytes);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
-	glBufferData(GL_ARRAY_BUFFER, paths_bytes, paths.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(
-		0, 3, GL_HALF_FLOAT, 
-		GL_FALSE, 3 * sizeof(half), (void*)0
-	);
-	
+void PathsRenderer::clearpaths()
+{
+	selectedpaths.clear();
 }

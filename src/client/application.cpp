@@ -242,7 +242,10 @@ void Application::renderui()
 	ImGui::End();
 	
 	ImGui::Begin("Filters");
-		ImGui::Button("Add");
+		if(ImGui::Button("Clear paths"))
+		{
+			pathsrenderer.clearpaths();
+		}
 	ImGui::End();
 
 	if(ImGui::CollapsingHeader("Camera controls"))
