@@ -1,6 +1,6 @@
-#include "selectionvolume.hpp"
+#include "selectionstroke.hpp"
 
-void SelectionVolume::init()
+void SelectionStroke::init()
 {
 	shaprog1_id = disk_load_shader_program(
 		"../src/client/shaders/selectionvolume1.vert.glsl",
@@ -12,9 +12,6 @@ void SelectionVolume::init()
 	locid1_radius     = glGetUniformLocation(shaprog1_id, "radius");
 	locid1_location   = glGetUniformLocation(shaprog1_id, "location");
 	locid1_scenedepth = glGetUniformLocation(shaprog1_id, "scenedepth");
-
-	location = Vec3f{0,0,0};
-	radius = 10;
 
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -45,9 +42,11 @@ void SelectionVolume::init()
 
 	locid2_scenebeauty	= glGetUniformLocation(shaprog2_id, "scenebeautytex");
 	locid2_mask 		= glGetUniformLocation(shaprog2_id, "masktex");
+
+	brushsize = SELECTIONSTROKE_DEFBRUSHSIZE;
 }
 
-void SelectionVolume::render(
+void SelectionStroke::render(
 	Camera& cam, 
 	GLuint scenefbo_id, 
 	GLuint scenedepthtex,
@@ -70,18 +69,21 @@ void SelectionVolume::render(
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
 
-	glUniform1f(locid1_radius, radius);
+	for(Sphere s : spheres)
+	{
+		glUniform1f(locid1_radius, s.radius);
 
-	glUniform3f(
-		locid1_location,
-		location[0], location[1], location[2]
-	);
+		glUniform3f(
+			locid1_location,
+			s.center[0], s.center[1], s.center[2]
+		);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
-	glUniform1i(locid1_scenedepth, 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, scenedepthtex);
+		glUniform1i(locid1_scenedepth, 0);
 
-	glDrawArrays(GL_PATCHES, 0, 24);
+		glDrawArrays(GL_PATCHES, 0, 24);
+	}
 
 
 	glUseProgram(shaprog2_id);
@@ -104,10 +106,11 @@ void SelectionVolume::render(
 	glEnable(GL_CULL_FACE);
 }
 
-void SelectionVolume::selectpaths(RenderData& rd)
+void SelectionStroke::addpoint(Vec3f pt, RenderData& rd)
 {
-	selectedpaths.clear();
-	
+	Sphere s{pt, brushsize};
+	spheres.push_back(s);
+
 	PathsGroup& paths = rd.pathgroups[0];
 	unsigned npaths = paths.size();
 	
@@ -117,8 +120,8 @@ void SelectionVolume::selectpaths(RenderData& rd)
 		for(Vec3h bounceh : path.points)
 		{
 			Vec3f bouncef = fromVec3h(bounceh);
-			float d = length(bouncef - location);
-			if(d <= radius)
+			float d = length(bouncef - pt);
+			if(d <= brushsize)
 			{
 				selectedpaths.insert(i);
 				break;

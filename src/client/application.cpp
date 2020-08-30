@@ -91,7 +91,7 @@ Application::Application()
 
 	scenerenderer.init();
 	axesvisualizer.init();
-	selectionvolume.init();
+	selectionstroke.init();
 	pathsrenderer.init();
 
 	camera.focus = scenerenderer.bbox.center();
@@ -172,10 +172,8 @@ bool Application::loop()
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				if(length(clicked_worldpoint) != 0)
 				{
-					selectionvolume.location = clicked_worldpoint;
-					selectionvolume.selectpaths(renderdata);
-					pathsrenderer.clearpaths();
-					pathsrenderer.addpaths(selectionvolume.selectedpaths);
+					selectionstroke.addpoint(clicked_worldpoint, renderdata);
+					pathsrenderer.addpaths(selectionstroke.selectedpaths);
 					pathsrenderer.updaterenderlist(renderdata);
 				}
 			}
@@ -194,7 +192,7 @@ void Application::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	scenerenderer.render1(camera);
-	selectionvolume.render(
+	selectionstroke.render(
 		camera,  
 		scenerenderer.fbo_id, 
 		scenerenderer.texid_fbodepth,

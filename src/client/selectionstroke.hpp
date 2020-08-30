@@ -1,5 +1,5 @@
-#ifndef _SELECTIONVOLUME_HPP_
-#define _SELECTIONVOLUME_HPP_
+#ifndef _SELECTIONSTROKE_HPP_
+#define _SELECTIONSTROKE_HPP_
 
 #include <set>
 
@@ -12,7 +12,17 @@
 #include "camera.hpp"
 #include "gatherer.hpp"
 
-class SelectionVolume {
+#define SELECTIONSTROKE_DEFBRUSHSIZE 10
+
+class Sphere
+{
+public:
+	Vec3f center;
+	float radius;
+};
+
+class SelectionStroke
+{
 public:
 	void init();
 	void render(
@@ -22,13 +32,15 @@ public:
 		GLuint scenebeautytex
 	);
 
-	Vec3f location;
-	float radius;
 	std::set<unsigned> selectedpaths;
 
-	void selectpaths(RenderData& rd);
+	void addpoint(Vec3f pt, RenderData& rd);
+
+	float brushsize;
 
 private:
+
+	std::vector<Sphere> spheres;
 
 	GLuint shaprog1_id;
 	GLuint locid1_camvpmat;

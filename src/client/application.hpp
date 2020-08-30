@@ -6,7 +6,7 @@
 
 #include "axesvisualizer.hpp"
 #include "scenerenderer.hpp"
-#include "selectionvolume.hpp"
+#include "selectionstroke.hpp"
 #include "pathsrenderer.hpp"
 
 #include "camera.hpp"
@@ -27,7 +27,7 @@ private:
 
 	AxesVisualizer	axesvisualizer;
 	SceneRenderer	scenerenderer;
-	SelectionVolume	selectionvolume;
+	SelectionStroke selectionstroke;
 	PathsRenderer	pathsrenderer;
 
 	Camera camera;

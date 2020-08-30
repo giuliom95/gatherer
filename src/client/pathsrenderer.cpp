@@ -15,6 +15,8 @@ void PathsRenderer::init()
 		"../src/client/shaders/paths.frag.glsl"
 	);
 
+	enabledepth = true;
+
 	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
 
 	pathsalpha = PATHSRENDERER_DEFPATHSALPHA;
