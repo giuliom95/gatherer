@@ -26,6 +26,7 @@ public:
 	bool enabledepth;
 
 	void addpaths(std::set<unsigned>& paths);
+	void removepaths(std::set<unsigned>& paths);
 
 	void clearpaths();
 

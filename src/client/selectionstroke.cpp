@@ -129,3 +129,9 @@ void SelectionStroke::addpoint(Vec3f pt, RenderData& rd)
 		}
 	}
 }
+
+void SelectionStroke::clearpoints()
+{
+	spheres.clear();
+	selectedpaths.clear();
+}

@@ -136,6 +136,7 @@ bool Application::loop()
 
 	if(!imgui_io->WantCaptureMouse)
 	{
+
 		if(camera_key_pressed)
 		{
 			mouse_camera_event(
@@ -170,12 +171,25 @@ bool Application::loop()
 					&clicked_worldpoint
 				);
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				// Perfect zero happens only when out of scene
 				if(length(clicked_worldpoint) != 0)
 				{
+					if(!lmb_pressed)
+					{
+						// First point so remove old stuff
+						pathsrenderer.removepaths(selectionstroke.selectedpaths);
+						selectionstroke.clearpoints();
+					}
 					selectionstroke.addpoint(clicked_worldpoint, renderdata);
 					pathsrenderer.addpaths(selectionstroke.selectedpaths);
 					pathsrenderer.updaterenderlist(renderdata);
+
+					lmb_pressed = true;
 				}
+			}
+			else
+			{
+				lmb_pressed = false;
 			}
 		}
 		

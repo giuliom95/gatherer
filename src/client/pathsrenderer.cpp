@@ -55,9 +55,15 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 	);
 }
 
-void PathsRenderer::addpaths(std::set<unsigned>& newpaths)
+void PathsRenderer::addpaths(std::set<unsigned>& paths)
 {
-	selectedpaths.insert(newpaths.begin(), newpaths.end());
+	selectedpaths.insert(paths.begin(), paths.end());
+}
+
+void PathsRenderer::removepaths(std::set<unsigned>& paths)
+{
+	for(unsigned p : paths)
+		selectedpaths.erase(p);
 }
 
 void PathsRenderer::updaterenderlist(RenderData& rd)

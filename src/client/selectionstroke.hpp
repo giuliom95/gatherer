@@ -36,6 +36,8 @@ public:
 
 	void addpoint(Vec3f pt, RenderData& rd);
 
+	void clearpoints();
+
 	float brushsize;
 
 private:
