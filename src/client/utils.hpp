@@ -9,8 +9,8 @@
 
 #include "math.hpp"
 
-#define WINDOW_W 1024
-#define WINDOW_H 1024
+#define DEF_WINDOW_W 1024
+#define DEF_WINDOW_H 1024
 
 #define LOG BOOST_LOG_TRIVIAL
 

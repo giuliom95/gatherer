@@ -12,20 +12,16 @@ void SelectionStroke::init()
 	locid1_radius     = glGetUniformLocation(shaprog1_id, "radius");
 	locid1_location   = glGetUniformLocation(shaprog1_id, "location");
 	locid1_scenedepth = glGetUniformLocation(shaprog1_id, "scenedepth");
+	locid1_framesize  = glGetUniformLocation(shaprog1_id, "framesize");
 
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
 	glGenTextures(1, &texid_fbomask);
 	glBindTexture(GL_TEXTURE_2D, texid_fbomask);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RED, 
-		WINDOW_W, WINDOW_H, 0, 
-		GL_RED, GL_UNSIGNED_BYTE, nullptr
-	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	setframesize({DEF_WINDOW_W, DEF_WINDOW_H});
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
 		GL_TEXTURE_2D, texid_fbomask, 0
@@ -50,7 +46,8 @@ void SelectionStroke::render(
 	Camera& cam, 
 	GLuint scenefbo_id, 
 	GLuint scenedepthtex,
-	GLuint scenebeautytex
+	GLuint scenebeautytex,
+	Vec2i framesize
 ) {
 	glDisable(GL_CULL_FACE);
 
@@ -68,6 +65,8 @@ void SelectionStroke::render(
 		locid1_camvpmat, 1, GL_FALSE, 
 		reinterpret_cast<const GLfloat*>(&vpmat)
 	);
+
+	glUniform2i(locid1_framesize, framesize[0], framesize[1]);
 
 	for(Sphere s : spheres)
 	{
@@ -104,6 +103,16 @@ void SelectionStroke::render(
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDepthMask(GL_TRUE);
 	glEnable(GL_CULL_FACE);
+}
+
+void SelectionStroke::setframesize(Vec2i size)
+{
+	glBindTexture(GL_TEXTURE_2D, texid_fbomask);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RED, 
+		size[0], size[1], 0, 
+		GL_RED, GL_UNSIGNED_BYTE, nullptr
+	);
 }
 
 void SelectionStroke::addpoint(Vec3f pt, RenderData& rd)

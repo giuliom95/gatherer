@@ -20,7 +20,7 @@ class PathsRenderer
 {
 public:
 	void init();
-	void render(Camera& cam, GLuint scenedepthtex);
+	void render(Camera& cam, GLuint scenedepthtex, Vec2i framesize);
 	
 	float pathsalpha;
 	bool enabledepth;
@@ -39,6 +39,7 @@ private:
 	GLuint locid_pathsalpha;
 	GLuint locid_enabledepth;
 	GLuint locid_scenedepth;
+	GLuint locid_framesize;
 
 	std::set<unsigned> selectedpaths;
 

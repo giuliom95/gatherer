@@ -23,9 +23,10 @@ void PathsRenderer::init()
 	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
 	locid_enabledepth = glGetUniformLocation(shaprog_idx, "enabledepth");
 	locid_scenedepth = glGetUniformLocation(shaprog_idx, "scenedepth");
+	locid_framesize = glGetUniformLocation(shaprog_idx, "framesize");
 }
 
-void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
+void PathsRenderer::render(Camera& cam, GLuint scenedepthtex, Vec2i framesize)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(shaprog_idx);
@@ -46,6 +47,8 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
 	glUniform1i(locid_scenedepth, 0);
+
+	glUniform2i(locid_framesize, framesize[0], framesize[1]);
 
 	glMultiDrawArrays(
 		GL_LINE_STRIP, 

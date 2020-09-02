@@ -25,6 +25,8 @@ public:
 	void render1(Camera& cam);
 	void render2();
 
+	void setframesize(Vec2i size);
+
 	AABB bbox;
 
 	GLuint texid_fboworldpos;

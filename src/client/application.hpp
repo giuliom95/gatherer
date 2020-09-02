@@ -20,10 +20,13 @@ public:
 	Application();
 	~Application();
 	bool loop();
+
+	void accountwindowresize();
 private:
 	RenderData renderdata;
 
 	GLFWwindow* window;
+	Vec2i framesize;
 
 	AxesVisualizer	axesvisualizer;
 	SceneRenderer	scenerenderer;
@@ -48,6 +51,7 @@ private:
 	void configureogl();
 	void initimgui();
 
+	static void windowresize(GLFWwindow* window, int width, int height);
 };
 
 #endif

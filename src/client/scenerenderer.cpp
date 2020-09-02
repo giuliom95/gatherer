@@ -122,45 +122,31 @@ void SceneRenderer::init(Camera& cam)
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
 	glGenTextures(1, &texid_fboworldpos);
+	glGenTextures(1, &texid_fbobeauty);
+	glGenTextures(1, &texid_fbodepth);
+
 	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGB32F, 
-		WINDOW_W, WINDOW_H, 0, 
-		GL_RGB,  GL_FLOAT, nullptr
-	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	setframesize({DEF_WINDOW_W, DEF_WINDOW_H});
+
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
 		GL_TEXTURE_2D, texid_fboworldpos, 0
 	);
-
-	glGenTextures(1, &texid_fbobeauty);
-	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, 
-		WINDOW_W, WINDOW_H, 0, 
-		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
-	);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
 		GL_TEXTURE_2D, texid_fbobeauty, 0
 	);  
-
-	glGenTextures(1, &texid_fbodepth);
-	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
-		WINDOW_W, WINDOW_H, 0, 
-		 GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
-	);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
 		GL_TEXTURE_2D, texid_fbodepth, 0
@@ -217,4 +203,28 @@ void SceneRenderer::render2()
 	glUniform1i(locid2_beautytex, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void SceneRenderer::setframesize(Vec2i size)
+{
+	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGB32F, 
+		size[0], size[1], 0, 
+		GL_RGB,  GL_FLOAT, nullptr
+	);
+
+	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA, 
+		size[0], size[1], 0, 
+		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+	);
+
+	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
+		size[0], size[1], 0, 
+		 GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
+	);
 }

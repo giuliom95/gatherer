@@ -15,6 +15,8 @@ public:
 	float zfar;
 	float znear;
 
+	float aspect;
+
 	Mat4f w2c()
 	{
 		Mat4f mrot;
@@ -41,29 +43,19 @@ public:
 
 	Mat4f persp()
 	{
-		/*
-		const float a = 1 / tanf(fov);
-		const float d = zfar - znear;
-		const float b = -(zfar + znear) / d;
-		const float c = -2 * zfar * znear / d;
-		return {
-			a, 0, 0, 0,
-			0, a, 0, 0,
-			0, 0, b, c,
-			0, 0, 1, 0
-		};
-		*/
 		const float tg = tanf(fov);
-		const float s = 1 / tg;
+		const float sx = 2 / (aspect*tg);
+		const float sy = 2 / tg;
+
 		const float det = zfar - znear;
 		const float c = - (zfar + znear) / det;
 		const float d = - (2*zfar*znear) / det;
 
 		return {
-			s, 0,  0, 0,
-			0, s,  0, 0,
-			0, 0,  c, d,
-			0, 0, -1, 0
+			sx,  0,  0, 0,
+			 0, sy,  0, 0,
+			 0,  0,  c, d,
+			 0,  0, -1, 0
 		};
 	}
 private:

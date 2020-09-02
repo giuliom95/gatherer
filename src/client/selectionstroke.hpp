@@ -29,8 +29,11 @@ public:
 		Camera& cam, 
 		GLuint scenefbo_id, 
 		GLuint scenedepthtex,
-		GLuint scenebeautytex
+		GLuint scenebeautytex,
+		Vec2i framesize
 	);
+
+	void setframesize(Vec2i size);
 
 	std::set<unsigned> selectedpaths;
 
@@ -49,6 +52,7 @@ private:
 	GLuint locid1_radius;
 	GLuint locid1_location;
 	GLuint locid1_scenedepth;
+	GLuint locid1_framesize;
 
 	GLuint shaprog2_id;
 	GLuint locid2_scenebeauty;

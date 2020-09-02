@@ -96,6 +96,7 @@ Application::Application()
 	camera.znear = 1;
 	camera.zfar  = 2000;
 	camera.fov   = 10;
+	camera.aspect = (float)DEF_WINDOW_W / DEF_WINDOW_H;
 
 	scenerenderer.init(camera);
 	axesvisualizer.init();
@@ -166,7 +167,7 @@ bool Application::loop()
 				Vec2f p = get_cursor_pos(window);
 				Vec3f clicked_worldpoint;
 				glReadPixels(
-					(int)p[0],(int)(1024-p[1]), 1, 1, 
+					(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
 					GL_RGB, GL_FLOAT, 
 					&clicked_worldpoint
 				);
@@ -200,9 +201,20 @@ bool Application::loop()
 	return true;
 }
 
+void Application::accountwindowresize()
+{
+	glfwGetFramebufferSize(window, &framesize[0], &framesize[1]);
+	LOG(info) << framesize[0] << " " << framesize[1];
+
+	scenerenderer.setframesize(framesize);
+	selectionstroke.setframesize(framesize);
+
+	camera.aspect = (float)framesize[0] / framesize[1];
+}
+
 void Application::render()
 {
-	glViewport(0, 0, WINDOW_W, WINDOW_H);
+	glViewport(0, 0, framesize[0], framesize[1]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	scenerenderer.render1(camera);
@@ -210,10 +222,11 @@ void Application::render()
 		camera,  
 		scenerenderer.fbo_id, 
 		scenerenderer.texid_fbodepth,
-		scenerenderer.texid_fbobeauty
+		scenerenderer.texid_fbobeauty,
+		framesize
 	);
 	scenerenderer.render2();
-	pathsrenderer.render(camera, scenerenderer.texid_fbodepth);
+	pathsrenderer.render(camera, scenerenderer.texid_fbodepth, framesize);
 
 	axesvisualizer.render(camera);
 
@@ -231,12 +244,7 @@ void Application::renderui()
 	ImGui::NewFrame();
 
 	ImGui::SetNextWindowSize({0,0});
-	ImGui::Begin(
-		"Axes", nullptr, 
-		ImGuiWindowFlags_NoResize | 
-		ImGuiWindowFlags_NoCollapse |
-		ImGuiWindowFlags_NoTitleBar
-	);
+	ImGui::Begin("Axes", nullptr);
 		ImGui::Image(
 			(void*)(intptr_t)axesvisualizer.fbotex_id, 
 			{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
@@ -321,8 +329,11 @@ void Application::createglfwwindow()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(WINDOW_W, WINDOW_H, "Gatherer", NULL, NULL);
+	window = glfwCreateWindow(DEF_WINDOW_W, DEF_WINDOW_H, "Gatherer", NULL, NULL);
 	glfwMakeContextCurrent(window);
+
+	glfwSetWindowUserPointer(window, this);
+	glfwSetWindowSizeCallback(window, Application::windowresize);
 }
 
 void Application::initglew()
@@ -352,4 +363,11 @@ void Application::initimgui()
 	imgui_io = &(ImGui::GetIO());
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 450 core");
+}
+
+void Application::windowresize(GLFWwindow* window, int width, int height)
+{
+	Application* app = (Application*)glfwGetWindowUserPointer(window);
+	app->accountwindowresize();
+	LOG(info) << "New window size: " << width << ", " << height;
 }
