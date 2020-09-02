@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(MATH_INCLUDE "deps/math/include")
 
-set(JSON_INCLUDE "deps/nlohmann")
+set(JSON_INCLUDE "deps/json/single_include/nlohmann")
 
 set(IMGUI_DIR "deps/imgui")
 set(IMGUI_INCLUDE 
