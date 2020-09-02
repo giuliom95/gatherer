@@ -2,7 +2,7 @@
 
 #include "json.hpp"
 
-void SceneRenderer::init()
+void SceneRenderer::init(Camera& cam)
 {
 	boost::filesystem::path json_path = "../data/renderdata/scene.json";
 	boost::filesystem::path bin_path = "../data/renderdata/scene.bin";
@@ -89,6 +89,25 @@ void SceneRenderer::init()
 		geometries.push_back(geom);
 		LOG(info) << "Loaded geometry";
 	}
+
+	const nlohmann::json json_camera = json_data["camera"];
+	const nlohmann::json json_eye = json_camera["eye"];
+	const Vec3f cam_eye{
+		json_eye[0],
+		json_eye[1],
+		json_eye[2]
+	};
+	const nlohmann::json json_look = json_camera["look"];
+	const Vec3f cam_look{
+		json_look[0],
+		json_look[1],
+		json_look[2]
+	};
+	cam.focus = cam_eye + cam.r*cam_look;
+	Vec3f sph = cartesian2spherical(cam_look);
+	LOG(info) << cam_look << " " << sph;
+	cam.yaw = sph[1];
+	cam.pitch = sph[2];
 
 	shaprog1_idx = disk_load_shader_program(
 		"../src/client/shaders/scene1.vert.glsl",

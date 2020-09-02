@@ -122,3 +122,28 @@ Vec2f get_cursor_pos(GLFWwindow* window)
 	glfwGetCursorPos(window, &x, &y);
 	return {(float)x, (float)y};
 }
+
+Vec3f spherical2cartesian(Vec3f sph)
+{
+	float yaw = PI_OVER_180*sph[1];
+	float pitch = PI_OVER_180*sph[2];
+	float proj = sph[0]*cosf(pitch);
+	return {
+		proj*cosf(yaw),
+		sph[0]*sinf(pitch),
+		proj*sinf(yaw)
+	};
+}
+
+Vec3f cartesian2spherical(Vec3f vec)
+{
+	float proj = length({vec[0], 0, vec[2]});
+	return{
+		//r
+		length(vec),
+		//yaw
+		RAD_TO_DEG*atan2f(vec[2], vec[0]),
+		//pitch
+		RAD_TO_DEG*atan2f(vec[1], proj)
+	};
+}

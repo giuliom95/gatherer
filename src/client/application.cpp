@@ -89,19 +89,19 @@ Application::Application()
 
 	initimgui();
 
-	scenerenderer.init();
+	camera.focus = Vec3f();
+	camera.pitch = 0;
+	camera.yaw = 0;
+	camera.r = 20;
+	camera.znear = 1;
+	camera.zfar  = 2000;
+	camera.fov   = 10;
+
+	scenerenderer.init(camera);
 	axesvisualizer.init();
 	selectionstroke.init();
 	pathsrenderer.init();
 
-	camera.focus = scenerenderer.bbox.center();
-	camera.pitch = 0;
-	camera.yaw = 0;
-	camera.r = 20;
-
-	camera.znear = 1;
-	camera.zfar  = 2000;
-	camera.fov   = 10;
 
 	cursor_old_pos = get_cursor_pos(window);
 	lmb_pressed = false;

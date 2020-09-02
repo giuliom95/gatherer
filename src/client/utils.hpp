@@ -42,4 +42,9 @@ bool glfwCheckErrors();
 
 Vec2f get_cursor_pos(GLFWwindow* window);
 
+// sph[0] = r, sph[1] = yaw, sph[2] = pitch
+Vec3f spherical2cartesian(Vec3f sph);
+Vec3f cartesian2spherical(Vec3f vec);
+
+
 #endif
