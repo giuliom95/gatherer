@@ -57,6 +57,7 @@ set( GATHERER_CLIENT_SOURCES
 )
 add_executable(${PROJECT_NAME}client ${GATHERER_CLIENT_SOURCES})
 target_link_libraries(${PROJECT_NAME}client glfw)
+target_link_libraries(${PROJECT_NAME}client OpenEXR::IlmImf)
 target_link_libraries(${PROJECT_NAME}client OpenGL::GL)
 target_link_libraries(${PROJECT_NAME}client GLEW::glew)
 target_link_libraries(${PROJECT_NAME}client ${Boost_LIBRARIES})
