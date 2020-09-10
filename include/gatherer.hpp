@@ -41,6 +41,7 @@ public:
 	static constexpr size_t maxgeom = maxpaths*maxbounces;
 
 	Buffer<Vec3h>			bouncespositions;
+	uint8_t 				currentpathbounces = 0;
 
 	Buffer<Vec3h>			luminance;
 	Buffer<uint8_t>			lenghts;
@@ -149,6 +150,7 @@ public:
 	void addbounce(unsigned tid, Vec3h pos)
 	{
 		std::vector<Vec3h>& pd = data[tid].bouncespositions.data;
+		data[tid].currentpathbounces++;
 		pd.push_back(pos);
 		if(pd.size() >= pd.capacity())
 		{
@@ -159,7 +161,8 @@ public:
 	void finalizepath(unsigned tid, Vec3h luminance, CameraSample sample)
 	{
 		DataBlock& db = data[tid];
-		db.lenghts.data.push_back(0);
+		db.lenghts.data.push_back(db.currentpathbounces);
+		db.currentpathbounces = 0;
 		db.luminance.data.push_back(luminance);
 		db.camerasamples.data.push_back(sample);
 
