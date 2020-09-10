@@ -53,7 +53,7 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex, Vec2i framesize)
 	glMultiDrawArrays(
 		GL_LINE_STRIP, 
 		paths_firsts.data(),
-		paths_lenghts.data(),
+		paths_lengths.data(),
 		selectedpaths.size()
 	);
 }
@@ -69,51 +69,63 @@ void PathsRenderer::removepaths(std::set<unsigned>& paths)
 		selectedpaths.erase(p);
 }
 
-void PathsRenderer::updaterenderlist(RenderData& rd)
+void PathsRenderer::updaterenderlist(GatheredData& gd)
 {
-	PathsGroup& paths = rd.pathgroups[0];
-	unsigned paths_number = selectedpaths.size();
-
-	std::vector<Path*> spaths(paths_number);
-	{
-		unsigned i = 0;
-		for(unsigned pi : selectedpaths)
-		{
-			spaths[i] = &paths[pi]; 
-			++i;
-		}
-	}
-	paths_firsts  = std::vector<GLint>(paths_number);
-	paths_lenghts = std::vector<GLsizei>(paths_number);
-
-	GLint off = 0; 
-	for(unsigned i = 0; i < paths_number; ++i)
-	{
-		unsigned npoints = spaths[i]->points.size();
-		paths_firsts[i] = off;
-		paths_lenghts[i] = npoints;
-		off += npoints;
-	}
-
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
+
+	const unsigned npaths = selectedpaths.size();
+
+	paths_firsts  = std::vector<GLint>(npaths);
+	paths_lengths = std::vector<GLsizei>(npaths);
+
+	if(npaths == 0)
+	{
+		glBufferData(GL_ARRAY_BUFFER, 0, NULL,  GL_DYNAMIC_DRAW);
+		return;
+	}
+
+	// Sorted set
+	std::vector<unsigned> sortedpathsidx(
+		selectedpaths.begin(), selectedpaths.end()
+	);
+	std::sort(sortedpathsidx.begin(), sortedpathsidx.end());
+	
+	std::vector<Vec3h*> offset_ptrs(npaths);
+	
+	unsigned j = 0;
+	unsigned g_off = 0;
+	unsigned off = 0;
+	for(unsigned i = 0; i < gd.pathlengths.size(); ++i)
+	{
+		const unsigned len = gd.pathlengths[i];
+		if(i == sortedpathsidx[j])
+		{
+			paths_firsts[j] = off;
+			paths_lengths[j] = len;
+			off += len;
+
+			offset_ptrs[j] = &(gd.bouncepositions[g_off]);
+			j++;
+		}
+		g_off += len;
+	}
 
 	unsigned totalbytes = off * sizeof(Vec3h);
 	glBufferData(GL_ARRAY_BUFFER, totalbytes, NULL,  GL_DYNAMIC_DRAW);
 
-	for(unsigned i = 0; i < paths_number; ++i)
+	for(unsigned i = 0; i < npaths; ++i)
 	{
 		glBufferSubData(
 			GL_ARRAY_BUFFER, 
 			paths_firsts[i] * sizeof(Vec3h), 
-			paths_lenghts[i] * sizeof(Vec3h), 
-			spaths[i]->points.data()
+			paths_lengths[i] * sizeof(Vec3h), 
+			offset_ptrs[i]
 		);
 	}
 	glVertexAttribPointer(
 		0, 3, GL_HALF_FLOAT, 
 		GL_FALSE, 3 * sizeof(half), (void*)0
 	);
-
 }
 
 void PathsRenderer::clearpaths()

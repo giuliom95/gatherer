@@ -115,27 +115,29 @@ void SelectionStroke::setframesize(Vec2i size)
 	);
 }
 
-void SelectionStroke::addpoint(Vec3f pt, RenderData& rd)
+void SelectionStroke::addpoint(Vec3f pt, GatheredData& gd)
 {
 	Sphere s{pt, brushsize};
 	spheres.push_back(s);
 
-	PathsGroup& paths = rd.pathgroups[0];
-	unsigned npaths = paths.size();
-	
-	for(unsigned i = 0; i < npaths; ++i)
+	unsigned npaths = gd.pathlengths.size();
+	unsigned off = 0;
+
+	for(unsigned path_i = 0; path_i < npaths; ++path_i)
 	{
-		Path& path = paths[i];
-		for(Vec3h bounceh : path.points)
+		const unsigned nbounces = gd.pathlengths[path_i];
+		for(unsigned b_i = off; b_i < off + nbounces; b_i++)
 		{
+			Vec3h bounceh = gd.bouncepositions[b_i];
 			Vec3f bouncef = fromVec3h(bounceh);
 			float d = length(bouncef - pt);
 			if(d <= brushsize)
 			{
-				selectedpaths.insert(i);
+				selectedpaths.insert(path_i);
 				break;
 			}
 		}
+		off += nbounces;
 	}
 }
 

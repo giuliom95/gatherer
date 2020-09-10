@@ -10,7 +10,7 @@
 
 #include "utils.hpp"
 #include "camera.hpp"
-#include "gatherer.hpp"
+#include "gathereddata.hpp"
 
 #define SELECTIONSTROKE_DEFBRUSHSIZE 10
 
@@ -37,7 +37,7 @@ public:
 
 	std::set<unsigned> selectedpaths;
 
-	void addpoint(Vec3f pt, RenderData& rd);
+	void addpoint(Vec3f pt, GatheredData& gd);
 
 	void clearpoints();
 

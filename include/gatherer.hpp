@@ -44,14 +44,14 @@ public:
 	uint8_t 				currentpathbounces = 0;
 
 	Buffer<Vec3h>			luminance;
-	Buffer<uint8_t>			lenghts;
+	Buffer<uint8_t>			lengths;
 	Buffer<CameraSample>	camerasamples;
 
 	void reserve()
 	{
 		bouncespositions.data.reserve(maxgeom);
 		luminance.data.reserve(maxpaths);
-		lenghts.data.reserve(maxpaths);
+		lengths.data.reserve(maxpaths);
 		camerasamples.data.reserve(maxpaths);
 	}
 
@@ -66,9 +66,9 @@ public:
 		luminance.outfile = folder / "paths" / filename;
 		luminance.outstream.open(luminance.outfile);
 
-		std::sprintf(filename, "lenghts%02d.bin", ti);
-		lenghts.outfile = folder / "paths" / filename;
-		lenghts.outstream.open(lenghts.outfile);
+		std::sprintf(filename, "lengths%02d.bin", ti);
+		lengths.outfile = folder / "paths" / filename;
+		lengths.outstream.open(lengths.outfile);
 
 		std::sprintf(filename, "camerasamples%02d.bin", ti);
 		camerasamples.outfile = folder / "paths" / filename;
@@ -79,7 +79,7 @@ public:
 	{
 		bouncespositions.outstream.close();
 		luminance.outstream.close();
-		lenghts.outstream.close();
+		lengths.outstream.close();
 		camerasamples.outstream.close();
 	}
 };
@@ -113,7 +113,7 @@ public:
 			folderpath / "paths" / "luminance.bin"
 		};
 		boost::filesystem::ofstream len_ofs{
-			folderpath / "paths" / "lenghts.bin"
+			folderpath / "paths" / "lengths.bin"
 		};
 		boost::filesystem::ofstream cs_ofs{
 			folderpath / "paths" / "camerasamples.bin"
@@ -123,7 +123,7 @@ public:
 		{
 			db.bouncespositions.storechunk();
 			db.luminance.storechunk();
-			db.lenghts.storechunk();
+			db.lengths.storechunk();
 			db.camerasamples.storechunk();
 
 			db.closefiles();
@@ -132,12 +132,12 @@ public:
 
 			movefilecontents(db.bouncespositions.outfile, buf, bpos_ofs);
 			movefilecontents(db.luminance.outfile, buf, lum_ofs);
-			movefilecontents(db.lenghts.outfile, buf, len_ofs);
+			movefilecontents(db.lengths.outfile, buf, len_ofs);
 			movefilecontents(db.camerasamples.outfile, buf, cs_ofs);
 
 			boost::filesystem::remove(db.bouncespositions.outfile);
 			boost::filesystem::remove(db.luminance.outfile);
-			boost::filesystem::remove(db.lenghts.outfile);
+			boost::filesystem::remove(db.lengths.outfile);
 			boost::filesystem::remove(db.camerasamples.outfile);
 		}
 
@@ -161,15 +161,15 @@ public:
 	void finalizepath(unsigned tid, Vec3h luminance, CameraSample sample)
 	{
 		DataBlock& db = data[tid];
-		db.lenghts.data.push_back(db.currentpathbounces);
+		db.lengths.data.push_back(db.currentpathbounces);
 		db.currentpathbounces = 0;
 		db.luminance.data.push_back(luminance);
 		db.camerasamples.data.push_back(sample);
 
-		std::vector<uint8_t>& ld = db.lenghts.data;
+		std::vector<uint8_t>& ld = db.lengths.data;
 		if(ld.size() >= ld.capacity())
 		{
-			data[tid].lenghts.storechunk();
+			data[tid].lengths.storechunk();
 			data[tid].luminance.storechunk();
 			data[tid].camerasamples.storechunk();
 		}

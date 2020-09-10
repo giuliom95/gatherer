@@ -110,7 +110,7 @@ Application::Application()
 	mmb_pressed = false;
 	camera_key_pressed = false;
 
-	renderdata.disk_load_all("../data/renderdata");
+	gathereddata.loadall("../data/renderdata");
 }
 
 Application::~Application()
@@ -181,9 +181,9 @@ bool Application::loop()
 						pathsrenderer.removepaths(selectionstroke.selectedpaths);
 						selectionstroke.clearpoints();
 					}
-					selectionstroke.addpoint(clicked_worldpoint, renderdata);
+					selectionstroke.addpoint(clicked_worldpoint, gathereddata);
 					pathsrenderer.addpaths(selectionstroke.selectedpaths);
-					pathsrenderer.updaterenderlist(renderdata);
+					pathsrenderer.updaterenderlist(gathereddata);
 
 					lmb_pressed = true;
 				}

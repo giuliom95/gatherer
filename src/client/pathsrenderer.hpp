@@ -12,7 +12,7 @@
 #include "utils.hpp"
 #include "camera.hpp"
 
-#include "gatherer.hpp"
+#include "gathereddata.hpp"
 
 #define PATHSRENDERER_DEFPATHSALPHA 0.2f
 
@@ -30,7 +30,7 @@ public:
 
 	void clearpaths();
 
-	void updaterenderlist(RenderData& rd);
+	void updaterenderlist(GatheredData& rd);
 private:
 	GLuint vaoidx;
 	GLuint vboidx;
@@ -44,7 +44,7 @@ private:
 	std::set<unsigned> selectedpaths;
 
 	std::vector<GLint>		paths_firsts;
-	std::vector<GLsizei>	paths_lenghts;
+	std::vector<GLsizei>	paths_lengths;
 };
 
 #endif

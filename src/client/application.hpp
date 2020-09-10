@@ -11,6 +11,8 @@
 
 #include "camera.hpp"
 
+#include "gathereddata.hpp"
+
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
@@ -23,7 +25,7 @@ public:
 
 	void accountwindowresize();
 private:
-	RenderData renderdata;
+	GatheredData gathereddata;
 
 	GLFWwindow* window;
 	Vec2i framesize;
