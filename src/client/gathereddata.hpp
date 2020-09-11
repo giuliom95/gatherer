@@ -10,6 +10,7 @@ public:
 
 	std::vector<uint8_t> pathslength;
 	std::vector<Vec3h> bouncesposition;
+	std::vector<Vec3h> pathsluminance;
 
 	std::vector<unsigned> firstbounceindexes;
 
