@@ -11,6 +11,8 @@ public:
 	std::vector<uint8_t> pathlengths;
 	std::vector<Vec3h> bouncepositions;
 
+	std::vector<unsigned> firstbounceindexes;
+	
 	void loadall(const boost::filesystem::path& folder);
 };
 

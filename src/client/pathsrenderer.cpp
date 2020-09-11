@@ -84,30 +84,20 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 		return;
 	}
 
-	// Sorted set
-	std::vector<unsigned> sortedpathsidx(
-		selectedpaths.begin(), selectedpaths.end()
-	);
-	std::sort(sortedpathsidx.begin(), sortedpathsidx.end());
-	
 	std::vector<Vec3h*> offset_ptrs(npaths);
-	
-	unsigned j = 0;
-	unsigned g_off = 0;
-	unsigned off = 0;
-	for(unsigned i = 0; i < gd.pathlengths.size(); ++i)
-	{
-		const unsigned len = gd.pathlengths[i];
-		if(i == sortedpathsidx[j])
-		{
-			paths_firsts[j] = off;
-			paths_lengths[j] = len;
-			off += len;
 
-			offset_ptrs[j] = &(gd.bouncepositions[g_off]);
-			j++;
-		}
-		g_off += len;
+	unsigned off = 0;
+	unsigned i = 0;
+	for(unsigned pi : selectedpaths)
+	{
+		const unsigned firstbounce = gd.firstbounceindexes[pi];
+		const unsigned len = gd.pathlengths[pi];
+		paths_firsts[i] = off;
+		paths_lengths[i] = len;
+		offset_ptrs[i] = &(gd.bouncepositions[firstbounce]);
+		//LOG(info) << firstbounce << " " << off << " " << len;
+		off += len;
+		i++;
 	}
 
 	unsigned totalbytes = off * sizeof(Vec3h);
@@ -122,6 +112,7 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 			offset_ptrs[i]
 		);
 	}
+
 	glVertexAttribPointer(
 		0, 3, GL_HALF_FLOAT, 
 		GL_FALSE, 3 * sizeof(half), (void*)0

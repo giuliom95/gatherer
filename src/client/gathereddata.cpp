@@ -12,17 +12,28 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	boost::filesystem::ifstream lengths_ifs(lengths_fp);
 	boost::filesystem::ifstream positions_ifs(positions_fp);
 	
-	uintmax_t lenghts_bytesize   = boost::filesystem::file_size(lengths_fp);
-	uintmax_t positions_bytesize = boost::filesystem::file_size(positions_fp);
+	const unsigned lenghts_bytesize   = boost::filesystem::file_size(lengths_fp);
+	const unsigned positions_bytesize = boost::filesystem::file_size(positions_fp);
 
-	pathlengths.resize(lenghts_bytesize / sizeof(uint8_t));
-	bouncepositions.resize(positions_bytesize / sizeof(Vec3h));
+	const unsigned npaths = lenghts_bytesize / sizeof(uint8_t);
+	const unsigned nbounces = positions_bytesize / sizeof(Vec3h);
+
+	pathlengths.resize(npaths);
+	bouncepositions.resize(nbounces);
 
 	lengths_ifs.read((char*)pathlengths.data(), lenghts_bytesize);
 	positions_ifs.read((char*)bouncepositions.data(), positions_bytesize);
 
 	lengths_ifs.close();
 	positions_ifs.close();
+
+	firstbounceindexes.reserve(npaths);
+	unsigned off = 0;
+	for(uint8_t l : pathlengths)
+	{
+		firstbounceindexes.push_back(off);
+		off += l;
+	}
 
 	BOOST_LOG_TRIVIAL(info) << "Loaded all paths";
 }
