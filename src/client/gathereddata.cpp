@@ -18,18 +18,18 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	const unsigned npaths = lenghts_bytesize / sizeof(uint8_t);
 	const unsigned nbounces = positions_bytesize / sizeof(Vec3h);
 
-	pathlengths.resize(npaths);
-	bouncepositions.resize(nbounces);
+	pathslength.resize(npaths);
+	bouncesposition.resize(nbounces);
 
-	lengths_ifs.read((char*)pathlengths.data(), lenghts_bytesize);
-	positions_ifs.read((char*)bouncepositions.data(), positions_bytesize);
+	lengths_ifs.read((char*)pathslength.data(), lenghts_bytesize);
+	positions_ifs.read((char*)bouncesposition.data(), positions_bytesize);
 
 	lengths_ifs.close();
 	positions_ifs.close();
 
 	firstbounceindexes.reserve(npaths);
 	unsigned off = 0;
-	for(uint8_t l : pathlengths)
+	for(uint8_t l : pathslength)
 	{
 		firstbounceindexes.push_back(off);
 		off += l;

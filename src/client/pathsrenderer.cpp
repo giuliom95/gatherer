@@ -91,10 +91,10 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 	for(unsigned pi : selectedpaths)
 	{
 		const unsigned firstbounce = gd.firstbounceindexes[pi];
-		const unsigned len = gd.pathlengths[pi];
+		const unsigned len = gd.pathslength[pi];
 		paths_firsts[i] = off;
 		paths_lengths[i] = len;
-		offset_ptrs[i] = &(gd.bouncepositions[firstbounce]);
+		offset_ptrs[i] = &(gd.bouncesposition[firstbounce]);
 		//LOG(info) << firstbounce << " " << off << " " << len;
 		off += len;
 		i++;

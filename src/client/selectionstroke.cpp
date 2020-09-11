@@ -124,14 +124,14 @@ void SelectionStroke::addpoint(Vec3f pt, GatheredData& gd)
 	 * This works fine as it is but, if multithreading has to be implemented,
 	 * it can be done with the gd.firstbounceindexes vector.
 	 */ 
-	unsigned npaths = gd.pathlengths.size();
+	unsigned npaths = gd.pathslength.size();
 	unsigned off = 0;
 	for(unsigned path_i = 0; path_i < npaths; ++path_i)
 	{
-		const unsigned nbounces = gd.pathlengths[path_i];
+		const unsigned nbounces = gd.pathslength[path_i];
 		for(unsigned b_i = off; b_i < off + nbounces; b_i++)
 		{
-			Vec3h bounceh = gd.bouncepositions[b_i];
+			Vec3h bounceh = gd.bouncesposition[b_i];
 			Vec3f bouncef = fromVec3h(bounceh);
 			float d = length(bouncef - pt);
 			if(d <= brushsize)

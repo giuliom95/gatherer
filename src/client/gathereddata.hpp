@@ -8,11 +8,11 @@ class GatheredData
 public:
 	boost::filesystem::path datafolder;
 
-	std::vector<uint8_t> pathlengths;
-	std::vector<Vec3h> bouncepositions;
+	std::vector<uint8_t> pathslength;
+	std::vector<Vec3h> bouncesposition;
 
 	std::vector<unsigned> firstbounceindexes;
-	
+
 	void loadall(const boost::filesystem::path& folder);
 };
 
