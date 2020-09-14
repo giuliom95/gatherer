@@ -15,8 +15,8 @@ public:
 	void init(GatheredData& gd);
 	void render();
 	GLuint fbotex_id;
-private:
 	Vec2i rendersize;
+private:
 	std::vector<Vec3h> renderedimage;
 	GLuint renderedimagetex_id;
 

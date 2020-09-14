@@ -254,6 +254,18 @@ void Application::renderui()
 		);
 	ImGui::End();
 
+	ImGui::SetNextWindowSize({0,0});
+	ImGui::Begin("Render", nullptr);
+		ImGui::Image(
+			(void*)(intptr_t)imagerenderer.fbotex_id, 
+			{
+				(float)imagerenderer.rendersize[0], 
+				(float)imagerenderer.rendersize[1]
+			},
+			{0,1}, {1,0}
+		);
+	ImGui::End();
+
 	
 	ImGui::Begin("Paths options");
 		ImGui::SliderFloat(
