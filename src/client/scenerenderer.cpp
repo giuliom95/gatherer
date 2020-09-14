@@ -1,7 +1,5 @@
 #include "scenerenderer.hpp"
 
-#include "json.hpp"
-
 void SceneRenderer::init(Camera& cam)
 {
 	boost::filesystem::path json_path = "../data/renderdata/scene.json";

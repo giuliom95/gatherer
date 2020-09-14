@@ -42,4 +42,26 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	}
 
 	BOOST_LOG_TRIVIAL(info) << "Loaded all paths";
+
+	boost::filesystem::path json_path = folder / "scene.json";
+
+	nlohmann::json json_data;
+	boost::filesystem::ifstream json_file{json_path};
+	if(!json_file) 
+	{
+		LOG(fatal) <<
+			"Could not open \"" << json_path.string() << "\"";
+		throw std::runtime_error("Could not open scene file");
+	}
+	json_file >> json_data;
+	json_file.close();
+
+	rendersamples = json_data["render"]["spp"];
+
+	rendersize = Vec2i{
+		json_data["render"]["width"],
+		json_data["render"]["height"]
+	};
+
+	LOG(info) << rendersamples << " " << rendersize[0] << " " << rendersize[1];
 }

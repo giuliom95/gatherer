@@ -10,6 +10,8 @@
 #include "utils.hpp"
 #include "camera.hpp"
 
+#include "json.hpp"
+
 class Geometry
 {
 public:
