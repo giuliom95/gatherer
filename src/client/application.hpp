@@ -8,6 +8,7 @@
 #include "scenerenderer.hpp"
 #include "selectionstroke.hpp"
 #include "pathsrenderer.hpp"
+#include "imagerenderer.hpp"
 
 #include "camera.hpp"
 
@@ -34,6 +35,7 @@ private:
 	SceneRenderer	scenerenderer;
 	SelectionStroke selectionstroke;
 	PathsRenderer	pathsrenderer;
+	ImageRenderer	imagerenderer;
 
 	Camera camera;
 	ImGuiIO* imgui_io;

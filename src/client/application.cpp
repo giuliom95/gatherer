@@ -98,11 +98,13 @@ Application::Application()
 	camera.fov   = 10;
 	camera.aspect = (float)DEF_WINDOW_W / DEF_WINDOW_H;
 
+	gathereddata.loadall("../data/renderdata");
+
 	scenerenderer.init(camera);
 	axesvisualizer.init();
 	selectionstroke.init();
 	pathsrenderer.init();
-
+	imagerenderer.init(gathereddata);
 
 	cursor_old_pos = get_cursor_pos(window);
 	lmb_pressed = false;
@@ -110,7 +112,6 @@ Application::Application()
 	mmb_pressed = false;
 	camera_key_pressed = false;
 
-	gathereddata.loadall("../data/renderdata");
 }
 
 Application::~Application()
@@ -229,6 +230,7 @@ void Application::render()
 	pathsrenderer.render(camera, scenerenderer.texid_fbodepth, framesize);
 
 	axesvisualizer.render(camera);
+	imagerenderer.render();
 
 	renderui();
 

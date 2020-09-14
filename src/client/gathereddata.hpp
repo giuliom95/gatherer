@@ -16,6 +16,7 @@ public:
 	std::vector<uint8_t> pathslength;
 	std::vector<Vec3h> bouncesposition;
 	std::vector<Vec3h> pathsluminance;
+	std::vector<Vec2h> pathscamerasamples;
 
 	std::vector<unsigned> firstbounceindexes;
 

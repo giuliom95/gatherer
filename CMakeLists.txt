@@ -48,6 +48,7 @@ include(FindGLEW)
 set( GATHERER_CLIENT_SOURCES 
   src/client/utils.cpp
   src/client/gathereddata.cpp
+  src/client/imagerenderer.cpp
   src/client/pathsrenderer.cpp
   src/client/axesvisualizer.cpp
   src/client/scenerenderer.cpp

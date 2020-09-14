@@ -10,10 +10,13 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 		folder / "bounces" / "positions.bin";
 	const boost::filesystem::path luminance_fp = 
 		folder / "paths" / "luminance.bin";
+	const boost::filesystem::path camerasamples_fp = 
+		folder / "paths" / "camerasamples.bin";
 
 	boost::filesystem::ifstream lengths_ifs(lengths_fp);
 	boost::filesystem::ifstream positions_ifs(positions_fp);
 	boost::filesystem::ifstream luminance_ifs(luminance_fp);
+	boost::filesystem::ifstream camerasamples_ifs(camerasamples_fp);
 	
 	const unsigned lenghts_bytesize   = boost::filesystem::file_size(lengths_fp);
 	const unsigned positions_bytesize = boost::filesystem::file_size(positions_fp);
@@ -24,14 +27,17 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	pathslength.resize(npaths);
 	bouncesposition.resize(nbounces);
 	pathsluminance.resize(npaths);
+	pathscamerasamples.resize(npaths);
 
 	lengths_ifs.read((char*)pathslength.data(), lenghts_bytesize);
 	positions_ifs.read((char*)bouncesposition.data(), positions_bytesize);
 	luminance_ifs.read((char*)pathsluminance.data(), npaths * sizeof(Vec3h));
+	camerasamples_ifs.read((char*)pathscamerasamples.data(), npaths * sizeof(Vec2h));
 
 	lengths_ifs.close();
 	positions_ifs.close();
 	luminance_ifs.close();
+	camerasamples_ifs.close();
 
 	firstbounceindexes.reserve(npaths);
 	unsigned off = 0;
