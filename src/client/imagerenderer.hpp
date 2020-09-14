@@ -16,6 +16,7 @@ public:
 	void render();
 	GLuint fbotex_id;
 	Vec2i rendersize;
+	float exposure;
 private:
 	std::vector<Vec3h> renderedimage;
 	GLuint renderedimagetex_id;
@@ -23,6 +24,7 @@ private:
 	GLuint shaprog_id;
 	GLuint fbo_id;
 	GLuint locid_renderedimagetex;
+	GLuint locid_exposure;
 };
 
 #endif

@@ -4,10 +4,11 @@ in vec2 uv;
 out vec3 out_color;
 
 uniform sampler2D renderedimagetex;
+uniform float exposure;
 
 void main()
 {
-	float a = pow(2, 2.47393f);
+	float a = pow(2, exposure + 2.47393f);
 	float b = 84.66f;
 	float invGamma = 1 / 2.2f;
 	vec3 hdr = texture(renderedimagetex, uv).rgb;

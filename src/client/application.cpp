@@ -264,6 +264,9 @@ void Application::renderui()
 			},
 			{0,1}, {1,0}
 		);
+		ImGui::SliderFloat(
+			"Exposure", &(imagerenderer.exposure), -2, 10
+		);
 	ImGui::End();
 
 	
@@ -274,12 +277,14 @@ void Application::renderui()
 		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
 	ImGui::End();
 	
+	/*
 	ImGui::Begin("Filters");
 		if(ImGui::Button("Clear paths"))
 		{
 			pathsrenderer.clearpaths();
 		}
 	ImGui::End();
+	*/
 
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{

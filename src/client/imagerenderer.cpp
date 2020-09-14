@@ -69,6 +69,9 @@ void ImageRenderer::init(GatheredData& gd)
 
 	locid_renderedimagetex = 
 		glGetUniformLocation(shaprog_id, "renderedimagetex");
+
+	exposure = 0;
+	locid_exposure = glGetUniformLocation(shaprog_id, "exposure");
 }
 
 void ImageRenderer::render()
@@ -80,6 +83,8 @@ void ImageRenderer::render()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, renderedimagetex_id);
 	glUniform1i(locid_renderedimagetex, 0);
+
+	glUniform1f(locid_exposure, exposure);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
