@@ -95,7 +95,7 @@ Application::Application()
 	camera.r = 20;
 	camera.znear = 1;
 	camera.zfar  = 2000;
-	camera.fov   = 10;
+	camera.fov   = 40;
 	camera.aspect = (float)DEF_WINDOW_W / DEF_WINDOW_H;
 
 	gathereddata.loadall("../data/renderdata");

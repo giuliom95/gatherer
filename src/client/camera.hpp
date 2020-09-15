@@ -43,7 +43,7 @@ public:
 
 	Mat4f persp()
 	{
-		const float tg = tanf(fov);
+		const float tg = tanf(PI_OVER_180*fov);
 		const float sx = 2 / (aspect*tg);
 		const float sy = 2 / tg;
 

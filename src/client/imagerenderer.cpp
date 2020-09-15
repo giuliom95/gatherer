@@ -33,27 +33,30 @@ void ImageRenderer::init(GatheredData& gd)
 
 	// Gather luminance into texture
 	renderedimage = std::vector<Vec3h>(rendersize[0]*rendersize[1]);
-	std::vector<unsigned> spp(rendersize[0]*rendersize[1], 0);
+	//std::vector<unsigned> spp(rendersize[0]*rendersize[1], 0);
 	for(unsigned pi = 0; pi < gd.pathscamerasamples.size(); ++pi)
 	{
-		Vec2h& origsample = gd.pathscamerasamples[pi];
-		Vec2h sample = (half)0.5*(origsample + (half)1);
-		if(sample[0] < 0 || sample[0] >= 1 || sample[1] < 0 || sample[1] >= 1)
-			continue;
-		Vec2i ppos{(int)(rendersize[0]*sample[0]), (int)(rendersize[1]*sample[1])};
-		//LOG(info) << origsample[0] << " " << origsample[1] << " | " << sample[0] << " " << sample[1] << " | " << ppos[0] << " " << ppos[1] << " | " << (ppos[0] + rendersize[0]*ppos[1]);
+		Vec2h& sample = gd.pathscamerasamples[pi];
+		Vec2i ppos{
+			(int)(rendersize[0]*sample[0]),
+			(int)(rendersize[1]*sample[1])
+		};
+		if(ppos[0] == rendersize[0]) ppos[0]--;
+		if(ppos[1] == rendersize[1]) ppos[1]--;
+		
 		const unsigned idx = ppos[0] + rendersize[0]*ppos[1];
 		Vec3h& p = renderedimage[idx];
 		p = p + gd.pathsluminance[pi];
-		spp[idx]++;
+		//spp[idx]++;
 	}
 	LOG(info) << "Accumulated paths";
-	for(unsigned idx = 0; idx < spp.size(); idx++)
+	for(unsigned idx = 0; idx < renderedimage.size(); idx++)
 	{
 		Vec3h& p = renderedimage[idx];
-		//LOG(info) << p;
-		p = (half)(1.0f / spp[idx]) * p;
-		//LOG(info) << spp[idx] << " " << p;
+		////LOG(info) << p;
+		//p = (half)(1.0f / spp[idx]) * p;
+		////LOG(info) << spp[idx] << " " << p;
+		p = p / (half)gd.rendersamples;
 	}
 
 	glGenTextures(1, &renderedimagetex_id);
