@@ -265,8 +265,7 @@ void Application::renderui()
 			{
 				(float)imagerenderer.rendersize[0], 
 				(float)imagerenderer.rendersize[1]
-			},
-			{0,1}, {1,0}
+			}
 		);
 		ImGui::SliderFloat(
 			"Exposure", &(imagerenderer.exposure), -2, 10

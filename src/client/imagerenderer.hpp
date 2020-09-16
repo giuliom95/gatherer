@@ -20,6 +20,8 @@ public:
 	float exposure;
 private:
 	std::vector<Vec3h> renderedimage;
+	std::vector<uint8_t> pathmask;
+
 	GLuint renderedimagetex_id;
 
 	GLuint shaprog_id;

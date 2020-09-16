@@ -36,7 +36,7 @@ void ImageRenderer::init(GatheredData& gd)
 	for(unsigned pi = 0; pi < gd.pathscamerasamples.size(); ++pi)
 	{
 		CameraSample& s = gd.pathscamerasamples[pi];
-		const unsigned idx = s.i + rendersize[0]*(rendersize[1]-s.j-1);
+		const unsigned idx = s.i + rendersize[0]*s.j;
 		Vec3h& p = renderedimage[idx];
 		p = p + gd.pathsluminance[pi];
 	}
@@ -58,7 +58,7 @@ void ImageRenderer::init(GatheredData& gd)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	std::vector<uint8_t> pathmask(rendersize[0]*rendersize[1], 255);
+	pathmask = std::vector<uint8_t>(rendersize[0]*rendersize[1], 255);
 	glGenTextures(1, &pathmasktex_id);
 	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);
 	glTexImage2D(
@@ -82,7 +82,19 @@ void ImageRenderer::init(GatheredData& gd)
 
 void ImageRenderer::updatepathmask(GatheredData& gd)
 {
+	for(uint8_t& p : pathmask) p = 0;
+	for(unsigned pi : gd.selectedpaths)
+	{
+		CameraSample& cs = gd.pathscamerasamples[pi];
+		pathmask[cs.i + gd.rendersize[0]*cs.j] = 255;
+	}
 	
+	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);
+	glTexSubImage2D(
+		GL_TEXTURE_2D, 0, 0, 0, rendersize[0], rendersize[1],
+		GL_RED, GL_UNSIGNED_BYTE, pathmask.data()
+	);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
