@@ -179,11 +179,12 @@ bool Application::loop()
 					if(!lmb_pressed)
 					{
 						// First point so remove old stuff
-						pathsrenderer.removepaths(selectionstroke.selectedpaths);
+						gathereddata.removepaths(selectionstroke.selectedpaths);
 						selectionstroke.clearpoints();
 					}
 					selectionstroke.addpoint(clicked_worldpoint, gathereddata);
-					pathsrenderer.addpaths(selectionstroke.selectedpaths);
+					gathereddata.addpaths(selectionstroke.selectedpaths);
+					imagerenderer.updatepathmask(gathereddata);
 					pathsrenderer.updaterenderlist(gathereddata);
 
 					lmb_pressed = true;
@@ -227,7 +228,10 @@ void Application::render()
 		framesize
 	);
 	scenerenderer.render2();
-	pathsrenderer.render(camera, scenerenderer.texid_fbodepth, framesize);
+	pathsrenderer.render(
+		camera, scenerenderer.texid_fbodepth, 
+		framesize, gathereddata
+	);
 
 	axesvisualizer.render(camera);
 	imagerenderer.render();

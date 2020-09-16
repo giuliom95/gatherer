@@ -14,6 +14,7 @@ class ImageRenderer
 public:
 	void init(GatheredData& gd);
 	void render();
+	void updatepathmask(GatheredData& gd);
 	GLuint fbotex_id;
 	Vec2i rendersize;
 	float exposure;

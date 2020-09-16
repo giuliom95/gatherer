@@ -20,17 +20,15 @@ class PathsRenderer
 {
 public:
 	void init();
-	void render(Camera& cam, GLuint scenedepthtex, Vec2i framesize);
+	void render(
+		Camera& cam, 
+		GLuint scenedepthtex,
+		Vec2i framesize,
+		GatheredData& gd
+	);
 	
 	float pathsalpha;
 	bool enabledepth;
-	
-	std::set<unsigned> selectedpaths;
-
-	void addpaths(std::set<unsigned>& paths);
-	void removepaths(std::set<unsigned>& paths);
-
-	void clearpaths();
 
 	void updaterenderlist(GatheredData& rd);
 	
@@ -43,7 +41,6 @@ private:
 	GLuint locid_enabledepth;
 	GLuint locid_scenedepth;
 	GLuint locid_framesize;
-
 
 	std::vector<GLint>		paths_firsts;
 	std::vector<GLsizei>	paths_lengths;

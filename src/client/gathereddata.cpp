@@ -2,6 +2,8 @@
 
 void GatheredData::loadall(const boost::filesystem::path& folder)
 {
+	selectedpaths = std::set<unsigned>();
+	
 	datafolder = folder;
 
 	const boost::filesystem::path lengths_fp = 
@@ -70,4 +72,15 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	};
 
 	LOG(info) << rendersamples << " " << rendersize[0] << " " << rendersize[1];
+}
+
+void GatheredData::addpaths(std::set<unsigned>& paths)
+{
+	selectedpaths.insert(paths.begin(), paths.end());
+}
+
+void GatheredData::removepaths(std::set<unsigned>& paths)
+{
+	for(unsigned p : paths)
+		selectedpaths.erase(p);
 }

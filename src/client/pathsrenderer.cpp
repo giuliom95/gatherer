@@ -7,8 +7,6 @@ void PathsRenderer::init()
 	glGenBuffers(1, &vboidx);
 	glEnableVertexAttribArray(0);
 	LOG(info) << "Created VAO";
-	
-	selectedpaths = std::set<unsigned>();
 
 	shaprog_idx = disk_load_shader_program(
 		"../src/client/shaders/paths.vert.glsl",
@@ -26,8 +24,12 @@ void PathsRenderer::init()
 	locid_framesize = glGetUniformLocation(shaprog_idx, "framesize");
 }
 
-void PathsRenderer::render(Camera& cam, GLuint scenedepthtex, Vec2i framesize)
-{
+void PathsRenderer::render(
+	Camera& cam, 
+	GLuint scenedepthtex,
+	Vec2i framesize,
+	GatheredData& gd
+) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
@@ -54,26 +56,15 @@ void PathsRenderer::render(Camera& cam, GLuint scenedepthtex, Vec2i framesize)
 		GL_LINE_STRIP, 
 		paths_firsts.data(),
 		paths_lengths.data(),
-		selectedpaths.size()
+		gd.selectedpaths.size()
 	);
-}
-
-void PathsRenderer::addpaths(std::set<unsigned>& paths)
-{
-	selectedpaths.insert(paths.begin(), paths.end());
-}
-
-void PathsRenderer::removepaths(std::set<unsigned>& paths)
-{
-	for(unsigned p : paths)
-		selectedpaths.erase(p);
 }
 
 void PathsRenderer::updaterenderlist(GatheredData& gd)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
 
-	const unsigned npaths = selectedpaths.size();
+	const unsigned npaths = gd.selectedpaths.size();
 
 	paths_firsts  = std::vector<GLint>(npaths);
 	paths_lengths = std::vector<GLsizei>(npaths);
@@ -88,7 +79,7 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 
 	unsigned off = 0;
 	unsigned i = 0;
-	for(unsigned pi : selectedpaths)
+	for(unsigned pi : gd.selectedpaths)
 	{
 		const unsigned firstbounce = gd.firstbounceindexes[pi];
 		const unsigned len = gd.pathslength[pi];
@@ -117,9 +108,4 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 		0, 3, GL_HALF_FLOAT, 
 		GL_FALSE, 3 * sizeof(half), (void*)0
 	);
-}
-
-void PathsRenderer::clearpaths()
-{
-	selectedpaths.clear();
 }

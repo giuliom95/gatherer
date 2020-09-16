@@ -1,6 +1,8 @@
 #ifndef _GATHEREDDATA_HPP_
 #define _GATHEREDDATA_HPP_
 
+#include <set>
+
 #include "utils.hpp"
 
 #include "json.hpp"
@@ -20,6 +22,10 @@ public:
 	std::vector<CameraSample> pathscamerasamples;
 
 	std::vector<unsigned> firstbounceindexes;
+
+	std::set<unsigned> selectedpaths;
+	void addpaths(std::set<unsigned>& paths);
+	void removepaths(std::set<unsigned>& paths);
 
 	void loadall(const boost::filesystem::path& folder);
 };

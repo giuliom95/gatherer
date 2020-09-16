@@ -80,6 +80,12 @@ void ImageRenderer::init(GatheredData& gd)
 	locid_exposure = glGetUniformLocation(shaprog_id, "exposure");
 }
 
+void ImageRenderer::updatepathmask(GatheredData& gd)
+{
+	
+}
+
+
 void ImageRenderer::render()
 {
 	glUseProgram(shaprog_id);
