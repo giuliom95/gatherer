@@ -23,7 +23,9 @@ private:
 
 	GLuint shaprog_id;
 	GLuint fbo_id;
+	GLuint pathmasktex_id;
 	GLuint locid_renderedimagetex;
+	GLuint locid_pathmasktex;
 	GLuint locid_exposure;
 };
 

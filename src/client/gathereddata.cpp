@@ -32,7 +32,7 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	lengths_ifs.read((char*)pathslength.data(), lenghts_bytesize);
 	positions_ifs.read((char*)bouncesposition.data(), positions_bytesize);
 	luminance_ifs.read((char*)pathsluminance.data(), npaths * sizeof(Vec3h));
-	camerasamples_ifs.read((char*)pathscamerasamples.data(), npaths * sizeof(Vec2h));
+	camerasamples_ifs.read((char*)pathscamerasamples.data(), npaths * sizeof(CameraSample));
 
 	lengths_ifs.close();
 	positions_ifs.close();

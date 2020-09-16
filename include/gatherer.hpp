@@ -10,6 +10,7 @@
 class CameraSample
 {
 public:
+	uint16_t i, j;
 	half u, v;
 };
 

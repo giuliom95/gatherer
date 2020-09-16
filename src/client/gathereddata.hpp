@@ -4,6 +4,7 @@
 #include "utils.hpp"
 
 #include "json.hpp"
+#include "gatherer.hpp"
 
 class GatheredData
 {
@@ -16,7 +17,7 @@ public:
 	std::vector<uint8_t> pathslength;
 	std::vector<Vec3h> bouncesposition;
 	std::vector<Vec3h> pathsluminance;
-	std::vector<Vec2h> pathscamerasamples;
+	std::vector<CameraSample> pathscamerasamples;
 
 	std::vector<unsigned> firstbounceindexes;
 

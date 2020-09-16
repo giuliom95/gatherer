@@ -24,6 +24,8 @@ public:
 	
 	float pathsalpha;
 	bool enabledepth;
+	
+	std::set<unsigned> selectedpaths;
 
 	void addpaths(std::set<unsigned>& paths);
 	void removepaths(std::set<unsigned>& paths);
@@ -31,6 +33,7 @@ public:
 	void clearpaths();
 
 	void updaterenderlist(GatheredData& rd);
+	
 private:
 	GLuint vaoidx;
 	GLuint vboidx;
@@ -41,7 +44,6 @@ private:
 	GLuint locid_scenedepth;
 	GLuint locid_framesize;
 
-	std::set<unsigned> selectedpaths;
 
 	std::vector<GLint>		paths_firsts;
 	std::vector<GLsizei>	paths_lengths;
