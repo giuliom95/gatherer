@@ -134,17 +134,17 @@ bool Application::loop()
 
 		if(camera_key_pressed)
 		{
-			mouse_camera_event(
+			mustrenderviewport |= mouse_camera_event(
 				GLFW_MOUSE_BUTTON_LEFT, lmb_pressed,
 				window, cursor_old_pos, rotate_camera, camera
 			);
 
-			mouse_camera_event(
+			mustrenderviewport |= mouse_camera_event(
 				GLFW_MOUSE_BUTTON_RIGHT, rmb_pressed,
 				window, cursor_old_pos, dolly_camera, camera
 			);
 
-			mouse_camera_event (
+			mustrenderviewport |= mouse_camera_event (
 				GLFW_MOUSE_BUTTON_MIDDLE, mmb_pressed,
 				window, cursor_old_pos, truckboom_camera, camera
 			);
@@ -181,6 +181,8 @@ bool Application::loop()
 					pathsrenderer.updaterenderlist(gathereddata);
 
 					lmb_pressed = true;
+
+					mustrenderviewport = true;
 				}
 			}
 			else
@@ -205,6 +207,8 @@ void Application::accountwindowresize()
 	selectionstroke.setframesize(framesize);
 
 	camera.aspect = (float)framesize[0] / framesize[1];
+
+	mustrenderviewport = true;
 }
 
 void Application::render()
@@ -212,19 +216,24 @@ void Application::render()
 	glViewport(0, 0, framesize[0], framesize[1]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	scenerenderer.render1(camera);
-	selectionstroke.render(
-		camera,  
-		scenerenderer.fbo_id, 
-		scenerenderer.texid_fbodepth,
-		scenerenderer.texid_fbobeauty,
-		framesize
-	);
-	pathsrenderer.render(
-		camera, scenerenderer.fbo_id,
-		scenerenderer.texid_fbodepth, 
-		framesize, gathereddata
-	);
+	if(mustrenderviewport)
+	{
+		scenerenderer.render1(camera);
+		selectionstroke.render(
+			camera,  
+			scenerenderer.fbo_id, 
+			scenerenderer.texid_fbodepth,
+			scenerenderer.texid_fbobeauty,
+			framesize
+		);
+		pathsrenderer.render(
+			camera, scenerenderer.fbo_id,
+			scenerenderer.texid_fbodepth, 
+			framesize, gathereddata
+		);
+
+		mustrenderviewport = false;
+	}
 	scenerenderer.render2();
 
 	axesvisualizer.render(camera);
@@ -268,10 +277,12 @@ void Application::renderui()
 
 	
 	ImGui::Begin("Paths options");
-		ImGui::SliderFloat(
+		mustrenderviewport |= ImGui::SliderFloat(
 			"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
 		);
-		ImGui::Checkbox("Depth test", &(pathsrenderer.enabledepth));
+		mustrenderviewport |= ImGui::Checkbox(
+			"Depth test", &(pathsrenderer.enabledepth)
+		);
 	ImGui::End();
 	
 	/*

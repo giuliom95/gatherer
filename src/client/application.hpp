@@ -46,6 +46,8 @@ private:
 	bool mmb_pressed;
 	bool camera_key_pressed;
 
+	bool mustrenderviewport = true;
+
 	void render();
 	void renderui();
 
