@@ -7,5 +7,6 @@ uniform sampler2D beautytex;
 
 void main()
 {
-	out_color = texture(beautytex, uv);
+	out_color.rgb = texture(beautytex, uv).rgb;
+	out_color.a = 1;
 }

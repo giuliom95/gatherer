@@ -227,11 +227,12 @@ void Application::render()
 		scenerenderer.texid_fbobeauty,
 		framesize
 	);
-	scenerenderer.render2();
 	pathsrenderer.render(
-		camera, scenerenderer.texid_fbodepth, 
+		camera, scenerenderer.fbo_id,
+		scenerenderer.texid_fbodepth, 
 		framesize, gathereddata
 	);
+	scenerenderer.render2();
 
 	axesvisualizer.render(camera);
 	imagerenderer.render();

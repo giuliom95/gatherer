@@ -21,7 +21,8 @@ class PathsRenderer
 public:
 	void init();
 	void render(
-		Camera& cam, 
+		Camera& cam,
+		GLuint fbo,
 		GLuint scenedepthtex,
 		Vec2i framesize,
 		GatheredData& gd

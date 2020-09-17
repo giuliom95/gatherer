@@ -26,11 +26,12 @@ void PathsRenderer::init()
 
 void PathsRenderer::render(
 	Camera& cam, 
+	GLuint fbo,
 	GLuint scenedepthtex,
 	Vec2i framesize,
 	GatheredData& gd
 ) {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
 	glLineWidth(1);
