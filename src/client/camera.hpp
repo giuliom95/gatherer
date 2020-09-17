@@ -6,16 +6,16 @@
 class Camera
 {
 public:
-	Vec3f focus;
-	float pitch;
-	float yaw;
-	float r;
+	Vec3f focus = Vec3f();
+	float pitch = 0;
+	float yaw = 0;
+	float r = 20;
 
-	float fov;
-	float zfar;
-	float znear;
+	float fov = 40;
+	float zfar = 2000;
+	float znear = 1;
 
-	float aspect;
+	float aspect = 1;
 
 	Mat4f w2c()
 	{
