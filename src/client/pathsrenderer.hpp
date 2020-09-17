@@ -28,6 +28,8 @@ public:
 		GatheredData& gd
 	);
 	
+	bool enablerendering;
+
 	float pathsalpha;
 	bool enabledepth;
 

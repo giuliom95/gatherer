@@ -225,11 +225,14 @@ void Application::render()
 			scenerenderer.texid_fbobeauty,
 			framesize
 		);
-		pathsrenderer.render(
-			camera, scenerenderer.fbo_id,
-			scenerenderer.texid_fbodepth, 
-			framesize, gathereddata
-		);
+		if(pathsrenderer.enablerendering)
+		{
+			pathsrenderer.render(
+				camera, scenerenderer.fbo_id,
+				scenerenderer.texid_fbodepth, 
+				framesize, gathereddata
+			);
+		}
 
 		mustrenderviewport = false;
 	}
@@ -280,12 +283,19 @@ void Application::renderui()
 
 	
 	ImGui::Begin("Paths options");
-		mustrenderviewport |= ImGui::SliderFloat(
-			"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
-		);
 		mustrenderviewport |= ImGui::Checkbox(
-			"Depth test", &(pathsrenderer.enabledepth)
+			"Render", &(pathsrenderer.enablerendering)
 		);
+
+		if(pathsrenderer.enablerendering)
+		{
+			mustrenderviewport |= ImGui::SliderFloat(
+				"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
+			);
+			mustrenderviewport |= ImGui::Checkbox(
+				"Depth test", &(pathsrenderer.enabledepth)
+			);
+		}
 	ImGui::End();
 	
 	/*

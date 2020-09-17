@@ -13,6 +13,8 @@ void PathsRenderer::init()
 		"../src/client/shaders/paths.frag.glsl"
 	);
 
+	enablerendering = true;
+
 	enabledepth = true;
 
 	locid_camvpmat = glGetUniformLocation(shaprog_idx, "vpmat");
@@ -63,6 +65,7 @@ void PathsRenderer::render(
 
 void PathsRenderer::updaterenderlist(GatheredData& gd)
 {
+	glBindVertexArray(vaoidx);
 	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
 
 	const unsigned npaths = gd.selectedpaths.size();
