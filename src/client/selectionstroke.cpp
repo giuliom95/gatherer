@@ -126,7 +126,7 @@ void SelectionStroke::findbounces(GatheredData& gd)
 	/*
 	 * This works fine as it is but, if multithreading has to be implemented,
 	 * it can be done with the gd.firstbounceindexes vector.
-	 */ 
+	 * 
 	unsigned npaths = gd.pathslength.size();
 	unsigned off = 0;
 	for(unsigned path_i = 0; path_i < npaths; ++path_i)
@@ -148,6 +148,59 @@ void SelectionStroke::findbounces(GatheredData& gd)
 		}
 		off += nbounces;
 	}
+	*/
+
+	const unsigned nthreads = std::thread::hardware_concurrency();
+	std::vector<std::thread> threads(nthreads);
+
+	const unsigned npaths = gd.pathslength.size();
+
+	// Number of Paths Per Thread
+	const unsigned nppt = npaths / nthreads;
+
+	std::vector<std::set<unsigned>> threadselectedpaths(nthreads);
+
+	for(unsigned ti = 0; ti < nthreads; ++ti)
+	{
+		threads[ti] = std::thread(
+			[this, &gd, &threadselectedpaths, ti, nppt](){
+				
+				for(
+					unsigned path_i = ti * nppt; 
+					path_i < (ti + 1)*nppt - 1; 
+					++path_i
+				){
+					const unsigned nbounces = gd.pathslength[path_i];
+					const unsigned off = gd.firstbounceindexes[path_i];
+					for(unsigned b_i = off; b_i < off + nbounces; b_i++)
+					{
+						Vec3h bounceh = gd.bouncesposition[b_i];
+						Vec3f bouncef = fromVec3h(bounceh);
+						for(Sphere& s : spheres)
+						{
+							float d = length(bouncef - s.center);
+							if(d <= s.radius)
+							{
+								threadselectedpaths[ti].insert(path_i);
+								break;
+							}
+						}
+					}
+				}
+			}
+		);
+	}
+
+	for(std::thread& th : threads)
+	{
+		th.join();
+	}
+
+	for(std::set<unsigned> paths : threadselectedpaths)
+	{
+		selectedpaths.insert(paths.begin(), paths.end());
+	}
+
 }
 
 void SelectionStroke::clearpoints()

@@ -2,6 +2,7 @@
 #define _SELECTIONSTROKE_HPP_
 
 #include <set>
+#include <thread>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
