@@ -32,6 +32,7 @@ void ImageRenderer::init(GatheredData& gd)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Gather luminance into texture
+	LOG(info) << "Render size: " << rendersize;
 	renderedimage = std::vector<Vec3h>(rendersize[0]*rendersize[1]);
 	for(unsigned pi = 0; pi < gd.pathscamerasamples.size(); ++pi)
 	{
@@ -78,6 +79,9 @@ void ImageRenderer::init(GatheredData& gd)
 
 	exposure = 0;
 	locid_exposure = glGetUniformLocation(shaprog_id, "exposure");
+
+	bgcolor = Vec3f{1,0,1};
+	locid_bgcolor = glGetUniformLocation(shaprog_id, "bgcolor");
 }
 
 void ImageRenderer::updatepathmask(GatheredData& gd)
@@ -113,6 +117,7 @@ void ImageRenderer::render()
 	glUniform1i(locid_pathmasktex, 1);
 
 	glUniform1f(locid_exposure, exposure);
+	glUniform3f(locid_bgcolor, bgcolor[0], bgcolor[1], bgcolor[2]);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

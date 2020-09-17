@@ -18,6 +18,7 @@ public:
 	GLuint fbotex_id;
 	Vec2i rendersize;
 	float exposure;
+	Vec3f bgcolor;
 private:
 	std::vector<Vec3h> renderedimage;
 	std::vector<uint8_t> pathmask;
@@ -30,6 +31,7 @@ private:
 	GLuint locid_renderedimagetex;
 	GLuint locid_pathmasktex;
 	GLuint locid_exposure;
+	GLuint locid_bgcolor;
 };
 
 #endif

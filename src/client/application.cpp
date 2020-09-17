@@ -201,7 +201,6 @@ bool Application::loop()
 void Application::accountwindowresize()
 {
 	glfwGetFramebufferSize(window, &framesize[0], &framesize[1]);
-	LOG(info) << framesize[0] << " " << framesize[1];
 
 	scenerenderer.setframesize(framesize);
 	selectionstroke.setframesize(framesize);
@@ -272,6 +271,10 @@ void Application::renderui()
 		);
 		ImGui::SliderFloat(
 			"Exposure", &(imagerenderer.exposure), -2, 10
+		);
+
+		ImGui::ColorEdit3(
+			"Background color", (float*)&(imagerenderer.bgcolor)
 		);
 	ImGui::End();
 

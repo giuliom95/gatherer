@@ -6,6 +6,7 @@ out vec3 out_color;
 uniform sampler2D renderedimagetex;
 uniform sampler2D pathmasktex;
 uniform float exposure;
+uniform vec3 bgcolor;
 
 void main()
 {
@@ -16,5 +17,7 @@ void main()
 	vec3 hdr = texture(renderedimagetex, uv).rgb;
 	out_color = clamp(b*pow(a*hdr, vec3(invGamma)), 0.0f, 255.0f) / 255.0f;
 
-	out_color *= texture(pathmasktex, uv).r;
+	float pathmask = texture(pathmasktex, uv).r;
+	if(pathmask == 0)
+		out_color = bgcolor;
 }
