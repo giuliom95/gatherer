@@ -57,6 +57,8 @@ private:
 	void configureogl();
 	void initimgui();
 
+	void updateselectedpaths();
+
 	static void windowresize(GLFWwindow* window, int width, int height);
 };
 

@@ -37,7 +37,9 @@ public:
 
 	std::set<unsigned> selectedpaths;
 
-	void addpoint(Vec3f pt, GatheredData& gd);
+	void addpoint(Vec3f pt);
+
+	void findbounces(GatheredData& gd);
 
 	void clearpoints();
 

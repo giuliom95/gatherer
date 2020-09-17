@@ -115,11 +115,14 @@ void SelectionStroke::setframesize(Vec2i size)
 	);
 }
 
-void SelectionStroke::addpoint(Vec3f pt, GatheredData& gd)
+void SelectionStroke::addpoint(Vec3f pt)
 {
 	Sphere s{pt, brushsize};
 	spheres.push_back(s);
+}
 
+void SelectionStroke::findbounces(GatheredData& gd)
+{
 	/*
 	 * This works fine as it is but, if multithreading has to be implemented,
 	 * it can be done with the gd.firstbounceindexes vector.
@@ -133,11 +136,14 @@ void SelectionStroke::addpoint(Vec3f pt, GatheredData& gd)
 		{
 			Vec3h bounceh = gd.bouncesposition[b_i];
 			Vec3f bouncef = fromVec3h(bounceh);
-			float d = length(bouncef - pt);
-			if(d <= brushsize)
+			for(Sphere& s : spheres)
 			{
-				selectedpaths.insert(path_i);
-				break;
+				float d = length(bouncef - s.center);
+				if(d <= s.radius)
+				{
+					selectedpaths.insert(path_i);
+					break;
+				}
 			}
 		}
 		off += nbounces;

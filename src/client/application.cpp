@@ -175,10 +175,8 @@ bool Application::loop()
 						gathereddata.removepaths(selectionstroke.selectedpaths);
 						selectionstroke.clearpoints();
 					}
-					selectionstroke.addpoint(clicked_worldpoint, gathereddata);
-					gathereddata.addpaths(selectionstroke.selectedpaths);
-					imagerenderer.updatepathmask(gathereddata);
-					pathsrenderer.updaterenderlist(gathereddata);
+
+					selectionstroke.addpoint(clicked_worldpoint);
 
 					lmb_pressed = true;
 
@@ -298,14 +296,14 @@ void Application::renderui()
 		}
 	ImGui::End();
 	
-	/*
+	
 	ImGui::Begin("Filters");
-		if(ImGui::Button("Clear paths"))
+		if(ImGui::Button("Update paths"))
 		{
-			pathsrenderer.clearpaths();
+			updateselectedpaths();
 		}
 	ImGui::End();
-	*/
+	
 
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{
@@ -403,6 +401,20 @@ void Application::initimgui()
 	imgui_io = &(ImGui::GetIO());
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 450 core");
+}
+
+void Application::updateselectedpaths()
+{
+	// Clear the old
+	gathereddata.removepaths(selectionstroke.selectedpaths);
+
+	// Add the new
+	selectionstroke.findbounces(gathereddata);
+	gathereddata.addpaths(selectionstroke.selectedpaths);
+	imagerenderer.updatepathmask(gathereddata);
+	pathsrenderer.updaterenderlist(gathereddata);
+
+	mustrenderviewport = true;
 }
 
 void Application::windowresize(GLFWwindow* window, int width, int height)
