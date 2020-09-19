@@ -123,32 +123,6 @@ void SelectionStroke::addpoint(Vec3f pt)
 
 void SelectionStroke::findbounces(GatheredData& gd)
 {
-	/*
-	 * This works fine as it is but, if multithreading has to be implemented,
-	 * it can be done with the gd.firstbounceindexes vector.
-	 * 
-	unsigned npaths = gd.pathslength.size();
-	unsigned off = 0;
-	for(unsigned path_i = 0; path_i < npaths; ++path_i)
-	{
-		const unsigned nbounces = gd.pathslength[path_i];
-		for(unsigned b_i = off; b_i < off + nbounces; b_i++)
-		{
-			Vec3h bounceh = gd.bouncesposition[b_i];
-			Vec3f bouncef = fromVec3h(bounceh);
-			for(Sphere& s : spheres)
-			{
-				float d = length(bouncef - s.center);
-				if(d <= s.radius)
-				{
-					selectedpaths.insert(path_i);
-					break;
-				}
-			}
-		}
-		off += nbounces;
-	}
-	*/
 
 	const unsigned nthreads = std::thread::hardware_concurrency();
 	std::vector<std::thread> threads(nthreads);

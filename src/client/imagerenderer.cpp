@@ -90,7 +90,7 @@ void ImageRenderer::updatepathmask(GatheredData& gd)
 	for(unsigned pi : gd.selectedpaths)
 	{
 		CameraSample& cs = gd.pathscamerasamples[pi];
-		pathmask[cs.i + gd.rendersize[0]*cs.j] = 255;
+		pathmask[cs.i + gd.rendersize[0]*cs.j]++;
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);

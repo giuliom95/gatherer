@@ -13,7 +13,7 @@
 #include "camera.hpp"
 #include "gathereddata.hpp"
 
-#define SELECTIONSTROKE_DEFBRUSHSIZE 10
+#define SELECTIONSTROKE_DEFBRUSHSIZE 30
 
 class Sphere
 {
