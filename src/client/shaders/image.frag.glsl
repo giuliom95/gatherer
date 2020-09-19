@@ -5,6 +5,7 @@ out vec3 out_color;
 
 uniform sampler2D renderedimagetex;
 uniform sampler2D pathmasktex;
+uniform float maxpathmask;
 uniform float exposure;
 uniform vec3 bgcolor;
 
@@ -21,13 +22,14 @@ void main()
 		out_color = bgcolor;
 	else
 	{
+		float x = pathmask / maxpathmask;
 		// Coolwarm mapping
 		vec3 low = vec3(0.230, 0.299, 0.754);
 		vec3 mid = vec3(0.865, 0.865, 0.865);
 		vec3 hig = vec3(0.706, 0.016, 0.150);
-		float s1 = step( pathmask,  .5);
-		float s2 = step(-pathmask, -.5);
-		float y = 2*pathmask;
+		float s1 = step( x,  .5);
+		float s2 = step(-x, -.5);
+		float y = 2*x;
 		float z = y - 1;
 		vec3 a = (1-y)*low + y*mid;
 		vec3 b = (1-z)*mid + z*hig;

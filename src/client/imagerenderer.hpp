@@ -21,7 +21,8 @@ public:
 	Vec3f bgcolor;
 private:
 	std::vector<Vec3h> renderedimage;
-	std::vector<uint8_t> pathmask;
+	std::vector<uint16_t> pathmask;
+	float spp_over_2e16;
 
 	GLuint renderedimagetex_id;
 
@@ -30,6 +31,7 @@ private:
 	GLuint pathmasktex_id;
 	GLuint locid_renderedimagetex;
 	GLuint locid_pathmasktex;
+	GLuint locid_spp;
 	GLuint locid_exposure;
 	GLuint locid_bgcolor;
 };

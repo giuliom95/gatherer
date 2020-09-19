@@ -59,13 +59,13 @@ void ImageRenderer::init(GatheredData& gd)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	pathmask = std::vector<uint8_t>(rendersize[0]*rendersize[1], 255);
+	pathmask = std::vector<uint16_t>(rendersize[0]*rendersize[1], 255);
 	glGenTextures(1, &pathmasktex_id);
 	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_R8, 
+		GL_TEXTURE_2D, 0, GL_R16, 
 		rendersize[0], rendersize[1], 
-		0, GL_RED, GL_UNSIGNED_BYTE, pathmask.data() 
+		0, GL_RED, GL_UNSIGNED_SHORT, pathmask.data() 
 	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -74,8 +74,9 @@ void ImageRenderer::init(GatheredData& gd)
 	locid_renderedimagetex = 
 		glGetUniformLocation(shaprog_id, "renderedimagetex");
 
-	locid_pathmasktex = 
-		glGetUniformLocation(shaprog_id, "pathmasktex");
+	locid_pathmasktex = glGetUniformLocation(shaprog_id, "pathmasktex");
+	locid_spp = glGetUniformLocation(shaprog_id, "maxpathmask");
+	spp_over_2e16 = (float)gd.rendersamples / (1 << 16);
 
 	exposure = 0;
 	locid_exposure = glGetUniformLocation(shaprog_id, "exposure");
@@ -86,17 +87,18 @@ void ImageRenderer::init(GatheredData& gd)
 
 void ImageRenderer::updatepathmask(GatheredData& gd)
 {
-	for(uint8_t& p : pathmask) p = 0;
+	for(uint16_t& p : pathmask) p = 0;
 	for(unsigned pi : gd.selectedpaths)
 	{
 		CameraSample& cs = gd.pathscamerasamples[pi];
-		pathmask[cs.i + gd.rendersize[0]*cs.j]++;
+		uint16_t& v = pathmask[cs.i + gd.rendersize[0]*cs.j];
+		v++;
 	}
 	
 	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);
 	glTexSubImage2D(
 		GL_TEXTURE_2D, 0, 0, 0, rendersize[0], rendersize[1],
-		GL_RED, GL_UNSIGNED_BYTE, pathmask.data()
+		GL_RED, GL_UNSIGNED_SHORT, pathmask.data()
 	);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -115,6 +117,8 @@ void ImageRenderer::render()
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);
 	glUniform1i(locid_pathmasktex, 1);
+
+	glUniform1f(locid_spp, spp_over_2e16);
 
 	glUniform1f(locid_exposure, exposure);
 	glUniform3f(locid_bgcolor, bgcolor[0], bgcolor[1], bgcolor[2]);
