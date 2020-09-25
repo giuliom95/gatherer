@@ -214,9 +214,9 @@ void SceneRenderer::setframesize(Vec2i size)
 
 	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA, 
+		GL_TEXTURE_2D, 0, GL_RGBA32F, 
 		size[0], size[1], 0, 
-		GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		GL_RGBA, GL_FLOAT, nullptr
 	);
 
 	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
