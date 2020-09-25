@@ -270,13 +270,23 @@ void Application::renderui()
 				(float)imagerenderer.rendersize[1]
 			}
 		);
-		ImGui::SliderFloat(
-			"Exposure", &(imagerenderer.exposure), -2, 10
-		);
 
 		ImGui::ColorEdit3(
 			"Background color", (float*)&(imagerenderer.bgcolor)
 		);
+
+		ImGui::Combo(
+			"Display mode", (int*)&(imagerenderer.displaymode),
+			"Final luminance\0Paths per pixel"
+		);
+		
+		if(imagerenderer.displaymode == finalluminance)
+		{
+			ImGui::SliderFloat(
+				"Exposure", &(imagerenderer.exposure), -2, 10
+			);
+		}
+
 	ImGui::End();
 
 	

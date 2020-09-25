@@ -83,6 +83,9 @@ void ImageRenderer::init(GatheredData& gd)
 
 	bgcolor = Vec3f{1,0,1};
 	locid_bgcolor = glGetUniformLocation(shaprog_id, "bgcolor");
+
+	displaymode = finalluminance;
+	locid_displaymode = glGetUniformLocation(shaprog_id, "displaymode");
 }
 
 void ImageRenderer::updatepathmask(GatheredData& gd)
@@ -122,6 +125,8 @@ void ImageRenderer::render()
 
 	glUniform1f(locid_exposure, exposure);
 	glUniform3f(locid_bgcolor, bgcolor[0], bgcolor[1], bgcolor[2]);
+
+	glUniform1i(locid_displaymode, (int)displaymode);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

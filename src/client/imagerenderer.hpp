@@ -9,6 +9,12 @@
 #include "utils.hpp"
 #include "gathereddata.hpp"
 
+enum ImageDisplayMode : int
+{
+	finalluminance,
+	pathsperpixel
+};
+
 class ImageRenderer
 {
 public:
@@ -19,6 +25,7 @@ public:
 	Vec2i rendersize;
 	float exposure;
 	Vec3f bgcolor;
+	ImageDisplayMode displaymode;
 private:
 	std::vector<Vec3h> renderedimage;
 	std::vector<uint16_t> pathmask;
@@ -34,6 +41,7 @@ private:
 	GLuint locid_spp;
 	GLuint locid_exposure;
 	GLuint locid_bgcolor;
+	GLuint locid_displaymode;
 };
 
 #endif
