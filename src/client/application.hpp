@@ -6,7 +6,7 @@
 
 #include "axesvisualizer.hpp"
 #include "scenerenderer.hpp"
-#include "selectionstroke.hpp"
+#include "selectionsphere.hpp"
 #include "pathsrenderer.hpp"
 #include "imagerenderer.hpp"
 
@@ -33,7 +33,7 @@ private:
 
 	AxesVisualizer	axesvisualizer;
 	SceneRenderer	scenerenderer;
-	SelectionStroke selectionstroke;
+	SelectionSphere selectionsphere;
 	PathsRenderer	pathsrenderer;
 	ImageRenderer	imagerenderer;
 

@@ -52,7 +52,8 @@ set( GATHERER_CLIENT_SOURCES
   src/client/pathsrenderer.cpp
   src/client/axesvisualizer.cpp
   src/client/scenerenderer.cpp
-  src/client/selectionstroke.cpp
+  src/client/filtermanager.cpp
+  src/client/selectionsphere.cpp
   src/client/application.cpp
   src/client/client.cpp
   ${IMGUI_SRCS}

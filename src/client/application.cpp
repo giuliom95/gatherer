@@ -95,7 +95,7 @@ Application::Application()
 
 	scenerenderer.init(camera);
 	axesvisualizer.init();
-	selectionstroke.init();
+	selectionsphere.init();
 	pathsrenderer.init();
 	imagerenderer.init(gathereddata);
 
@@ -169,14 +169,13 @@ bool Application::loop()
 				// Perfect zero happens only when out of scene
 				if(length(clicked_worldpoint) != 0)
 				{
-					if(!lmb_pressed)
-					{
-						// First point so remove old stuff
-						gathereddata.removepaths(selectionstroke.selectedpaths);
-						selectionstroke.clearpoints();
-					}
+					
+					// Just one point
+					gathereddata.removepaths(selectionsphere.selectedpaths);
+					selectionsphere.clearpoints();
+					
 
-					selectionstroke.addpoint(clicked_worldpoint);
+					selectionsphere.addpoint(clicked_worldpoint);
 
 					lmb_pressed = true;
 
@@ -201,7 +200,7 @@ void Application::accountwindowresize()
 	glfwGetFramebufferSize(window, &framesize[0], &framesize[1]);
 
 	scenerenderer.setframesize(framesize);
-	selectionstroke.setframesize(framesize);
+	selectionsphere.setframesize(framesize);
 
 	camera.aspect = (float)framesize[0] / framesize[1];
 
@@ -216,7 +215,7 @@ void Application::render()
 	if(mustrenderviewport)
 	{
 		scenerenderer.render1(camera);
-		selectionstroke.render(
+		selectionsphere.render(
 			camera,  
 			scenerenderer.fbo_id, 
 			scenerenderer.texid_fbodepth,
@@ -312,6 +311,9 @@ void Application::renderui()
 		{
 			updateselectedpaths();
 		}
+
+		ImGui::Button("-"); ImGui::SameLine();
+		ImGui::Text("filter 1");
 	ImGui::End();
 	
 
@@ -416,11 +418,11 @@ void Application::initimgui()
 void Application::updateselectedpaths()
 {
 	// Clear the old
-	gathereddata.removepaths(selectionstroke.selectedpaths);
+	gathereddata.removepaths(selectionsphere.selectedpaths);
 
 	// Add the new
-	selectionstroke.findbounces(gathereddata);
-	gathereddata.addpaths(selectionstroke.selectedpaths);
+	selectionsphere.findbounces(gathereddata);
+	gathereddata.addpaths(selectionsphere.selectedpaths);
 	imagerenderer.updatepathmask(gathereddata);
 	pathsrenderer.updaterenderlist(gathereddata);
 

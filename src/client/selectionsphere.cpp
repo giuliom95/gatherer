@@ -1,6 +1,6 @@
-#include "selectionstroke.hpp"
+#include "selectionsphere.hpp"
 
-void SelectionStroke::init()
+void SelectionSphere::init()
 {
 	shaprog1_id = disk_load_shader_program(
 		"../src/client/shaders/selectionvolume1.vert.glsl",
@@ -42,7 +42,7 @@ void SelectionStroke::init()
 	brushsize = SELECTIONSTROKE_DEFBRUSHSIZE;
 }
 
-void SelectionStroke::render(
+void SelectionSphere::render(
 	Camera& cam, 
 	GLuint scenefbo_id, 
 	GLuint scenedepthtex,
@@ -105,7 +105,7 @@ void SelectionStroke::render(
 	glEnable(GL_CULL_FACE);
 }
 
-void SelectionStroke::setframesize(Vec2i size)
+void SelectionSphere::setframesize(Vec2i size)
 {
 	glBindTexture(GL_TEXTURE_2D, texid_fbomask);
 	glTexImage2D(
@@ -115,13 +115,13 @@ void SelectionStroke::setframesize(Vec2i size)
 	);
 }
 
-void SelectionStroke::addpoint(Vec3f pt)
+void SelectionSphere::addpoint(Vec3f pt)
 {
 	Sphere s{pt, brushsize};
 	spheres.push_back(s);
 }
 
-void SelectionStroke::findbounces(GatheredData& gd)
+void SelectionSphere::findbounces(GatheredData& gd)
 {
 
 	const unsigned nthreads = std::thread::hardware_concurrency();
@@ -177,7 +177,7 @@ void SelectionStroke::findbounces(GatheredData& gd)
 
 }
 
-void SelectionStroke::clearpoints()
+void SelectionSphere::clearpoints()
 {
 	spheres.clear();
 	selectedpaths.clear();

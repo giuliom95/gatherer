@@ -1,6 +1,8 @@
 #ifndef _SELECTIONSTROKE_HPP_
 #define _SELECTIONSTROKE_HPP_
 
+#include "filtermanager.hpp"
+
 #include <set>
 #include <thread>
 
@@ -13,7 +15,7 @@
 #include "camera.hpp"
 #include "gathereddata.hpp"
 
-#define SELECTIONSTROKE_DEFBRUSHSIZE 30
+#define SELECTIONSTROKE_DEFBRUSHSIZE 10
 
 class Sphere
 {
@@ -22,7 +24,7 @@ public:
 	float radius;
 };
 
-class SelectionStroke
+class SelectionSphere : Filter
 {
 public:
 	void init();
@@ -32,7 +34,7 @@ public:
 		GLuint scenedepthtex,
 		GLuint scenebeautytex,
 		Vec2i framesize
-	);
+	) override;
 
 	void setframesize(Vec2i size);
 
