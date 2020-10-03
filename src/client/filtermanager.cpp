@@ -13,6 +13,14 @@ void FilterManager::render(
 	}
 }
 
+void FilterManager::addfilter(std::shared_ptr<Filter> filter)
+{
+	filterslist.push_back(filter);
+	filter->globalid = progressiveid;
+	progressiveid++;
+}
+
+
 void FilterManager::setframesize(Vec2i size)
 {
 	for(std::shared_ptr<Filter> f : filterslist)
@@ -21,13 +29,23 @@ void FilterManager::setframesize(Vec2i size)
 	}
 }
 
-void FilterManager::renderui()
+bool FilterManager::renderui()
 {
-	for(std::shared_ptr<Filter> f : filterslist)
-	{
-		ImGui::Button("-"); ImGui::SameLine();
-		ImGui::Text("filter 1");
+	bool modified = false;
+	for(
+		std::list<std::shared_ptr<Filter>>::iterator it = filterslist.begin();
+		it != filterslist.end();
+	) {
+		ImGui::Text("Filter %u", (*it)->globalid);
+		bool toerase = ImGui::IsItemClicked();
+		modified |= toerase;
+		if(toerase)
+		{
+			it = filterslist.erase(it);
+		}
+		if(!toerase) ++it;
 	}
+	return modified;
 }
 
 void FilterManager::computepaths(GatheredData& gd)

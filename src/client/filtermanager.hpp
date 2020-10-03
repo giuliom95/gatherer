@@ -28,12 +28,17 @@ public:
 	virtual void setframesize(Vec2i size) = 0;
 
 	virtual void computepaths(GatheredData& gd) = 0;
+
+	unsigned globalid;
 };
 
 class FilterManager
 {
-public:
+private:
 	std::list<std::shared_ptr<Filter>> filterslist;
+
+	unsigned progressiveid = 0;
+public:
 
 	void render(
 		Camera& cam, 
@@ -43,9 +48,12 @@ public:
 		Vec2i framesize
 	);
 
+	void addfilter(std::shared_ptr<Filter> filter);
+
 	void setframesize(Vec2i size);
 
-	void renderui();
+	// Return true if something changed
+	bool renderui();
 
 	void computepaths(GatheredData& gd);
 };

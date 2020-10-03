@@ -174,7 +174,7 @@ bool Application::loop()
 						std::shared_ptr<Filter> ss(
 							new SelectionSphere(clicked_worldpoint)
 						);
-						filtermanager.filterslist.push_back(ss);
+						filtermanager.addfilter(ss);
 
 						lmb_pressed = true;
 
@@ -312,7 +312,10 @@ void Application::renderui()
 			updateselectedpaths();
 		}
 
-		filtermanager.renderui();
+		if(filtermanager.renderui())
+		{
+			mustrenderviewport = true;
+		}
 	ImGui::End();
 	
 
