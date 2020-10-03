@@ -26,6 +26,7 @@ public:
 	std::set<unsigned> selectedpaths;
 	void addpaths(std::set<unsigned>& paths);
 	void removepaths(std::set<unsigned>& paths);
+	void removeallpaths();
 
 	void loadall(const boost::filesystem::path& folder);
 };

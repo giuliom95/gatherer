@@ -32,9 +32,7 @@ public:
 
 	void setframesize(Vec2i size) override;
 
-	std::set<unsigned> selectedpaths;
-
-	void findbounces(GatheredData& gd);
+	void computepaths(GatheredData& gd) override;
 
 	Vec3f center;
 	float radius;

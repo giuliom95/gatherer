@@ -84,3 +84,8 @@ void GatheredData::removepaths(std::set<unsigned>& paths)
 	for(unsigned p : paths)
 		selectedpaths.erase(p);
 }
+
+void GatheredData::removeallpaths()
+{
+	selectedpaths.clear();
+}

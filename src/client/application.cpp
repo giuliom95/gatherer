@@ -175,10 +175,6 @@ bool Application::loop()
 							new SelectionSphere(clicked_worldpoint)
 						);
 						filtermanager.filterslist.push_back(ss);
-						//gathereddata.removepaths(selectionsphere.selectedpaths);
-						//selectionsphere.clearpoints();
-
-						//selectionsphere.addpoint(clicked_worldpoint);
 
 						lmb_pressed = true;
 
@@ -420,14 +416,10 @@ void Application::initimgui()
 
 void Application::updateselectedpaths()
 {
-	// Clear the old
-	//gathereddata.removepaths(selectionsphere.selectedpaths);
-
-	// Add the new
-	//selectionsphere.findbounces(gathereddata);
-	//gathereddata.addpaths(selectionsphere.selectedpaths);
-	//imagerenderer.updatepathmask(gathereddata);
-	//pathsrenderer.updaterenderlist(gathereddata);
+	gathereddata.removeallpaths();
+	filtermanager.computepaths(gathereddata);
+	imagerenderer.updatepathmask(gathereddata);
+	pathsrenderer.updaterenderlist(gathereddata);
 
 	mustrenderviewport = true;
 }

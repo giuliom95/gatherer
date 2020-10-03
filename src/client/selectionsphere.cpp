@@ -112,9 +112,8 @@ void SelectionSphere::setframesize(Vec2i size)
 	);
 }
 
-void SelectionSphere::findbounces(GatheredData& gd)
+void SelectionSphere::computepaths(GatheredData& gd)
 {
-
 	const unsigned nthreads = std::thread::hardware_concurrency();
 	std::vector<std::thread> threads(nthreads);
 
@@ -161,7 +160,7 @@ void SelectionSphere::findbounces(GatheredData& gd)
 
 	for(std::set<unsigned> paths : threadselectedpaths)
 	{
-		selectedpaths.insert(paths.begin(), paths.end());
+		gd.addpaths(paths);
 	}
 
 }

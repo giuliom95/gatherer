@@ -12,6 +12,7 @@
 #include "math.hpp"
 #include "utils.hpp"
 #include "camera.hpp"
+#include "gathereddata.hpp"
 
 class Filter
 {
@@ -25,6 +26,8 @@ public:
 	) = 0;
 
 	virtual void setframesize(Vec2i size) = 0;
+
+	virtual void computepaths(GatheredData& gd) = 0;
 };
 
 class FilterManager
@@ -43,6 +46,8 @@ public:
 	void setframesize(Vec2i size);
 
 	void renderui();
+
+	void computepaths(GatheredData& gd);
 };
 
 #endif

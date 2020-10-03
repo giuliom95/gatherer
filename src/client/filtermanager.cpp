@@ -29,3 +29,11 @@ void FilterManager::renderui()
 		ImGui::Text("filter 1");
 	}
 }
+
+void FilterManager::computepaths(GatheredData& gd)
+{
+	for(std::shared_ptr<Filter> f : filterslist)
+	{
+		f->computepaths(gd);
+	}
+}
