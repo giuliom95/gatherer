@@ -15,19 +15,13 @@
 #include "camera.hpp"
 #include "gathereddata.hpp"
 
-#define SELECTIONSTROKE_DEFBRUSHSIZE 10
+#define SELECTIONSPHERE_DEFRADIUS 10
 
-class Sphere
+class SelectionSphere : public Filter
 {
 public:
-	Vec3f center;
-	float radius;
-};
+	SelectionSphere(Vec3f c, float r = 0);
 
-class SelectionSphere : Filter
-{
-public:
-	void init();
 	void render(
 		Camera& cam, 
 		GLuint scenefbo_id, 
@@ -36,21 +30,16 @@ public:
 		Vec2i framesize
 	) override;
 
-	void setframesize(Vec2i size);
+	void setframesize(Vec2i size) override;
 
 	std::set<unsigned> selectedpaths;
 
-	void addpoint(Vec3f pt);
-
 	void findbounces(GatheredData& gd);
 
-	void clearpoints();
-
-	float brushsize;
+	Vec3f center;
+	float radius;
 
 private:
-
-	std::vector<Sphere> spheres;
 
 	GLuint shaprog1_id;
 	GLuint locid1_camvpmat;

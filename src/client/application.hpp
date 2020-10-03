@@ -6,9 +6,11 @@
 
 #include "axesvisualizer.hpp"
 #include "scenerenderer.hpp"
-#include "selectionsphere.hpp"
 #include "pathsrenderer.hpp"
 #include "imagerenderer.hpp"
+
+#include "filtermanager.hpp"
+#include "selectionsphere.hpp"
 
 #include "camera.hpp"
 
@@ -33,9 +35,10 @@ private:
 
 	AxesVisualizer	axesvisualizer;
 	SceneRenderer	scenerenderer;
-	SelectionSphere selectionsphere;
 	PathsRenderer	pathsrenderer;
 	ImageRenderer	imagerenderer;
+
+	FilterManager	filtermanager;
 
 	Camera camera;
 	ImGuiIO* imgui_io;

@@ -7,8 +7,25 @@ void FilterManager::render(
 	GLuint scenebeautytex,
 	Vec2i framesize
 ) {
-	for(Filter& f : filterslist)
+	for(std::shared_ptr<Filter> f : filterslist)
 	{
-		f.render(cam, scenefbo_id, scenedepthtex, scenebeautytex, framesize);
+		f->render(cam, scenefbo_id, scenedepthtex, scenebeautytex, framesize);
+	}
+}
+
+void FilterManager::setframesize(Vec2i size)
+{
+	for(std::shared_ptr<Filter> f : filterslist)
+	{
+		f->setframesize(size);
+	}
+}
+
+void FilterManager::renderui()
+{
+	for(std::shared_ptr<Filter> f : filterslist)
+	{
+		ImGui::Button("-"); ImGui::SameLine();
+		ImGui::Text("filter 1");
 	}
 }

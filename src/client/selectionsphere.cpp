@@ -1,6 +1,6 @@
 #include "selectionsphere.hpp"
 
-void SelectionSphere::init()
+SelectionSphere::SelectionSphere(Vec3f c, float r)
 {
 	shaprog1_id = disk_load_shader_program(
 		"../src/client/shaders/selectionvolume1.vert.glsl",
@@ -39,7 +39,8 @@ void SelectionSphere::init()
 	locid2_scenebeauty	= glGetUniformLocation(shaprog2_id, "scenebeautytex");
 	locid2_mask 		= glGetUniformLocation(shaprog2_id, "masktex");
 
-	brushsize = SELECTIONSTROKE_DEFBRUSHSIZE;
+	radius = r > 0 ? r : SELECTIONSPHERE_DEFRADIUS;
+	center = c;
 }
 
 void SelectionSphere::render(
@@ -68,22 +69,18 @@ void SelectionSphere::render(
 
 	glUniform2i(locid1_framesize, framesize[0], framesize[1]);
 
-	for(Sphere s : spheres)
-	{
-		glUniform1f(locid1_radius, s.radius);
+	glUniform1f(locid1_radius, radius);
 
-		glUniform3f(
-			locid1_location,
-			s.center[0], s.center[1], s.center[2]
-		);
+	glUniform3f(
+		locid1_location,
+		center[0], center[1], center[2]
+	);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, scenedepthtex);
-		glUniform1i(locid1_scenedepth, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
+	glUniform1i(locid1_scenedepth, 0);
 
-		glDrawArrays(GL_PATCHES, 0, 24);
-	}
-
+	glDrawArrays(GL_PATCHES, 0, 24);
 
 	glUseProgram(shaprog2_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, scenefbo_id);
@@ -115,12 +112,6 @@ void SelectionSphere::setframesize(Vec2i size)
 	);
 }
 
-void SelectionSphere::addpoint(Vec3f pt)
-{
-	Sphere s{pt, brushsize};
-	spheres.push_back(s);
-}
-
 void SelectionSphere::findbounces(GatheredData& gd)
 {
 
@@ -150,15 +141,13 @@ void SelectionSphere::findbounces(GatheredData& gd)
 					{
 						Vec3h bounceh = gd.bouncesposition[b_i];
 						Vec3f bouncef = fromVec3h(bounceh);
-						for(Sphere& s : spheres)
+						
+						float d = length(bouncef - center);
+						if(d <= radius)
 						{
-							float d = length(bouncef - s.center);
-							if(d <= s.radius)
-							{
-								threadselectedpaths[ti].insert(path_i);
-								break;
-							}
+							threadselectedpaths[ti].insert(path_i);
 						}
+					
 					}
 				}
 			}
@@ -175,10 +164,4 @@ void SelectionSphere::findbounces(GatheredData& gd)
 		selectedpaths.insert(paths.begin(), paths.end());
 	}
 
-}
-
-void SelectionSphere::clearpoints()
-{
-	spheres.clear();
-	selectedpaths.clear();
 }

@@ -6,7 +6,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+
 #include "math.hpp"
+#include "utils.hpp"
 #include "camera.hpp"
 
 class Filter
@@ -18,19 +22,15 @@ public:
 		GLuint scenedepthtex,
 		GLuint scenebeautytex,
 		Vec2i framesize
-	) {
-		(void)cam;
-		(void)scenefbo_id;
-		(void)scenedepthtex;
-		(void)scenebeautytex;
-		(void)framesize;
-	};
+	) = 0;
+
+	virtual void setframesize(Vec2i size) = 0;
 };
 
 class FilterManager
 {
 public:
-	std::list<Filter> filterslist;
+	std::list<std::shared_ptr<Filter>> filterslist;
 
 	void render(
 		Camera& cam, 
@@ -39,6 +39,10 @@ public:
 		GLuint scenebeautytex,
 		Vec2i framesize
 	);
+
+	void setframesize(Vec2i size);
+
+	void renderui();
 };
 
 #endif
