@@ -117,23 +117,27 @@ void SelectionSphere::computepaths(GatheredData& gd)
 	const unsigned nthreads = std::thread::hardware_concurrency();
 	std::vector<std::thread> threads(nthreads);
 
-	const unsigned npaths = gd.pathslength.size();
+	const unsigned npaths = gd.selectedpaths.size();
 
 	// Number of Paths Per Thread
 	const unsigned nppt = npaths / nthreads;
 
-	std::vector<std::set<unsigned>> threadselectedpaths(nthreads);
+	std::vector<unsigned> threadselectedpaths(npaths);
+	std::vector<unsigned> threadselectedpathscount(nthreads, 0);
 
 	for(unsigned ti = 0; ti < nthreads; ++ti)
 	{
+		unsigned& tspc = threadselectedpathscount[ti];
 		threads[ti] = std::thread(
-			[this, &gd, &threadselectedpaths, ti, nppt](){
+			[this, &gd, &threadselectedpaths, &tspc, ti, nppt](){
 				
+				//LOG(info) << "thread: " << ti << "; from " << (ti * nppt) << " to " << ((ti + 1)*nppt - 1);
 				for(
-					unsigned path_i = ti * nppt; 
-					path_i < (ti + 1)*nppt - 1; 
-					++path_i
+					unsigned i = ti * nppt; 
+					i < (ti + 1)*nppt - 1; 
+					++i
 				){
+					const unsigned path_i = gd.selectedpaths[i];
 					const unsigned nbounces = gd.pathslength[path_i];
 					const unsigned off = gd.firstbounceindexes[path_i];
 					for(unsigned b_i = off; b_i < off + nbounces; b_i++)
@@ -144,9 +148,9 @@ void SelectionSphere::computepaths(GatheredData& gd)
 						float d = length(bouncef - center);
 						if(d <= radius)
 						{
-							threadselectedpaths[ti].insert(path_i);
+							threadselectedpaths[ti * nppt + tspc] = path_i;
+							tspc++;
 						}
-					
 					}
 				}
 			}
@@ -158,9 +162,45 @@ void SelectionSphere::computepaths(GatheredData& gd)
 		th.join();
 	}
 
-	for(std::set<unsigned> paths : threadselectedpaths)
+	LOG(info) << "Accumulation done";
+
+	const std::vector<unsigned>::iterator absfirst = threadselectedpaths.begin();
+	unsigned comulativetspc = threadselectedpathscount[0];
+	for(unsigned ti = 1; ti < nthreads; ++ti)
 	{
-		gd.addpaths(paths);
+		const unsigned tspc = threadselectedpathscount[ti];
+		const std::vector<unsigned>::iterator first = absfirst + (ti*nppt);
+		const std::vector<unsigned>::iterator last  = first + tspc;
+		const std::vector<unsigned>::iterator dest  = absfirst + comulativetspc;
+		LOG(info) << first.base() << " " << last.base() << " " << dest.base();
+		std::move(first, last, dest);
+		comulativetspc += tspc;
 	}
 
+	LOG(info) << "Concat done";
+
+	std::set_intersection(
+		gd.selectedpaths.begin(), gd.selectedpaths.end(),
+		absfirst, absfirst+comulativetspc, 
+		std::back_inserter(gd.selectedpathstmpbuf)
+	);
+
+	LOG(info) << "Intersection done";
+
+	const unsigned nspaths = gd.selectedpathstmpbuf.size();
+
+	std::move(
+		gd.selectedpathstmpbuf.begin(), 
+		gd.selectedpathstmpbuf.end(), 
+		gd.selectedpaths.begin()
+	);
+
+	gd.selectedpaths.erase(
+		gd.selectedpaths.begin() + nspaths, 
+		gd.selectedpaths.end()
+	);
+
+	gd.selectedpathstmpbuf.clear();
+
+	LOG(info) << "Filtered paths (" << gd.selectedpaths.size() << " / " << npaths << ")";
 }

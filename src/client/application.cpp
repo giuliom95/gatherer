@@ -419,7 +419,6 @@ void Application::initimgui()
 
 void Application::updateselectedpaths()
 {
-	gathereddata.removeallpaths();
 	filtermanager.computepaths(gathereddata);
 	imagerenderer.updatepathmask(gathereddata);
 	pathsrenderer.updaterenderlist(gathereddata);

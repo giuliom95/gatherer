@@ -50,6 +50,9 @@ bool FilterManager::renderui()
 
 void FilterManager::computepaths(GatheredData& gd)
 {
+	gd.selectedpaths.resize(gd.npaths);
+	std::iota(gd.selectedpaths.begin(), gd.selectedpaths.end(), 0);
+
 	for(std::shared_ptr<Filter> f : filterslist)
 	{
 		f->computepaths(gd);

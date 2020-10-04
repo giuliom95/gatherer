@@ -1,8 +1,6 @@
 #ifndef _GATHEREDDATA_HPP_
 #define _GATHEREDDATA_HPP_
 
-#include <set>
-
 #include "utils.hpp"
 
 #include "json.hpp"
@@ -16,6 +14,8 @@ public:
 	Vec2i rendersize;
 	unsigned rendersamples;
 
+	unsigned npaths;
+	unsigned nbounces;
 	std::vector<uint8_t> pathslength;
 	std::vector<Vec3h> bouncesposition;
 	std::vector<Vec3h> pathsluminance;
@@ -23,10 +23,9 @@ public:
 
 	std::vector<unsigned> firstbounceindexes;
 
-	std::set<unsigned> selectedpaths;
-	void addpaths(std::set<unsigned>& paths);
-	void removepaths(std::set<unsigned>& paths);
-	void removeallpaths();
+	std::vector<unsigned> selectedpaths;
+	// Used to store temporary data;
+	std::vector<unsigned> selectedpathstmpbuf;
 
 	void loadall(const boost::filesystem::path& folder);
 };

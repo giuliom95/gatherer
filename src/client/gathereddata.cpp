@@ -2,7 +2,6 @@
 
 void GatheredData::loadall(const boost::filesystem::path& folder)
 {
-	selectedpaths = std::set<unsigned>();
 	
 	datafolder = folder;
 
@@ -23,8 +22,8 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	const unsigned lenghts_bytesize   = boost::filesystem::file_size(lengths_fp);
 	const unsigned positions_bytesize = boost::filesystem::file_size(positions_fp);
 
-	const unsigned npaths = lenghts_bytesize / sizeof(uint8_t);
-	const unsigned nbounces = positions_bytesize / sizeof(Vec3h);
+	npaths = lenghts_bytesize / sizeof(uint8_t);
+	nbounces = positions_bytesize / sizeof(Vec3h);
 
 	pathslength.resize(npaths);
 	bouncesposition.resize(nbounces);
@@ -71,21 +70,6 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 		json_data["render"]["height"]
 	};
 
-	LOG(info) << rendersamples << " " << rendersize[0] << " " << rendersize[1];
-}
-
-void GatheredData::addpaths(std::set<unsigned>& paths)
-{
-	selectedpaths.insert(paths.begin(), paths.end());
-}
-
-void GatheredData::removepaths(std::set<unsigned>& paths)
-{
-	for(unsigned p : paths)
-		selectedpaths.erase(p);
-}
-
-void GatheredData::removeallpaths()
-{
-	selectedpaths.clear();
+	selectedpaths.reserve(npaths);
+	selectedpaths.reserve(npaths);
 }
