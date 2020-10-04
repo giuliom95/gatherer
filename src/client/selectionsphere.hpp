@@ -15,7 +15,7 @@
 #include "camera.hpp"
 #include "gathereddata.hpp"
 
-#define SELECTIONSPHERE_DEFRADIUS 10
+#define SELECTIONSPHERE_DEFRADIUS 30
 
 class SelectionSphere : public Filter
 {
