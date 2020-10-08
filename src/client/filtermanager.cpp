@@ -4,12 +4,11 @@ void FilterManager::render(
 	Camera& cam, 
 	GLuint scenefbo_id, 
 	GLuint scenedepthtex,
-	GLuint scenebeautytex,
-	Vec2i framesize
+	GLuint scenebeautytex
 ) {
 	for(std::shared_ptr<Filter> f : filterslist)
 	{
-		f->render(cam, scenefbo_id, scenedepthtex, scenebeautytex, framesize);
+		f->render(cam, scenefbo_id, scenedepthtex, scenebeautytex);
 	}
 }
 

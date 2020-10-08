@@ -21,8 +21,7 @@ public:
 		Camera& cam,
 		GLuint scenefbo_id,
 		GLuint scenedepthtex,
-		GLuint scenebeautytex,
-		Vec2i framesize
+		GLuint scenebeautytex
 	) = 0;
 
 	virtual void setframesize(Vec2i size) = 0;
@@ -31,6 +30,7 @@ public:
 
 	virtual bool renderstackui() = 0;
 
+	Vec2i framesize;
 	unsigned globalid;
 };
 
@@ -46,8 +46,7 @@ public:
 		Camera& cam, 
 		GLuint scenefbo_id, 
 		GLuint scenedepthtex,
-		GLuint scenebeautytex,
-		Vec2i framesize
+		GLuint scenebeautytex
 	);
 
 	void addfilter(std::shared_ptr<Filter> filter);

@@ -32,7 +32,7 @@ void ImageRenderer::init(GatheredData& gd)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Gather luminance into texture
-	LOG(info) << "Render size: " << rendersize;
+	LOG(info) << "Final render size: " << rendersize;
 	renderedimage = std::vector<Vec3h>(rendersize[0]*rendersize[1]);
 	for(unsigned pi = 0; pi < gd.pathscamerasamples.size(); ++pi)
 	{

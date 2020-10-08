@@ -47,8 +47,7 @@ void SelectionSphere::render(
 	Camera& cam, 
 	GLuint scenefbo_id, 
 	GLuint scenedepthtex,
-	GLuint scenebeautytex,
-	Vec2i framesize
+	GLuint scenebeautytex
 ) {
 	glDisable(GL_CULL_FACE);
 
@@ -110,6 +109,7 @@ void SelectionSphere::setframesize(Vec2i size)
 		size[0], size[1], 0, 
 		GL_RED, GL_UNSIGNED_BYTE, nullptr
 	);
+	framesize = size;
 }
 
 void SelectionSphere::computepaths(GatheredData& gd)

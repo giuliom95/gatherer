@@ -26,8 +26,7 @@ public:
 		Camera& cam, 
 		GLuint scenefbo_id, 
 		GLuint scenedepthtex,
-		GLuint scenebeautytex,
-		Vec2i framesize
+		GLuint scenebeautytex
 	) override;
 
 	void setframesize(Vec2i size) override;

@@ -104,6 +104,7 @@ Application::Application()
 	mmb_pressed = false;
 	camera_key_pressed = false;
 
+	accountwindowresize();
 }
 
 Application::~Application()
@@ -174,6 +175,7 @@ bool Application::loop()
 						std::shared_ptr<Filter> ss(
 							new SelectionSphere(clicked_worldpoint)
 						);
+						ss->setframesize(framesize);
 						filtermanager.addfilter(ss);
 
 						lmb_pressed = true;
@@ -198,6 +200,7 @@ bool Application::loop()
 void Application::accountwindowresize()
 {
 	glfwGetFramebufferSize(window, &framesize[0], &framesize[1]);
+	LOG(info) << "Framebuffer size: " << framesize;
 
 	scenerenderer.setframesize(framesize);
 	filtermanager.setframesize(framesize);
@@ -219,8 +222,7 @@ void Application::render()
 			camera,  
 			scenerenderer.fbo_id, 
 			scenerenderer.texid_fbodepth,
-			scenerenderer.texid_fbobeauty,
-			framesize
+			scenerenderer.texid_fbobeauty
 		);
 		if(pathsrenderer.enablerendering)
 		{
