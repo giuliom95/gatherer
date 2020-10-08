@@ -214,3 +214,11 @@ void SelectionSphere::computepaths(GatheredData& gd)
 
 	LOG(info) << "Filtered paths (" << gd.selectedpaths.size() << " / " << npaths << ")";
 }
+
+bool SelectionSphere::renderstackui()
+{
+	char label[11];
+	sprintf(label, "Radius##%02u", globalid);
+	ImGui::DragFloat(label, &radius, 0.1f);
+	return true;
+}

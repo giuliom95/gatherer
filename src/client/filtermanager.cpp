@@ -31,18 +31,23 @@ void FilterManager::setframesize(Vec2i size)
 
 bool FilterManager::renderui()
 {
+	ImGui::Separator();
 	bool modified = false;
 	unsigned i = 0;
 	for(
 		std::list<std::shared_ptr<Filter>>::iterator it = filterslist.begin();
 		it != filterslist.end();
 	) {
+		std::shared_ptr<Filter> filterptr = *it;
+		
 		char label[6];
 		sprintf(label, "-##%02u", i);
-		
 		bool toerase = ImGui::Button(label);
 		ImGui::SameLine();
-		ImGui::Text("Filter %u", (*it)->globalid);
+		ImGui::Text("Filter %u", filterptr->globalid);
+		modified |= filterptr->renderstackui();
+		ImGui::Separator();
+
 		modified |= toerase;
 		if(toerase)
 		{

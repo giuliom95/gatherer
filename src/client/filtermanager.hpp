@@ -29,6 +29,8 @@ public:
 
 	virtual void computepaths(GatheredData& gd) = 0;
 
+	virtual bool renderstackui() = 0;
+
 	unsigned globalid;
 };
 

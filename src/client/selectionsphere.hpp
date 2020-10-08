@@ -34,6 +34,8 @@ public:
 
 	void computepaths(GatheredData& gd) override;
 
+	bool renderstackui() override;
+
 	Vec3f center;
 	float radius;
 
