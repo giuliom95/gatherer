@@ -10,7 +10,7 @@
 #include "imagerenderer.hpp"
 
 #include "filtermanager.hpp"
-#include "selectionsphere.hpp"
+#include "spherefilter.hpp"
 
 #include "camera.hpp"
 

@@ -1,11 +1,11 @@
-#include "selectionsphere.hpp"
+#include "spherefilter.hpp"
 
-SelectionSphere::SelectionSphere(Vec3f c, float r)
+SphereFilter::SphereFilter(Vec3f c, float r)
 {
 	shaprog1_id = disk_load_shader_program(
-		"../src/client/shaders/selectionvolume1.vert.glsl",
-		"../src/client/shaders/selectionvolume1.frag.glsl",
-		"../src/client/shaders/selectionvolume1.tes.glsl"
+		"../src/client/shaders/spherefilter1.vert.glsl",
+		"../src/client/shaders/spherefilter1.frag.glsl",
+		"../src/client/shaders/spherefilter1.tes.glsl"
 	);
 
 	locid1_camvpmat   = glGetUniformLocation(shaprog1_id, "vpmat");
@@ -33,17 +33,17 @@ SelectionSphere::SelectionSphere(Vec3f c, float r)
 
 	shaprog2_id = disk_load_shader_program(
 		"../src/client/shaders/screenquad.vert.glsl",
-		"../src/client/shaders/selectionvolume2.frag.glsl"
+		"../src/client/shaders/spherefilter2.frag.glsl"
 	);
 
 	locid2_scenebeauty	= glGetUniformLocation(shaprog2_id, "scenebeautytex");
 	locid2_mask 		= glGetUniformLocation(shaprog2_id, "masktex");
 
-	radius = r > 0 ? r : SELECTIONSPHERE_DEFRADIUS;
+	radius = r > 0 ? r : SPHEREFILTER_DEFRADIUS;
 	center = c;
 }
 
-void SelectionSphere::render(
+void SphereFilter::render(
 	Camera& cam, 
 	GLuint scenefbo_id, 
 	GLuint scenedepthtex,
@@ -101,7 +101,7 @@ void SelectionSphere::render(
 	glEnable(GL_CULL_FACE);
 }
 
-void SelectionSphere::setframesize(Vec2i size)
+void SphereFilter::setframesize(Vec2i size)
 {
 	glBindTexture(GL_TEXTURE_2D, texid_fbomask);
 	glTexImage2D(
@@ -112,7 +112,7 @@ void SelectionSphere::setframesize(Vec2i size)
 	framesize = size;
 }
 
-void SelectionSphere::computepaths(GatheredData& gd)
+void SphereFilter::computepaths(GatheredData& gd)
 {
 	unsigned nthreads = std::thread::hardware_concurrency();
 	const unsigned npaths = gd.selectedpaths.size();
@@ -215,7 +215,7 @@ void SelectionSphere::computepaths(GatheredData& gd)
 	LOG(info) << "Filtered paths (" << gd.selectedpaths.size() << " / " << npaths << ")";
 }
 
-bool SelectionSphere::renderstackui()
+bool SphereFilter::renderstackui()
 {
 	char label[11];
 	sprintf(label, "Radius##%02u", globalid);

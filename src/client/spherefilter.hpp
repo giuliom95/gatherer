@@ -15,12 +15,12 @@
 #include "camera.hpp"
 #include "gathereddata.hpp"
 
-#define SELECTIONSPHERE_DEFRADIUS 30
+#define SPHEREFILTER_DEFRADIUS 30
 
-class SelectionSphere : public Filter
+class SphereFilter : public Filter
 {
 public:
-	SelectionSphere(Vec3f c, float r = 0);
+	SphereFilter(Vec3f c, float r = 0);
 
 	void render(
 		Camera& cam, 

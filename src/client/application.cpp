@@ -173,7 +173,7 @@ bool Application::loop()
 					{
 						// One sphere every click
 						std::shared_ptr<Filter> ss(
-							new SelectionSphere(clicked_worldpoint)
+							new SphereFilter(clicked_worldpoint)
 						);
 						ss->setframesize(framesize);
 						filtermanager.addfilter(ss);
