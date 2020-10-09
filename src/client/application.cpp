@@ -105,6 +105,8 @@ Application::Application()
 	camera_key_pressed = false;
 
 	accountwindowresize();
+
+	activefiltertool = ActiveFilterTool::none;
 }
 
 Application::~Application()
@@ -171,12 +173,22 @@ bool Application::loop()
 				{
 					if(!lmb_pressed)
 					{
-						// One sphere every click
-						std::shared_ptr<Filter> ss(
-							new SphereFilter(clicked_worldpoint)
-						);
-						ss->setframesize(framesize);
-						filtermanager.addfilter(ss);
+
+						if(activefiltertool == ActiveFilterTool::sphere)
+						{
+							std::shared_ptr<Filter> ss(
+								new SphereFilter(clicked_worldpoint)
+							);
+							ss->setframesize(framesize);
+							filtermanager.addfilter(ss);
+
+							activefiltertool = ActiveFilterTool::none;
+						}
+						else if(activefiltertool == ActiveFilterTool::window)
+						{
+							activefiltertool = ActiveFilterTool::none;
+						}
+						
 
 						lmb_pressed = true;
 
@@ -312,6 +324,27 @@ void Application::renderui()
 		if(ImGui::Button("Update paths"))
 		{
 			updateselectedpaths();
+		}
+
+		if(activefiltertool == ActiveFilterTool::none)
+		{
+			if(ImGui::Button("Add sphere"))
+			{
+				activefiltertool = ActiveFilterTool::sphere;
+			}
+			ImGui::SameLine();
+			if(ImGui::Button("Add window"))
+			{
+				activefiltertool = ActiveFilterTool::window;
+			}
+		}
+		else if(activefiltertool == ActiveFilterTool::sphere)
+		{
+			ImGui::Text("Placing sphere...");
+		}
+		else if(activefiltertool == ActiveFilterTool::window)
+		{
+			ImGui::Text("Placing window...");
 		}
 
 		if(filtermanager.renderui())

@@ -19,6 +19,12 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
+enum ActiveFilterTool{
+	none,
+	sphere,
+	window
+};
+
 class Application
 {
 public:
@@ -33,12 +39,13 @@ private:
 	GLFWwindow* window;
 	Vec2i framesize;
 
-	AxesVisualizer	axesvisualizer;
-	SceneRenderer	scenerenderer;
-	PathsRenderer	pathsrenderer;
-	ImageRenderer	imagerenderer;
+	AxesVisualizer axesvisualizer;
+	SceneRenderer  scenerenderer;
+	PathsRenderer  pathsrenderer;
+	ImageRenderer  imagerenderer;
 
-	FilterManager	filtermanager;
+	FilterManager    filtermanager;
+	ActiveFilterTool activefiltertool;
 
 	Camera camera;
 	ImGuiIO* imgui_io;
