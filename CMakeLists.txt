@@ -54,6 +54,7 @@ set( GATHERER_CLIENT_SOURCES
   src/client/scenerenderer.cpp
   src/client/filtermanager.cpp
   src/client/spherefilter.cpp
+  src/client/windowfilter.cpp
   src/client/application.cpp
   src/client/client.cpp
   ${IMGUI_SRCS}

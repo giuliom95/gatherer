@@ -24,7 +24,10 @@ public:
 		GLuint scenebeautytex
 	) = 0;
 
-	virtual void setframesize(Vec2i size) = 0;
+	virtual void setframesize(Vec2i size)
+	{
+		framesize = size;
+	}
 
 	virtual void computepaths(GatheredData& gd) = 0;
 
