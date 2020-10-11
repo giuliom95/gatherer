@@ -12,6 +12,7 @@
 
 class WindowFilter : public Filter
 {
+public:
 	WindowFilter();
 
 	void render(
@@ -25,17 +26,20 @@ class WindowFilter : public Filter
 
 	bool renderstackui() override;
 
-	Mat4f w2o, o2w;
 	Vec3f position, normal;
 	Vec2f size;
+	void updatematrices();
 
 private:
+	Mat4f w2o, o2w;
 
 	GLuint shaprog_id;
 	GLuint locid_camvpmat;
 	GLuint locid_scenedepth;
 	GLuint locid_framesize;
 	GLuint locid_scenebeauty;
+	GLuint locid_objmat;
+	GLuint locid_size;
 
 };
 

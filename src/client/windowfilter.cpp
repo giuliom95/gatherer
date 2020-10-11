@@ -10,7 +10,10 @@ WindowFilter::WindowFilter()
 	locid_camvpmat    = glGetUniformLocation(shaprog_id, "vpmat");
 	locid_scenedepth  = glGetUniformLocation(shaprog_id, "scenedepth");
 	locid_framesize   = glGetUniformLocation(shaprog_id, "framesize");
-	locid_scenebeauty = glGetUniformLocation(shaprog_id, "scenebeautytex");
+	locid_scenebeauty = glGetUniformLocation(shaprog_id, "scenebeauty");
+
+	locid_objmat      = glGetUniformLocation(shaprog_id, "objmat");
+	locid_size        = glGetUniformLocation(shaprog_id, "size");
 }
 
 void WindowFilter::render(
@@ -41,6 +44,12 @@ void WindowFilter::render(
 	glBindTexture(GL_TEXTURE_2D, scenebeautytex);
 	glUniform1i(locid_scenebeauty, 1);
 
+	glUniformMatrix4fv(
+		locid_objmat, 1, GL_FALSE, 
+		reinterpret_cast<const GLfloat*>(&o2w)
+	);
+	glUniform2f(locid_size, size[0], size[1]);
+
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glDepthMask(GL_TRUE);
@@ -67,6 +76,16 @@ bool WindowFilter::renderstackui()
 	modified |= ImGui::DragFloat2(
 		"Size", reinterpret_cast<float*>(&size)
 	);
+
+	if(modified) updatematrices();
 	
 	return modified;
+}
+
+void WindowFilter::updatematrices()
+{
+	const Mat4f axes(refFromVec(normal));
+	const Mat4f axes_t(transpose(axes));
+	o2w = axes   * translationMatrix(   position);
+	w2o = axes_t * translationMatrix(-1*position);
 }

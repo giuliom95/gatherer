@@ -186,6 +186,12 @@ bool Application::loop()
 						}
 						else if(activefiltertool == ActiveFilterTool::window)
 						{
+							std::shared_ptr<Filter> ss(
+								new WindowFilter()
+							);
+							ss->setframesize(framesize);
+							filtermanager.addfilter(ss);
+
 							activefiltertool = ActiveFilterTool::none;
 						}
 						

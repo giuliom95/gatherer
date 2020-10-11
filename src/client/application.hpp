@@ -11,6 +11,7 @@
 
 #include "filtermanager.hpp"
 #include "spherefilter.hpp"
+#include "windowfilter.hpp"
 
 #include "camera.hpp"
 
