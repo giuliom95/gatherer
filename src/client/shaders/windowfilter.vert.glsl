@@ -8,5 +8,5 @@ void main()
 {
 	uint i = gl_VertexID;
 	vec2 uv = vec2((i & 0x1), (i & 0x2) >> 1);
-	gl_Position = vec4(0, size*(uv*2 - 1), 1) * objmat * vpmat;
+	gl_Position = vec4(0, .5*size*(uv*2 - 1), 1) * objmat * vpmat;
 }

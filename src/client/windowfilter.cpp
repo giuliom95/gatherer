@@ -64,6 +64,12 @@ void WindowFilter::computepaths(GatheredData& gd)
 	std::vector<unsigned> selectedpaths;
 	selectedpaths.reserve(npaths);
 
+	const float s0 = size[0];
+	const float s1 = size[1];
+	const Vec3f v0 = transformPoint(o2w, {0, -.5f*s0, -.5f*s1});
+	const Vec3f v1 = transformPoint(o2w, {0, 1.5f*s0, -.5f*s1});
+	const Vec3f v2 = transformPoint(o2w, {0, -.5f*s0, 1.5f*s1});
+
 	for(unsigned i = 0; i < npaths; ++i)
 	{
 		const unsigned path_i = gd.selectedpaths[i];
@@ -72,29 +78,56 @@ void WindowFilter::computepaths(GatheredData& gd)
 
 		// Get first bounce
 		Vec3f prev_b = fromVec3h(gd.bouncesposition[off]);
-		// Transform it
-		Vec3f t_prev_b = transformPoint(w2o, prev_b);
 
-		LOG(info) << t_prev_b;
+		//LOG(info) << prev_b;
 
 		//Starts from the second one
 		for(unsigned b_i = off+1; b_i < off + nbounces; b_i++)
 		{
-			Vec3f this_b = fromVec3h(gd.bouncesposition[b_i]);
-			Vec3f t_this_b = transformPoint(w2o, this_b);
+			const Vec3f  this_b = fromVec3h(gd.bouncesposition[b_i]);
+			//LOG(info) << this_b;
 
-			LOG(info) << t_this_b;
-
-			// On the opposite half spaces
-			if(t_this_b[0] * t_prev_b[0] < 1)
+			const Vec3f  rv = prev_b - this_b;
+			const Vec3f& ro = this_b;
+			constexpr float EPSILON = 0.0000001f;
+			Vec3f edge1, edge2, h, s, q;
+			float a,f,u,v;
+			edge1 = v1 - v0;
+			edge2 = v2 - v0;
+			h = cross(rv, edge2);
+			a = dot(edge1, h);
+			if (a > -EPSILON && a < EPSILON)
 			{
-				selectedpaths.push_back(path_i);
-				LOG(info) << "FOUND";
-				break;
+				prev_b = this_b;
+				continue;
+			}
+			f = 1.0f/a;
+			s = ro - v0;
+			u = f * dot(s, h);
+			// u < .5 because only one big triangle instead of two quads
+			if (u < 0.0f || u > 0.5f)
+			{
+				prev_b = this_b;
+				continue;
+			}
+			q = cross(s, edge1);
+			v = f * dot(rv, q);
+			if (v < 0.0f || v > 0.5f || u + v > 1.0f)
+			{
+				prev_b = this_b;
+				continue;
 			}
 
+			float t = f * dot(edge2, q);
+
+			if(t > 0 && t < 1)
+			{
+				selectedpaths.push_back(path_i);
+				//LOG(info) << "FOUND";
+				break;
+			}
+			
 			prev_b = this_b;
-			t_prev_b = t_this_b;
 		}
 	}
 
