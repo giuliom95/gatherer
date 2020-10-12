@@ -1,6 +1,6 @@
 #include "windowfilter.hpp"
 
-WindowFilter::WindowFilter(Vec3f pos)
+WindowFilter::WindowFilter(Vec3f pos, Vec3f n)
 {
 	shaprog_id = disk_load_shader_program(
 		"../src/client/shaders/windowfilter.vert.glsl",
@@ -16,7 +16,7 @@ WindowFilter::WindowFilter(Vec3f pos)
 	locid_size        = glGetUniformLocation(shaprog_id, "size");
 
 	position = pos;
-	normal = Vec3f{0, 0, 1};
+	normal = n;
 	size = Vec2f{50, 50};
 	updatematrices();
 }

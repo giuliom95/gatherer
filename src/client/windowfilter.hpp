@@ -13,7 +13,7 @@
 class WindowFilter : public Filter
 {
 public:
-	WindowFilter(Vec3f pos);
+	WindowFilter(Vec3f pos, Vec3f n);
 
 	void render(
 		Camera& cam, 

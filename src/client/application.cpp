@@ -186,8 +186,9 @@ bool Application::loop()
 						}
 						else if(activefiltertool == ActiveFilterTool::window)
 						{
+							Vec3f n = normalize(camera.eye() - camera.focus);
 							std::shared_ptr<WindowFilter> ss(
-								new WindowFilter(clicked_worldpoint)
+								new WindowFilter(clicked_worldpoint, n)
 							);
 							ss->setframesize(framesize);
 							filtermanager.addfilter(ss);
