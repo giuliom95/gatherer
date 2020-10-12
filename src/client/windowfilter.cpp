@@ -1,6 +1,6 @@
 #include "windowfilter.hpp"
 
-WindowFilter::WindowFilter()
+WindowFilter::WindowFilter(Vec3f pos)
 {
 	shaprog_id = disk_load_shader_program(
 		"../src/client/shaders/windowfilter.vert.glsl",
@@ -14,6 +14,11 @@ WindowFilter::WindowFilter()
 
 	locid_objmat      = glGetUniformLocation(shaprog_id, "objmat");
 	locid_size        = glGetUniformLocation(shaprog_id, "size");
+
+	position = pos;
+	normal = Vec3f{0, 0, 1};
+	size = Vec2f{50, 50};
+	updatematrices();
 }
 
 void WindowFilter::render(
@@ -151,17 +156,24 @@ bool WindowFilter::renderstackui()
 {
 	bool modified = false;
 
+	char label[13];
+
+	sprintf(label, "Position##%u", globalid);
 	modified |= ImGui::DragFloat3(
-		"Position", reinterpret_cast<float*>(&position)
+		label, reinterpret_cast<float*>(&position)
 	);
+
+	sprintf(label, "Normal##%u", globalid);
 	if(ImGui::DragFloat3(
-		"Normal", reinterpret_cast<float*>(&normal), 0.01f
+		label, reinterpret_cast<float*>(&normal), 0.01f
 	)) {
 		normal = normalize(normal);
 		modified = true;
 	}
+
+	sprintf(label, "Size##%u", globalid);
 	modified |= ImGui::DragFloat2(
-		"Size", reinterpret_cast<float*>(&size)
+		label, reinterpret_cast<float*>(&size)
 	);
 
 	if(modified) updatematrices();

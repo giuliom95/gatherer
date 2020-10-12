@@ -186,8 +186,8 @@ bool Application::loop()
 						}
 						else if(activefiltertool == ActiveFilterTool::window)
 						{
-							std::shared_ptr<Filter> ss(
-								new WindowFilter()
+							std::shared_ptr<WindowFilter> ss(
+								new WindowFilter(clicked_worldpoint)
 							);
 							ss->setframesize(framesize);
 							filtermanager.addfilter(ss);
