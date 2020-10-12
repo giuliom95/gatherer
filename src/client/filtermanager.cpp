@@ -43,7 +43,11 @@ bool FilterManager::renderui()
 		sprintf(label, "-##%02u", i);
 		bool toerase = ImGui::Button(label);
 		ImGui::SameLine();
-		ImGui::Text("Filter %u", filterptr->globalid);
+		ImGui::Text(
+			"%s %u", 
+			filterptr->filtertypename.c_str(), 
+			filterptr->globalid
+		);
 		modified |= filterptr->renderstackui();
 		ImGui::Separator();
 

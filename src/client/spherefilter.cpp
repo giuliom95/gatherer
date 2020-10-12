@@ -2,6 +2,8 @@
 
 SphereFilter::SphereFilter(Vec3f c, float r)
 {
+	filtertypename = "Sphere";
+
 	shaprog1_id = disk_load_shader_program(
 		"../src/client/shaders/spherefilter1.vert.glsl",
 		"../src/client/shaders/spherefilter1.frag.glsl",

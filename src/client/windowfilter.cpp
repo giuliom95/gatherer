@@ -2,6 +2,8 @@
 
 WindowFilter::WindowFilter(Vec3f pos, Vec3f n)
 {
+	filtertypename = "Window";
+	
 	shaprog_id = disk_load_shader_program(
 		"../src/client/shaders/windowfilter.vert.glsl",
 		"../src/client/shaders/windowfilter.frag.glsl"

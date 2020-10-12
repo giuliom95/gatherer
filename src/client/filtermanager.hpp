@@ -2,6 +2,7 @@
 #define _FILTERMANAGER_HPP_
 
 #include <list>
+#include <string>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -32,6 +33,8 @@ public:
 	virtual void computepaths(GatheredData& gd) = 0;
 
 	virtual bool renderstackui() = 0;
+
+	std::string filtertypename = "Filter";
 
 	Vec2i framesize;
 	unsigned globalid;
