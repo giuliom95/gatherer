@@ -35,6 +35,8 @@ public:
 
 	void accountwindowresize();
 private:
+	bool datasetloaded = false;
+	char datasetpath[128];
 	GatheredData gathereddata;
 
 	GLFWwindow* window;
@@ -69,6 +71,8 @@ private:
 	void initimgui();
 
 	void updateselectedpaths();
+
+	void loaddataset(const boost::filesystem::path& folder);
 
 	static void windowresize(GLFWwindow* window, int width, int height);
 };

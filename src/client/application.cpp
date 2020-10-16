@@ -89,14 +89,9 @@ Application::Application()
 
 	initimgui();
 
+	memset(datasetpath, '\0', 128);
+
 	camera.aspect = (float)DEF_WINDOW_W / DEF_WINDOW_H;
-
-	gathereddata.loadall("../data/renderdata");
-
-	scenerenderer.init(camera);
-	axesvisualizer.init();
-	pathsrenderer.init();
-	imagerenderer.init(gathereddata);
 
 	cursor_old_pos = get_cursor_pos(window);
 	lmb_pressed = false;
@@ -234,30 +229,35 @@ void Application::render()
 	glViewport(0, 0, framesize[0], framesize[1]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if(mustrenderviewport)
+	if(datasetloaded)
 	{
-		scenerenderer.render1(camera);
-		filtermanager.render(
-			camera,  
-			scenerenderer.fbo_id, 
-			scenerenderer.texid_fbodepth,
-			scenerenderer.texid_fbobeauty
-		);
-		if(pathsrenderer.enablerendering)
+		if(mustrenderviewport)
 		{
-			pathsrenderer.render(
-				camera, scenerenderer.fbo_id,
-				scenerenderer.texid_fbodepth, 
-				framesize, gathereddata
+			scenerenderer.render1(camera);
+			filtermanager.render(
+				camera,  
+				scenerenderer.fbo_id, 
+				scenerenderer.texid_fbodepth,
+				scenerenderer.texid_fbobeauty
 			);
+			if(pathsrenderer.enablerendering)
+			{
+				pathsrenderer.render(
+					camera, scenerenderer.fbo_id,
+					scenerenderer.texid_fbodepth, 
+					framesize, gathereddata
+				);
+			}
+
+			mustrenderviewport = false;
 		}
+		scenerenderer.render2();
 
-		mustrenderviewport = false;
+		axesvisualizer.render(camera);
+		
+		imagerenderer.render();
 	}
-	scenerenderer.render2();
 
-	axesvisualizer.render(camera);
-	imagerenderer.render();
 
 	renderui();
 
@@ -272,94 +272,106 @@ void Application::renderui()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::SetNextWindowSize({0,0});
-	ImGui::Begin("Axes", nullptr);
-		ImGui::Image(
-			(void*)(intptr_t)axesvisualizer.fbotex_id, 
-			{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
-			{0,1}, {1,0}
-		);
+	ImGui::Begin("Dataset loading");
+		boost::filesystem::path cwd = boost::filesystem::current_path();
+		ImGui::TextWrapped("cwd: %s", cwd.c_str());
+		ImGui::InputText("##A", datasetpath, 128);
+		ImGui::SameLine();
+		if(ImGui::Button("Load dataset"))
+		{
+			loaddataset(datasetpath);
+		}
 	ImGui::End();
 
-	ImGui::SetNextWindowSize({0,0});
-	ImGui::Begin("Render", nullptr);
-		ImGui::Image(
-			(void*)(intptr_t)imagerenderer.fbotex_id, 
+	if(datasetloaded)
+	{
+		ImGui::SetNextWindowSize({0,0});
+		ImGui::Begin("Axes", nullptr);
+			ImGui::Image(
+				(void*)(intptr_t)axesvisualizer.fbotex_id, 
+				{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
+				{0,1}, {1,0}
+			);
+		ImGui::End();
+
+		ImGui::SetNextWindowSize({0,0});
+		ImGui::Begin("Render", nullptr);
+			ImGui::Image(
+				(void*)(intptr_t)imagerenderer.fbotex_id, 
+				{
+					(float)imagerenderer.rendersize[0], 
+					(float)imagerenderer.rendersize[1]
+				}
+			);
+
+			ImGui::ColorEdit3(
+				"Background color", (float*)&(imagerenderer.bgcolor)
+			);
+
+			ImGui::Combo(
+				"Display mode", (int*)&(imagerenderer.displaymode),
+				"Final luminance\0Paths per pixel"
+			);
+			
+			if(imagerenderer.displaymode == finalluminance)
 			{
-				(float)imagerenderer.rendersize[0], 
-				(float)imagerenderer.rendersize[1]
+				ImGui::SliderFloat(
+					"Exposure", &(imagerenderer.exposure), -2, 10
+				);
 			}
-		);
 
-		ImGui::ColorEdit3(
-			"Background color", (float*)&(imagerenderer.bgcolor)
-		);
+		ImGui::End();
 
-		ImGui::Combo(
-			"Display mode", (int*)&(imagerenderer.displaymode),
-			"Final luminance\0Paths per pixel"
-		);
 		
-		if(imagerenderer.displaymode == finalluminance)
-		{
-			ImGui::SliderFloat(
-				"Exposure", &(imagerenderer.exposure), -2, 10
-			);
-		}
-
-	ImGui::End();
-
-	
-	ImGui::Begin("Paths options");
-		mustrenderviewport |= ImGui::Checkbox(
-			"Render", &(pathsrenderer.enablerendering)
-		);
-
-		if(pathsrenderer.enablerendering)
-		{
-			mustrenderviewport |= ImGui::SliderFloat(
-				"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
-			);
+		ImGui::Begin("Paths options");
 			mustrenderviewport |= ImGui::Checkbox(
-				"Depth test", &(pathsrenderer.enabledepth)
+				"Render", &(pathsrenderer.enablerendering)
 			);
-		}
-	ImGui::End();
-	
-	
-	ImGui::Begin("Filters");
-		if(ImGui::Button("Update paths"))
-		{
-			updateselectedpaths();
-		}
 
-		if(activefiltertool == ActiveFilterTool::none)
-		{
-			if(ImGui::Button("Add sphere"))
+			if(pathsrenderer.enablerendering)
 			{
-				activefiltertool = ActiveFilterTool::sphere;
+				mustrenderviewport |= ImGui::SliderFloat(
+					"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
+				);
+				mustrenderviewport |= ImGui::Checkbox(
+					"Depth test", &(pathsrenderer.enabledepth)
+				);
 			}
-			ImGui::SameLine();
-			if(ImGui::Button("Add window"))
-			{
-				activefiltertool = ActiveFilterTool::window;
-			}
-		}
-		else if(activefiltertool == ActiveFilterTool::sphere)
-		{
-			ImGui::Text("Placing sphere...");
-		}
-		else if(activefiltertool == ActiveFilterTool::window)
-		{
-			ImGui::Text("Placing window...");
-		}
+		ImGui::End();
 
-		if(filtermanager.renderui())
-		{
-			mustrenderviewport = true;
-		}
-	ImGui::End();
-	
+		ImGui::Begin("Filters");
+			if(ImGui::Button("Update paths"))
+			{
+				updateselectedpaths();
+			}
+
+			if(activefiltertool == ActiveFilterTool::none)
+			{
+				if(ImGui::Button("Add sphere"))
+				{
+					activefiltertool = ActiveFilterTool::sphere;
+				}
+				ImGui::SameLine();
+				if(ImGui::Button("Add window"))
+				{
+					activefiltertool = ActiveFilterTool::window;
+				}
+			}
+			else if(activefiltertool == ActiveFilterTool::sphere)
+			{
+				ImGui::Text("Placing sphere...");
+			}
+			else if(activefiltertool == ActiveFilterTool::window)
+			{
+				ImGui::Text("Placing window...");
+			}
+
+			if(filtermanager.renderui())
+			{
+				mustrenderviewport = true;
+			}
+		ImGui::End();
+	}
 
 	if(ImGui::CollapsingHeader("Camera controls"))
 	{
@@ -466,6 +478,21 @@ void Application::updateselectedpaths()
 	pathsrenderer.updaterenderlist(gathereddata);
 
 	mustrenderviewport = true;
+}
+
+void Application::loaddataset(const boost::filesystem::path& folder)
+{
+	LOG(info) << folder;
+	gathereddata.loadall(folder);
+
+	scenerenderer.init(camera);
+	axesvisualizer.init();
+	pathsrenderer.init();
+	imagerenderer.init(gathereddata);
+
+	datasetloaded = true;
+	mustrenderviewport = true;
+	accountwindowresize();
 }
 
 void Application::windowresize(GLFWwindow* window, int width, int height)

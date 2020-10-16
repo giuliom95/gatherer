@@ -14,6 +14,11 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	const boost::filesystem::path camerasamples_fp = 
 		folder / "paths" / "camerasamples.bin";
 
+	LOG(info) << lengths_fp;
+	LOG(info) << positions_fp;
+	LOG(info) << luminance_fp;
+	LOG(info) << camerasamples_fp;
+
 	boost::filesystem::ifstream lengths_ifs(lengths_fp);
 	boost::filesystem::ifstream positions_ifs(positions_fp);
 	boost::filesystem::ifstream luminance_ifs(luminance_fp);
