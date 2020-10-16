@@ -21,15 +21,82 @@ void SceneRenderer::init(Camera& cam)
 	std::vector<char> bin_data(bin_size);
 	bin_ifs.read(bin_data.data(), bin_size);
 
+	glGenVertexArrays(1, &vaoidx);
+	glBindVertexArray(vaoidx);
+
+	nverts = 0;
+	nidxs  = 0;
+
+	// Compute the lenghts of the buffers
 	for(const nlohmann::json json_geom : json_data["geometries"]) 
 	{
-		GLuint vaoidx;
-		glGenVertexArrays(1, &vaoidx);
-		glBindVertexArray(vaoidx);
+		for(const nlohmann::json json_buf : json_geom["buffers"])
+		{
+			const std::string type = json_buf["type"];
+			const unsigned buf_size = json_buf["size"];
+			if(type == "vertices")
+			{
+				nverts += buf_size / sizeof(Vec3f);
+			}
+			else if(type == "indices")
+			{
+				nidxs  += buf_size / sizeof(unsigned);
+			}
+		}
+	}
 
+	// Generate the buffers
+	LOG(info) << "Vertices: " << nverts;
+	LOG(info) << "Indexes: " << nidxs;
+	std::vector<Vec3f> vertices;
+	vertices.reserve(nverts);
+	std::vector<unsigned> indexes;
+	indexes.reserve(nidxs);
+
+	// Fill the buffers
+	unsigned vtx_byteoff = 0;
+	unsigned idx_byteoff = 0;
+	unsigned maxidx = 0;
+	for(const nlohmann::json json_geom : json_data["geometries"]) 
+	{
+		unsigned curmaxidx = maxidx;
 		Geometry geom;
-		geom.vaoidx = vaoidx;
-		geom.nelems = 0;	// Will be filled later. If it stays zero, something went wrong.
+		geom.offset = idx_byteoff;
+
+		for(const nlohmann::json json_buf : json_geom["buffers"])
+		{
+			const std::string type = json_buf["type"];
+			const unsigned buf_off  = json_buf["offset"];
+			const unsigned buf_size = json_buf["size"];
+
+			if(type == "vertices")
+			{
+				std::move(
+					reinterpret_cast<Vec3f*>(bin_data.data() + buf_off),
+          			reinterpret_cast<Vec3f*>(bin_data.data() + buf_off + buf_size),
+          			back_inserter(vertices)
+				);
+				
+				vtx_byteoff += buf_size;
+			}
+			else if(type == "indices")
+			{
+				for(unsigned i = 0; i < buf_size / sizeof(unsigned); ++i)
+				{
+					const unsigned value = *reinterpret_cast<unsigned*>(
+						bin_data.data() + buf_off + i*sizeof(unsigned)
+					);
+					const unsigned shiftedvalue = value + curmaxidx;
+					indexes.push_back(shiftedvalue);
+					maxidx = max(maxidx, shiftedvalue + 1);
+				}
+				
+				geom.count = buf_size / sizeof(unsigned);
+				idx_byteoff += buf_size;
+			}
+
+		}
+
 		nlohmann::json json_albedo = json_geom["material"]["albedo"];
 		geom.albedo = Vec3f{
 			json_albedo[0],
@@ -37,56 +104,35 @@ void SceneRenderer::init(Camera& cam)
 			json_albedo[2]
 		};
 
-		for(const nlohmann::json json_buf : json_geom["buffers"])
-		{
-			std::string type = json_buf["type"];
-			unsigned int buf_off  = json_buf["offset"];
-			unsigned int buf_size = json_buf["size"];
-			if(type == "vertices")
-			{
-				GLuint vbo;
-				glGenBuffers(1, &vbo);
-				glBindBuffer(GL_ARRAY_BUFFER, vbo);
-				glBufferData(
-					GL_ARRAY_BUFFER, 
-					buf_size, bin_data.data() + buf_off, 
-					GL_STATIC_DRAW
-				);
-				glVertexAttribPointer(
-					0, 3, GL_FLOAT,
-					GL_FALSE, 3 * sizeof(float), (void*)0
-				);
-				glEnableVertexAttribArray(0);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-				for(unsigned i = 0; i < buf_size / sizeof(Vec3f); ++i) {
-					Vec3f p = *reinterpret_cast<Vec3f*>(
-						bin_data.data() + buf_off + i*sizeof(Vec3f)
-					);
-					bbox.addpt(p);
-				}
-
-				LOG(info) << "Loaded vertices";
-			}
-			else if(type == "indices")
-			{
-				GLuint ebo;
-				glGenBuffers(1, &ebo);
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-				glBufferData(
-					GL_ELEMENT_ARRAY_BUFFER, 
-					buf_size, bin_data.data() + buf_off, 
-					GL_STATIC_DRAW
-				);
-				geom.nelems = buf_size / 4;
-				LOG(info) << "Loaded indices";
-			}
-		}
-
-		glBindVertexArray(0);
 		geometries.push_back(geom);
-		LOG(info) << "Loaded geometry";
 	}
+
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(
+		GL_ARRAY_BUFFER, 
+		nverts*sizeof(Vec3f), vertices.data(), 
+		GL_STATIC_DRAW
+	);
+	glVertexAttribPointer(
+		0, 3, GL_FLOAT,
+		GL_FALSE, 3 * sizeof(float), NULL
+	);
+	glEnableVertexAttribArray(0);
+
+	GLuint ebo;
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(
+		GL_ELEMENT_ARRAY_BUFFER, 
+		nidxs*sizeof(unsigned), indexes.data(), 
+		GL_STATIC_DRAW
+	);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 	const nlohmann::json json_camera = json_data["camera"];
 	const nlohmann::json json_eye = json_camera["eye"];
@@ -181,11 +227,18 @@ void SceneRenderer::render1(Camera& cam)
 	const Vec3f eye = cam.eye();
 	glUniform3f(locid1_eye, eye[0], eye[1], eye[2]);
 
+	glBindVertexArray(vaoidx);
 	for(Geometry geo : geometries)
 	{
-		glBindVertexArray(geo.vaoidx);
-		glUniform3f(locid1_geomalbedo, geo.albedo[0], geo.albedo[1], geo.albedo[2]);
-		glDrawElements(GL_TRIANGLES, geo.nelems, GL_UNSIGNED_INT, NULL);
+		glUniform3f(
+			locid1_geomalbedo, 
+			geo.albedo[0], geo.albedo[1], geo.albedo[2]
+		);
+		glDrawElements(
+			GL_TRIANGLES, 
+			geo.count, 
+			GL_UNSIGNED_INT, reinterpret_cast<void*>(geo.offset)
+		);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

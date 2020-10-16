@@ -15,8 +15,8 @@
 class Geometry
 {
 public:
-	GLuint vaoidx;
-	unsigned nelems;
+	unsigned offset;
+	unsigned count;
 	Vec3f albedo;
 };
 
@@ -29,13 +29,18 @@ public:
 
 	void setframesize(Vec2i size);
 
-	AABB bbox;
+	//AABB bbox;
 
 	GLuint texid_fboworldpos;
 	GLuint texid_fbobeauty;
 	GLuint texid_fbodepth;
 	GLuint fbo_id;
 private:
+	GLuint vaoidx;
+
+	unsigned nverts;
+	unsigned nidxs;
+
 	std::vector<Geometry> geometries;
 	GLuint shaprog1_idx;
 	GLuint locid1_camvpmat;
