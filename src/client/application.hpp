@@ -75,6 +75,7 @@ private:
 	bool rmb_pressed;
 	bool mmb_pressed;
 	bool camera_key_pressed;
+	bool switch_key_pressed;
 
 	bool mustrenderviewport = true;
 

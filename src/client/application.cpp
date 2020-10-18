@@ -97,6 +97,7 @@ Application::Application()
 	rmb_pressed = false;
 	mmb_pressed = false;
 	camera_key_pressed = false;
+	switch_key_pressed = false;
 
 	accountwindowresize();
 
@@ -130,6 +131,26 @@ bool Application::loop()
 		if(!imgui_io->WantCaptureKeyboard)
 		{
 			camera_key_pressed = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
+
+			if(datasetA.isloaded && datasetB.isloaded)
+			{
+				bool pressed = glfwGetKey(window, GLFW_KEY_TAB);
+				if(!switch_key_pressed)
+				{
+					if(pressed)
+					{
+						switchdataset();
+						switch_key_pressed = true;
+					}
+				}
+				else 
+				{
+					if(!pressed)
+					{
+						switch_key_pressed = false;
+					}
+				}
+			}
 		}
 
 		if(!imgui_io->WantCaptureMouse)
@@ -326,6 +347,20 @@ void Application::renderui()
 		}
 	ImGui::End();
 
+	// Dataset switching makes sense only when both datasets are loaded
+	if(datasetA.isloaded && datasetB.isloaded)
+	{
+		ImGui::SetNextWindowSize({0,0});
+		ImGui::Begin("Dataset switcher");
+			ImGui::Text(
+				"Current dataset: %c", currentdataset->id);
+			if(ImGui::Button("Switch dataset"))
+			{
+				switchdataset();
+			}
+		ImGui::End();
+	}
+
 	if(sceneloaded)
 	{
 		ImGui::SetNextWindowSize({0,0});
@@ -342,20 +377,6 @@ void Application::renderui()
 	{
 		DataSet& otherdataset = 
 			currentdataset->id == datasetA.id ? datasetB : datasetA;
-		
-		// Dataset switching makes sense only when both datasets are loaded
-		if(datasetA.isloaded && datasetB.isloaded)
-		{
-			ImGui::SetNextWindowSize({0,0});
-			ImGui::Begin("Dataset switcher");
-				ImGui::Text(
-					"Current dataset: %c", currentdataset->id);
-				if(ImGui::Button("Switch dataset"))
-				{
-					switchdataset();
-				}
-			ImGui::End();
-		}
 
 		ImGui::SetNextWindowSize({0,0});
 		ImGui::Begin("Render", nullptr);
