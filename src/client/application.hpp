@@ -39,6 +39,7 @@ public:
 	ImageRenderer  imagerenderer;
 	bool isloaded;
 	char path[128];
+	char id;
 };
 
 class Application
@@ -54,6 +55,8 @@ private:
 	char scenepath[128];
 	
 	DataSet datasetA;
+	DataSet datasetB;
+	DataSet* currentdataset;
 
 	GLFWwindow* window;
 	Vec2i framesize;
@@ -87,7 +90,9 @@ private:
 	void updateselectedpaths();
 
 	void loadscene();
-	void loaddataset();
+	void loaddataset(DataSet& dataset);
+
+	void switchdataset();
 
 	static void windowresize(GLFWwindow* window, int width, int height);
 };

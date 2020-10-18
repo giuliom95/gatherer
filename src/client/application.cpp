@@ -101,6 +101,10 @@ Application::Application()
 	accountwindowresize();
 
 	activefiltertool = ActiveFilterTool::none;
+
+	currentdataset = nullptr;
+	datasetA.id = 'A';
+	datasetB.id = 'B';
 }
 
 Application::~Application()
@@ -150,7 +154,7 @@ bool Application::loop()
 			else
 			{
 				// Events on path filters matter only when a dataset is loaded
-				if(datasetA.isloaded)
+				if(currentdataset != nullptr)
 				{
 					const int btn_state = 
 						glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -247,12 +251,14 @@ void Application::render()
 				scenerenderer.texid_fbobeauty
 			);
 
-			if(datasetA.isloaded && datasetA.pathsrenderer.enablerendering)
-			{
-				datasetA.pathsrenderer.render(
+			if(
+				currentdataset != nullptr && 
+				currentdataset->pathsrenderer.enablerendering
+			) {
+				currentdataset->pathsrenderer.render(
 					camera, scenerenderer.fbo_id,
 					scenerenderer.texid_fbodepth, 
-					framesize, datasetA.gathereddata
+					framesize, currentdataset->gathereddata
 				);
 			}
 
@@ -262,9 +268,9 @@ void Application::render()
 
 		axesvisualizer.render(camera);
 		
-		if(datasetA.isloaded)
+		if(currentdataset != nullptr)
 		{
-			datasetA.imagerenderer.render();
+			currentdataset->imagerenderer.render();
 		}
 	}
 
@@ -303,19 +309,20 @@ void Application::renderui()
 			ImGui::SameLine();
 			if(ImGui::Button("Load##loaddatasetA"))
 			{
-				loaddataset();
+				loaddataset(datasetA);
 			}
 
-			/*
-			ImGui::Text("Dataset B:");
-			ImGui::SameLine();
-			ImGui::InputText("##B", datasetBpath, 128);
-			ImGui::SameLine();
-			if(ImGui::Button("Load"))
+			if(datasetA.isloaded)
 			{
-				loaddataset();
+				ImGui::Text("Dataset B:");
+				ImGui::SameLine();
+				ImGui::InputText("##B", datasetB.path, 128);
+				ImGui::SameLine();
+				if(ImGui::Button("Load"))
+				{
+					loaddataset(datasetB);
+				}
 			}
-			*/
 		}
 	ImGui::End();
 
@@ -331,32 +338,55 @@ void Application::renderui()
 		ImGui::End();
 	}
 
-	if(datasetA.isloaded)
+	if(currentdataset != nullptr)
 	{
+		DataSet& otherdataset = 
+			currentdataset->id == datasetA.id ? datasetB : datasetA;
+		
+		// Dataset switching makes sense only when both datasets are loaded
+		if(datasetA.isloaded && datasetB.isloaded)
+		{
+			ImGui::SetNextWindowSize({0,0});
+			ImGui::Begin("Dataset switcher");
+				ImGui::Text(
+					"Current dataset: %c", currentdataset->id);
+				if(ImGui::Button("Switch dataset"))
+				{
+					switchdataset();
+				}
+			ImGui::End();
+		}
+
 		ImGui::SetNextWindowSize({0,0});
 		ImGui::Begin("Render", nullptr);
 			ImGui::Image(
-				(void*)(intptr_t)datasetA.imagerenderer.fbotex_id, 
+				(void*)(intptr_t)currentdataset->imagerenderer.fbotex_id, 
 				{
-					(float)datasetA.imagerenderer.rendersize[0], 
-					(float)datasetA.imagerenderer.rendersize[1]
+					(float)currentdataset->imagerenderer.rendersize[0], 
+					(float)currentdataset->imagerenderer.rendersize[1]
 				}
 			);
 
 			ImGui::ColorEdit3(
-				"Background color", (float*)&(datasetA.imagerenderer.bgcolor)
+				"Background color", (float*)&(currentdataset->imagerenderer.bgcolor)
 			);
+			otherdataset.imagerenderer.bgcolor = 
+				currentdataset->imagerenderer.bgcolor;
 
 			ImGui::Combo(
-				"Display mode", (int*)&(datasetA.imagerenderer.displaymode),
+				"Display mode", (int*)&(currentdataset->imagerenderer.displaymode),
 				"Final luminance\0Paths per pixel"
 			);
+			otherdataset.imagerenderer.displaymode = 
+				currentdataset->imagerenderer.displaymode;
 			
-			if(datasetA.imagerenderer.displaymode == finalluminance)
+			if(currentdataset->imagerenderer.displaymode == finalluminance)
 			{
 				ImGui::SliderFloat(
-					"Exposure", &(datasetA.imagerenderer.exposure), -2, 10
+					"Exposure", &(currentdataset->imagerenderer.exposure), -2, 10
 				);
+				otherdataset.imagerenderer.exposure =
+					currentdataset->imagerenderer.exposure;
 			}
 
 		ImGui::End();
@@ -364,17 +394,25 @@ void Application::renderui()
 		
 		ImGui::Begin("Paths options");
 			mustrenderviewport |= ImGui::Checkbox(
-				"Render", &(datasetA.pathsrenderer.enablerendering)
+				"Render", &(currentdataset->pathsrenderer.enablerendering)
 			);
+			otherdataset.pathsrenderer.enablerendering
+				= currentdataset->pathsrenderer.enablerendering;
 
-			if(datasetA.pathsrenderer.enablerendering)
+			if(currentdataset->pathsrenderer.enablerendering)
 			{
 				mustrenderviewport |= ImGui::SliderFloat(
-					"Paths alpha", &(datasetA.pathsrenderer.pathsalpha), 0, 1
+					"Paths alpha", &(currentdataset->pathsrenderer.pathsalpha), 
+					0, 1
 				);
+				otherdataset.pathsrenderer.pathsalpha =
+					currentdataset->pathsrenderer.pathsalpha;
+
 				mustrenderviewport |= ImGui::Checkbox(
-					"Depth test", &(datasetA.pathsrenderer.enabledepth)
+					"Depth test", &(currentdataset->pathsrenderer.enabledepth)
 				);
+				otherdataset.pathsrenderer.enabledepth = 
+					currentdataset->pathsrenderer.enabledepth;
 			}
 		ImGui::End();
 
@@ -516,9 +554,19 @@ void Application::initimgui()
 
 void Application::updateselectedpaths()
 {
-	filtermanager.computepaths(datasetA.gathereddata);
-	datasetA.imagerenderer.updatepathmask(datasetA.gathereddata);
-	datasetA.pathsrenderer.updaterenderlist(datasetA.gathereddata);
+	if(datasetA.isloaded)
+	{
+		filtermanager.computepaths(datasetA.gathereddata);
+		datasetA.imagerenderer.updatepathmask(datasetA.gathereddata);
+		datasetA.pathsrenderer.updaterenderlist(datasetA.gathereddata);
+	}
+
+	if(datasetB.isloaded)
+	{
+		filtermanager.computepaths(datasetB.gathereddata);
+		datasetB.imagerenderer.updatepathmask(datasetB.gathereddata);
+		datasetB.pathsrenderer.updaterenderlist(datasetB.gathereddata);
+	}
 
 	mustrenderviewport = true;
 }
@@ -536,19 +584,30 @@ void Application::loadscene()
 	accountwindowresize();
 }
 
-void Application::loaddataset()
+void Application::loaddataset(DataSet& dataset)
 {
-	datasetA.gathereddata = GatheredData();
-	datasetA.gathereddata.loadall(datasetA.path, scenepath);
+	// Clean start
+	dataset.gathereddata = GatheredData();
+	dataset.pathsrenderer = PathsRenderer();
+	dataset.imagerenderer = ImageRenderer();
 
-	datasetA.pathsrenderer = PathsRenderer();
-	datasetA.pathsrenderer.init();
+	dataset.gathereddata.loadall(dataset.path, scenepath);
+	dataset.pathsrenderer.init();
+	dataset.imagerenderer.init(dataset.gathereddata);
 
-	datasetA.imagerenderer = ImageRenderer();
-	datasetA.imagerenderer.init(datasetA.gathereddata);
+	currentdataset = &dataset;
 
-	datasetA.isloaded = true;
+	dataset.isloaded = true;
 	mustrenderviewport = true;
+	LOG(info) << "Done loading dataset";
+}
+
+void Application::switchdataset()
+{
+	DataSet* other = 
+		currentdataset->id == datasetA.id ? &datasetB : &datasetA;
+	LOG(info) << "Switching from " << currentdataset->id << " to dataset " << other->id;
+	currentdataset = other;
 }
 
 void Application::windowresize(GLFWwindow* window, int width, int height)
