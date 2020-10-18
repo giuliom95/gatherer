@@ -26,6 +26,21 @@ enum ActiveFilterTool{
 	window
 };
 
+class DataSet
+{
+public:
+	DataSet()
+	{
+		isloaded = false;
+		memset(path, '\0', 128);
+	}
+	GatheredData   gathereddata;
+	PathsRenderer  pathsrenderer;
+	ImageRenderer  imagerenderer;
+	bool isloaded;
+	char path[128];
+};
+
 class Application
 {
 public:
@@ -36,20 +51,15 @@ public:
 	void accountwindowresize();
 private:
 	bool sceneloaded = false;
-	bool datasetloaded = false;
-
 	char scenepath[128];
-	char datasetpath[128];
-
-	GatheredData gathereddata;
+	
+	DataSet datasetA;
 
 	GLFWwindow* window;
 	Vec2i framesize;
 
 	AxesVisualizer axesvisualizer;
 	SceneRenderer  scenerenderer;
-	PathsRenderer  pathsrenderer;
-	ImageRenderer  imagerenderer;
 
 	FilterManager    filtermanager;
 	ActiveFilterTool activefiltertool;

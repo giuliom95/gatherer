@@ -90,8 +90,7 @@ Application::Application()
 	initimgui();
 
 	memset(scenepath, '\0', 128);
-	memset(datasetpath, '\0', 128);
-
+	
 	// TODO move 
 	cursor_old_pos = get_cursor_pos(window);
 	lmb_pressed = false;
@@ -151,7 +150,7 @@ bool Application::loop()
 			else
 			{
 				// Events on path filters matter only when a dataset is loaded
-				if(datasetloaded)
+				if(datasetA.isloaded)
 				{
 					const int btn_state = 
 						glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -248,12 +247,12 @@ void Application::render()
 				scenerenderer.texid_fbobeauty
 			);
 
-			if(datasetloaded && pathsrenderer.enablerendering)
+			if(datasetA.isloaded && datasetA.pathsrenderer.enablerendering)
 			{
-				pathsrenderer.render(
+				datasetA.pathsrenderer.render(
 					camera, scenerenderer.fbo_id,
 					scenerenderer.texid_fbodepth, 
-					framesize, gathereddata
+					framesize, datasetA.gathereddata
 				);
 			}
 
@@ -263,9 +262,9 @@ void Application::render()
 
 		axesvisualizer.render(camera);
 		
-		if(datasetloaded)
+		if(datasetA.isloaded)
 		{
-			imagerenderer.render();
+			datasetA.imagerenderer.render();
 		}
 	}
 
@@ -286,9 +285,11 @@ void Application::renderui()
 		boost::filesystem::path cwd = boost::filesystem::current_path();
 		ImGui::TextWrapped("cwd: %s", cwd.c_str());
 
+		ImGui::Text("Scene:");
+			ImGui::SameLine();
 		ImGui::InputText("##scene", scenepath, 128);
 		ImGui::SameLine();
-		if(ImGui::Button("Load scene"))
+		if(ImGui::Button("Load##loadscene"))
 		{
 			loadscene();
 		}
@@ -296,12 +297,25 @@ void Application::renderui()
 		// User shouldn't be able to load datasets without loading a scene first
 		if(sceneloaded)
 		{
-			ImGui::InputText("##A", datasetpath, 128);
+			ImGui::Text("Dataset A:");
 			ImGui::SameLine();
-			if(ImGui::Button("Load dataset"))
+			ImGui::InputText("##A", datasetA.path, 128);
+			ImGui::SameLine();
+			if(ImGui::Button("Load##loaddatasetA"))
 			{
 				loaddataset();
 			}
+
+			/*
+			ImGui::Text("Dataset B:");
+			ImGui::SameLine();
+			ImGui::InputText("##B", datasetBpath, 128);
+			ImGui::SameLine();
+			if(ImGui::Button("Load"))
+			{
+				loaddataset();
+			}
+			*/
 		}
 	ImGui::End();
 
@@ -317,31 +331,31 @@ void Application::renderui()
 		ImGui::End();
 	}
 
-	if(datasetloaded)
+	if(datasetA.isloaded)
 	{
 		ImGui::SetNextWindowSize({0,0});
 		ImGui::Begin("Render", nullptr);
 			ImGui::Image(
-				(void*)(intptr_t)imagerenderer.fbotex_id, 
+				(void*)(intptr_t)datasetA.imagerenderer.fbotex_id, 
 				{
-					(float)imagerenderer.rendersize[0], 
-					(float)imagerenderer.rendersize[1]
+					(float)datasetA.imagerenderer.rendersize[0], 
+					(float)datasetA.imagerenderer.rendersize[1]
 				}
 			);
 
 			ImGui::ColorEdit3(
-				"Background color", (float*)&(imagerenderer.bgcolor)
+				"Background color", (float*)&(datasetA.imagerenderer.bgcolor)
 			);
 
 			ImGui::Combo(
-				"Display mode", (int*)&(imagerenderer.displaymode),
+				"Display mode", (int*)&(datasetA.imagerenderer.displaymode),
 				"Final luminance\0Paths per pixel"
 			);
 			
-			if(imagerenderer.displaymode == finalluminance)
+			if(datasetA.imagerenderer.displaymode == finalluminance)
 			{
 				ImGui::SliderFloat(
-					"Exposure", &(imagerenderer.exposure), -2, 10
+					"Exposure", &(datasetA.imagerenderer.exposure), -2, 10
 				);
 			}
 
@@ -350,16 +364,16 @@ void Application::renderui()
 		
 		ImGui::Begin("Paths options");
 			mustrenderviewport |= ImGui::Checkbox(
-				"Render", &(pathsrenderer.enablerendering)
+				"Render", &(datasetA.pathsrenderer.enablerendering)
 			);
 
-			if(pathsrenderer.enablerendering)
+			if(datasetA.pathsrenderer.enablerendering)
 			{
 				mustrenderviewport |= ImGui::SliderFloat(
-					"Paths alpha", &(pathsrenderer.pathsalpha), 0, 1
+					"Paths alpha", &(datasetA.pathsrenderer.pathsalpha), 0, 1
 				);
 				mustrenderviewport |= ImGui::Checkbox(
-					"Depth test", &(pathsrenderer.enabledepth)
+					"Depth test", &(datasetA.pathsrenderer.enabledepth)
 				);
 			}
 		ImGui::End();
@@ -502,9 +516,9 @@ void Application::initimgui()
 
 void Application::updateselectedpaths()
 {
-	filtermanager.computepaths(gathereddata);
-	imagerenderer.updatepathmask(gathereddata);
-	pathsrenderer.updaterenderlist(gathereddata);
+	filtermanager.computepaths(datasetA.gathereddata);
+	datasetA.imagerenderer.updatepathmask(datasetA.gathereddata);
+	datasetA.pathsrenderer.updaterenderlist(datasetA.gathereddata);
 
 	mustrenderviewport = true;
 }
@@ -524,16 +538,16 @@ void Application::loadscene()
 
 void Application::loaddataset()
 {
-	gathereddata = GatheredData();
-	gathereddata.loadall(datasetpath, scenepath);
+	datasetA.gathereddata = GatheredData();
+	datasetA.gathereddata.loadall(datasetA.path, scenepath);
 
-	pathsrenderer = PathsRenderer();
-	pathsrenderer.init();
+	datasetA.pathsrenderer = PathsRenderer();
+	datasetA.pathsrenderer.init();
 
-	imagerenderer = ImageRenderer();
-	imagerenderer.init(gathereddata);
+	datasetA.imagerenderer = ImageRenderer();
+	datasetA.imagerenderer.init(datasetA.gathereddata);
 
-	datasetloaded = true;
+	datasetA.isloaded = true;
 	mustrenderviewport = true;
 }
 
