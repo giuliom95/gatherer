@@ -27,7 +27,10 @@ public:
 	// Used to store temporary data;
 	std::vector<unsigned> selectedpathstmpbuf;
 
-	void loadall(const boost::filesystem::path& folder);
+	void loadall(
+		const boost::filesystem::path& folder,
+		const boost::filesystem::path& scenejson
+	);
 };
 
 #endif

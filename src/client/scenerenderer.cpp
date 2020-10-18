@@ -1,16 +1,17 @@
 #include "scenerenderer.hpp"
 
-void SceneRenderer::init(Camera& cam)
+void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 {
-	boost::filesystem::path json_path = "../data/renderdata/scene.json";
-	boost::filesystem::path bin_path = "../data/renderdata/scene.bin";
+	boost::filesystem::path bin_path = 
+		boost::filesystem::change_extension(path, "bin");
+	LOG(info) << path << " " << bin_path;
 
 	nlohmann::json json_data;
-	boost::filesystem::ifstream json_file{json_path};
+	boost::filesystem::ifstream json_file{path};
 	if(!json_file) 
 	{
 		LOG(fatal) <<
-			"Could not open \"" << json_path.string() << "\"";
+			"Could not open \"" << path.string() << "\"";
 		throw std::runtime_error("Could not open scene file");
 	}
 	json_file >> json_data;

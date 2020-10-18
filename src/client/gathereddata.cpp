@@ -1,7 +1,9 @@
 #include "gathereddata.hpp"
 
-void GatheredData::loadall(const boost::filesystem::path& folder)
-{
+void GatheredData::loadall(
+	const boost::filesystem::path& folder, 
+	const boost::filesystem::path& scenejson
+) {
 	
 	datafolder = folder;
 
@@ -55,14 +57,12 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 
 	BOOST_LOG_TRIVIAL(info) << "Loaded all paths";
 
-	boost::filesystem::path json_path = folder / "scene.json";
-
 	nlohmann::json json_data;
-	boost::filesystem::ifstream json_file{json_path};
+	boost::filesystem::ifstream json_file{scenejson};
 	if(!json_file) 
 	{
 		LOG(fatal) <<
-			"Could not open \"" << json_path.string() << "\"";
+			"Could not open \"" << scenejson.string() << "\"";
 		throw std::runtime_error("Could not open scene file");
 	}
 	json_file >> json_data;
@@ -76,5 +76,6 @@ void GatheredData::loadall(const boost::filesystem::path& folder)
 	};
 
 	selectedpaths.reserve(npaths);
-	selectedpaths.reserve(npaths);
+
+	selectedpathstmpbuf.reserve(npaths);
 }

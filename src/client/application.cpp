@@ -89,10 +89,10 @@ Application::Application()
 
 	initimgui();
 
+	memset(scenepath, '\0', 128);
 	memset(datasetpath, '\0', 128);
 
-	camera.aspect = (float)DEF_WINDOW_W / DEF_WINDOW_H;
-
+	// TODO move 
 	cursor_old_pos = get_cursor_pos(window);
 	lmb_pressed = false;
 	rmb_pressed = false;
@@ -121,89 +121,96 @@ bool Application::loop()
 
 	glfwPollEvents();
 
-	if(!imgui_io->WantCaptureKeyboard)
+	// Bother checking events outside GUI only if scene has been loaded
+	if(sceneloaded)
 	{
-		camera_key_pressed = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
-	}
-
-	if(!imgui_io->WantCaptureMouse)
-	{
-
-		if(camera_key_pressed)
+		if(!imgui_io->WantCaptureKeyboard)
 		{
-			mustrenderviewport |= mouse_camera_event(
-				GLFW_MOUSE_BUTTON_LEFT, lmb_pressed,
-				window, cursor_old_pos, rotate_camera, camera
-			);
-
-			mustrenderviewport |= mouse_camera_event(
-				GLFW_MOUSE_BUTTON_RIGHT, rmb_pressed,
-				window, cursor_old_pos, dolly_camera, camera
-			);
-
-			mustrenderviewport |= mouse_camera_event (
-				GLFW_MOUSE_BUTTON_MIDDLE, mmb_pressed,
-				window, cursor_old_pos, truckboom_camera, camera
-			);
+			camera_key_pressed = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
 		}
-		else
+
+		if(!imgui_io->WantCaptureMouse)
 		{
-			const int btn_state = 
-				glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-
-			if (btn_state == GLFW_PRESS)
+			if(camera_key_pressed)
 			{
-				// Find out world position
-				glBindFramebuffer(GL_FRAMEBUFFER, scenerenderer.fbo_id);
-				Vec2f p = get_cursor_pos(window);
-				Vec3f clicked_worldpoint;
-				glReadPixels(
-					(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
-					GL_RGB, GL_FLOAT, 
-					&clicked_worldpoint
+				mustrenderviewport |= mouse_camera_event(
+					GLFW_MOUSE_BUTTON_LEFT, lmb_pressed,
+					window, cursor_old_pos, rotate_camera, camera
 				);
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				// Perfect zero happens only when out of scene
-				if(length(clicked_worldpoint) != 0)
-				{
-					if(!lmb_pressed)
-					{
 
-						if(activefiltertool == ActiveFilterTool::sphere)
-						{
-							std::shared_ptr<Filter> ss(
-								new SphereFilter(clicked_worldpoint)
-							);
-							ss->setframesize(framesize);
-							filtermanager.addfilter(ss);
+				mustrenderviewport |= mouse_camera_event(
+					GLFW_MOUSE_BUTTON_RIGHT, rmb_pressed,
+					window, cursor_old_pos, dolly_camera, camera
+				);
 
-							activefiltertool = ActiveFilterTool::none;
-						}
-						else if(activefiltertool == ActiveFilterTool::window)
-						{
-							Vec3f n = normalize(camera.eye() - camera.focus);
-							std::shared_ptr<WindowFilter> ss(
-								new WindowFilter(clicked_worldpoint, n)
-							);
-							ss->setframesize(framesize);
-							filtermanager.addfilter(ss);
-
-							activefiltertool = ActiveFilterTool::none;
-						}
-						
-
-						lmb_pressed = true;
-
-						mustrenderviewport = true;
-					}
-				}
+				mustrenderviewport |= mouse_camera_event (
+					GLFW_MOUSE_BUTTON_MIDDLE, mmb_pressed,
+					window, cursor_old_pos, truckboom_camera, camera
+				);
 			}
 			else
 			{
-				lmb_pressed = false;
+				// Events on path filters matter only when a dataset is loaded
+				if(datasetloaded)
+				{
+					const int btn_state = 
+						glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+
+					if (btn_state == GLFW_PRESS)
+					{
+						// Find out world position
+						glBindFramebuffer(GL_FRAMEBUFFER, scenerenderer.fbo_id);
+						Vec2f p = get_cursor_pos(window);
+						Vec3f clicked_worldpoint;
+						glReadPixels(
+							(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
+							GL_RGB, GL_FLOAT, 
+							&clicked_worldpoint
+						);
+						glBindFramebuffer(GL_FRAMEBUFFER, 0);
+						// Perfect zero happens only when out of scene
+						if(length(clicked_worldpoint) != 0)
+						{
+							if(!lmb_pressed)
+							{
+
+								if(activefiltertool == ActiveFilterTool::sphere)
+								{
+									std::shared_ptr<Filter> ss(
+										new SphereFilter(clicked_worldpoint)
+									);
+									ss->setframesize(framesize);
+									filtermanager.addfilter(ss);
+
+									activefiltertool = ActiveFilterTool::none;
+								}
+								else if(activefiltertool == ActiveFilterTool::window)
+								{
+									Vec3f n = normalize(camera.eye() - camera.focus);
+									std::shared_ptr<WindowFilter> ss(
+										new WindowFilter(clicked_worldpoint, n)
+									);
+									ss->setframesize(framesize);
+									filtermanager.addfilter(ss);
+
+									activefiltertool = ActiveFilterTool::none;
+								}
+								
+
+								lmb_pressed = true;
+
+								mustrenderviewport = true;
+							}
+						}
+					}
+					else
+					{
+						lmb_pressed = false;
+					}
+				}
 			}
+			
 		}
-		
 	}
 
 	render();
@@ -229,7 +236,7 @@ void Application::render()
 	glViewport(0, 0, framesize[0], framesize[1]);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if(datasetloaded)
+	if(sceneloaded)
 	{
 		if(mustrenderviewport)
 		{
@@ -240,7 +247,8 @@ void Application::render()
 				scenerenderer.texid_fbodepth,
 				scenerenderer.texid_fbobeauty
 			);
-			if(pathsrenderer.enablerendering)
+
+			if(datasetloaded && pathsrenderer.enablerendering)
 			{
 				pathsrenderer.render(
 					camera, scenerenderer.fbo_id,
@@ -255,9 +263,11 @@ void Application::render()
 
 		axesvisualizer.render(camera);
 		
-		imagerenderer.render();
+		if(datasetloaded)
+		{
+			imagerenderer.render();
+		}
 	}
-
 
 	renderui();
 
@@ -272,18 +282,30 @@ void Application::renderui()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::Begin("Dataset loading");
+	ImGui::Begin("Resource loading");
 		boost::filesystem::path cwd = boost::filesystem::current_path();
 		ImGui::TextWrapped("cwd: %s", cwd.c_str());
-		ImGui::InputText("##A", datasetpath, 128);
+
+		ImGui::InputText("##scene", scenepath, 128);
 		ImGui::SameLine();
-		if(ImGui::Button("Load dataset"))
+		if(ImGui::Button("Load scene"))
 		{
-			loaddataset(datasetpath);
+			loadscene();
+		}
+
+		// User shouldn't be able to load datasets without loading a scene first
+		if(sceneloaded)
+		{
+			ImGui::InputText("##A", datasetpath, 128);
+			ImGui::SameLine();
+			if(ImGui::Button("Load dataset"))
+			{
+				loaddataset();
+			}
 		}
 	ImGui::End();
 
-	if(datasetloaded)
+	if(sceneloaded)
 	{
 		ImGui::SetNextWindowSize({0,0});
 		ImGui::Begin("Axes", nullptr);
@@ -293,7 +315,10 @@ void Application::renderui()
 				{0,1}, {1,0}
 			);
 		ImGui::End();
+	}
 
+	if(datasetloaded)
+	{
 		ImGui::SetNextWindowSize({0,0});
 		ImGui::Begin("Render", nullptr);
 			ImGui::Image(
@@ -373,42 +398,46 @@ void Application::renderui()
 		ImGui::End();
 	}
 
-	if(ImGui::CollapsingHeader("Camera controls"))
+	//Debug window start
+	if(sceneloaded)
 	{
-		ImGui::DragFloat3(
-			"Focus point", 
-			reinterpret_cast<float*>(&(camera.focus))
-		);
-		ImGui::DragFloat("Pitch", &(camera.pitch));
-		ImGui::DragFloat("Yaw", &(camera.yaw));
-		ImGui::DragFloat("R", &(camera.r));
-		ImGui::DragFloat("FOV", &(camera.fov));
-		ImGui::DragFloat("Near plane", &(camera.znear));
-		ImGui::DragFloat("Far plane", &(camera.zfar));
-		if(ImGui::CollapsingHeader("View matrix"))
+		if(ImGui::CollapsingHeader("Camera controls"))
 		{
-			Mat4f w2c{camera.w2c()};
-			char fmt[]{"%.02f"};
-			ImGui::Columns(4, "w2c");
-			ImGui::Text(fmt, w2c(0,0));
-			ImGui::Text(fmt, w2c(0,1));
-			ImGui::Text(fmt, w2c(0,2));
-			ImGui::Text(fmt, w2c(0,3));
-			ImGui::NextColumn();
-			ImGui::Text(fmt, w2c(1,0));
-			ImGui::Text(fmt, w2c(1,1));
-			ImGui::Text(fmt, w2c(1,2));
-			ImGui::Text(fmt, w2c(1,3));
-			ImGui::NextColumn();
-			ImGui::Text(fmt, w2c(2,0));
-			ImGui::Text(fmt, w2c(2,1));
-			ImGui::Text(fmt, w2c(2,2));
-			ImGui::Text(fmt, w2c(2,3));
-			ImGui::NextColumn();
-			ImGui::Text(fmt, w2c(3,0));
-			ImGui::Text(fmt, w2c(3,1));
-			ImGui::Text(fmt, w2c(3,2));
-			ImGui::Text(fmt, w2c(3,3));
+			ImGui::DragFloat3(
+				"Focus point", 
+				reinterpret_cast<float*>(&(camera.focus))
+			);
+			ImGui::DragFloat("Pitch", &(camera.pitch));
+			ImGui::DragFloat("Yaw", &(camera.yaw));
+			ImGui::DragFloat("R", &(camera.r));
+			ImGui::DragFloat("FOV", &(camera.fov));
+			ImGui::DragFloat("Near plane", &(camera.znear));
+			ImGui::DragFloat("Far plane", &(camera.zfar));
+			if(ImGui::CollapsingHeader("View matrix"))
+			{
+				Mat4f w2c{camera.w2c()};
+				char fmt[]{"%.02f"};
+				ImGui::Columns(4, "w2c");
+				ImGui::Text(fmt, w2c(0,0));
+				ImGui::Text(fmt, w2c(0,1));
+				ImGui::Text(fmt, w2c(0,2));
+				ImGui::Text(fmt, w2c(0,3));
+				ImGui::NextColumn();
+				ImGui::Text(fmt, w2c(1,0));
+				ImGui::Text(fmt, w2c(1,1));
+				ImGui::Text(fmt, w2c(1,2));
+				ImGui::Text(fmt, w2c(1,3));
+				ImGui::NextColumn();
+				ImGui::Text(fmt, w2c(2,0));
+				ImGui::Text(fmt, w2c(2,1));
+				ImGui::Text(fmt, w2c(2,2));
+				ImGui::Text(fmt, w2c(2,3));
+				ImGui::NextColumn();
+				ImGui::Text(fmt, w2c(3,0));
+				ImGui::Text(fmt, w2c(3,1));
+				ImGui::Text(fmt, w2c(3,2));
+				ImGui::Text(fmt, w2c(3,3));
+			}
 		}
 	}
 
@@ -480,19 +509,32 @@ void Application::updateselectedpaths()
 	mustrenderviewport = true;
 }
 
-void Application::loaddataset(const boost::filesystem::path& folder)
+void Application::loadscene()
 {
-	LOG(info) << folder;
-	gathereddata.loadall(folder);
+	scenerenderer = SceneRenderer();
+	scenerenderer.init(scenepath, camera);
 
-	scenerenderer.init(camera);
+	axesvisualizer = AxesVisualizer();
 	axesvisualizer.init();
+
+	sceneloaded = true;
+	mustrenderviewport = true;
+	accountwindowresize();
+}
+
+void Application::loaddataset()
+{
+	gathereddata = GatheredData();
+	gathereddata.loadall(datasetpath, scenepath);
+
+	pathsrenderer = PathsRenderer();
 	pathsrenderer.init();
+
+	imagerenderer = ImageRenderer();
 	imagerenderer.init(gathereddata);
 
 	datasetloaded = true;
 	mustrenderviewport = true;
-	accountwindowresize();
 }
 
 void Application::windowresize(GLFWwindow* window, int width, int height)

@@ -6,6 +6,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/convenience.hpp>
 
 #include "utils.hpp"
 #include "camera.hpp"
@@ -23,7 +24,7 @@ public:
 class SceneRenderer
 {
 public:
-	void init(Camera& cam);
+	void init(const boost::filesystem::path& path, Camera& cam);
 	void render1(Camera& cam);
 	void render2();
 

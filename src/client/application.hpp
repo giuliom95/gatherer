@@ -35,8 +35,12 @@ public:
 
 	void accountwindowresize();
 private:
+	bool sceneloaded = false;
 	bool datasetloaded = false;
+
+	char scenepath[128];
 	char datasetpath[128];
+
 	GatheredData gathereddata;
 
 	GLFWwindow* window;
@@ -72,7 +76,8 @@ private:
 
 	void updateselectedpaths();
 
-	void loaddataset(const boost::filesystem::path& folder);
+	void loadscene();
+	void loaddataset();
 
 	static void windowresize(GLFWwindow* window, int width, int height);
 };
