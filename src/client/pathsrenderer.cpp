@@ -4,8 +4,10 @@ void PathsRenderer::init()
 {
 	glGenVertexArrays(1, &vaoidx);
 	glBindVertexArray(vaoidx);
-	glGenBuffers(1, &vboidx);
+	glGenBuffers(1, &posvboidx);
+	glGenBuffers(1, &colorvboidx);
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 	LOG(info) << "Created VAO";
 
 	shaprog_idx = disk_load_shader_program(
@@ -22,6 +24,7 @@ void PathsRenderer::init()
 	pathsalpha = PATHSRENDERER_DEFPATHSALPHA;
 	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
 	locid_enabledepth = glGetUniformLocation(shaprog_idx, "enabledepth");
+	locid_enableluminance = glGetUniformLocation(shaprog_idx, "enableluminance");
 	locid_scenedepth = glGetUniformLocation(shaprog_idx, "scenedepth");
 	locid_framesize = glGetUniformLocation(shaprog_idx, "framesize");
 }
@@ -48,6 +51,7 @@ void PathsRenderer::render(
 
 	glUniform1f(locid_pathsalpha, pathsalpha);
 	glUniform1i(locid_enabledepth, enabledepth);
+	glUniform1i(locid_enableluminance, enableluminance);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
@@ -66,8 +70,6 @@ void PathsRenderer::render(
 void PathsRenderer::updaterenderlist(GatheredData& gd)
 {
 	glBindVertexArray(vaoidx);
-	glBindBuffer(GL_ARRAY_BUFFER, vboidx);
-
 	const unsigned npaths = gd.selectedpaths.size();
 
 	paths_firsts  = std::vector<GLint>(npaths);
@@ -95,8 +97,12 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 		i++;
 	}
 
-	unsigned totalbytes = off * sizeof(Vec3h);
-	glBufferData(GL_ARRAY_BUFFER, totalbytes, NULL,  GL_DYNAMIC_DRAW);
+	const unsigned nvtx = off;
+	std::vector<half> pathsenergy(nvtx);
+
+	const unsigned totalvtxbytes = nvtx * sizeof(Vec3h);
+	glBindBuffer(GL_ARRAY_BUFFER, posvboidx);
+	glBufferData(GL_ARRAY_BUFFER, totalvtxbytes, NULL,  GL_DYNAMIC_DRAW);
 
 	for(unsigned i = 0; i < npaths; ++i)
 	{
@@ -106,10 +112,29 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 			paths_lengths[i] * sizeof(Vec3h), 
 			offset_ptrs[i]
 		);
+
+		const Vec3h luminance = gd.pathsluminance[i];
+		const half pathenergy = luminance[0] + luminance[1] + luminance[2];
+		std::fill(
+			pathsenergy.begin() + paths_firsts[i], 
+			pathsenergy.begin() + paths_firsts[i] + paths_lengths[i],
+			pathenergy
+		);
 	}
 
 	glVertexAttribPointer(
 		0, 3, GL_HALF_FLOAT, 
 		GL_FALSE, 3 * sizeof(half), (void*)0
+	);
+
+	glBindBuffer(GL_ARRAY_BUFFER, colorvboidx);
+	glBufferData(
+		GL_ARRAY_BUFFER, 
+		nvtx*sizeof(half), pathsenergy.data(),
+		GL_DYNAMIC_DRAW
+	);
+	glVertexAttribPointer(
+		1, 1, GL_HALF_FLOAT, 
+		GL_FALSE, sizeof(half), (void*)0
 	);
 }

@@ -32,16 +32,19 @@ public:
 
 	float pathsalpha;
 	bool enabledepth;
+	bool enableluminance;
 
 	void updaterenderlist(GatheredData& rd);
 	
 private:
 	GLuint vaoidx;
-	GLuint vboidx;
+	GLuint posvboidx;
+	GLuint colorvboidx;
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
 	GLuint locid_pathsalpha;
 	GLuint locid_enabledepth;
+	GLuint locid_enableluminance;
 	GLuint locid_scenedepth;
 	GLuint locid_framesize;
 

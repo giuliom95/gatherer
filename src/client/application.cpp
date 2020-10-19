@@ -434,6 +434,13 @@ void Application::renderui()
 				);
 				otherdataset.pathsrenderer.enabledepth = 
 					currentdataset->pathsrenderer.enabledepth;
+
+				mustrenderviewport |= ImGui::Checkbox(
+					"Luminance scaling", 
+					&(currentdataset->pathsrenderer.enableluminance)
+				);
+				otherdataset.pathsrenderer.enableluminance = 
+					currentdataset->pathsrenderer.enableluminance;
 			}
 		ImGui::End();
 
