@@ -31,7 +31,7 @@ void ImageRenderer::init(GatheredData& gd)
 		LOG(error) << "Framebuffer is not complete!";
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// Gather luminance into texture
+	// Gather radiance into texture
 	LOG(info) << "Final render size: " << rendersize;
 	renderedimage = std::vector<Vec3h>(rendersize[0]*rendersize[1]);
 	for(unsigned pi = 0; pi < gd.pathscamerasamples.size(); ++pi)
@@ -39,7 +39,7 @@ void ImageRenderer::init(GatheredData& gd)
 		CameraSample& s = gd.pathscamerasamples[pi];
 		const unsigned idx = s.i + rendersize[0]*s.j;
 		Vec3h& p = renderedimage[idx];
-		p = p + gd.pathsluminance[pi];
+		p = p + gd.pathsradiance[pi];
 	}
 	LOG(info) << "Accumulated paths";
 	for(unsigned idx = 0; idx < renderedimage.size(); idx++)
@@ -84,7 +84,7 @@ void ImageRenderer::init(GatheredData& gd)
 	bgcolor = Vec3f{1,0,1};
 	locid_bgcolor = glGetUniformLocation(shaprog_id, "bgcolor");
 
-	displaymode = finalluminance;
+	displaymode = finalradiance;
 	locid_displaymode = glGetUniformLocation(shaprog_id, "displaymode");
 }
 

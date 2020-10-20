@@ -11,7 +11,7 @@
 
 enum ImageDisplayMode : int
 {
-	finalluminance,
+	finalradiance,
 	pathsperpixel
 };
 

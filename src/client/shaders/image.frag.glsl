@@ -15,7 +15,7 @@ void main()
 
 	float pathmask = texture(pathmasktex, uv).r;
 
-	// luminance
+	// radiance
 	if(displaymode == 0)
 	{
 		if(pathmask == 0)

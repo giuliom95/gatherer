@@ -24,7 +24,7 @@ void PathsRenderer::init()
 	pathsalpha = PATHSRENDERER_DEFPATHSALPHA;
 	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
 	locid_enabledepth = glGetUniformLocation(shaprog_idx, "enabledepth");
-	locid_enableluminance = glGetUniformLocation(shaprog_idx, "enableluminance");
+	locid_enableradiance = glGetUniformLocation(shaprog_idx, "enableradiance");
 	locid_scenedepth = glGetUniformLocation(shaprog_idx, "scenedepth");
 	locid_framesize = glGetUniformLocation(shaprog_idx, "framesize");
 }
@@ -51,7 +51,7 @@ void PathsRenderer::render(
 
 	glUniform1f(locid_pathsalpha, pathsalpha);
 	glUniform1i(locid_enabledepth, enabledepth);
-	glUniform1i(locid_enableluminance, enableluminance);
+	glUniform1i(locid_enableradiance, enableradiance);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
@@ -113,8 +113,8 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 			offset_ptrs[i]
 		);
 
-		const Vec3h luminance = gd.pathsluminance[i];
-		const half pathenergy = luminance[0] + luminance[1] + luminance[2];
+		const Vec3h radiance = gd.pathsradiance[i];
+		const half pathenergy = radiance[0] + radiance[1] + radiance[2];
 		std::fill(
 			pathsenergy.begin() + paths_firsts[i], 
 			pathsenergy.begin() + paths_firsts[i] + paths_lengths[i],

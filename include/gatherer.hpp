@@ -43,14 +43,14 @@ public:
 	Buffer<Vec3h>			bouncespositions;
 	uint8_t 				currentpathbounces = 0;
 
-	Buffer<Vec3h>			luminance;
+	Buffer<Vec3h>			radiance;
 	Buffer<uint8_t>			lengths;
 	Buffer<CameraSample>	camerasamples;
 
 	void reserve()
 	{
 		bouncespositions.data.reserve(maxgeom);
-		luminance.data.reserve(maxpaths);
+		radiance.data.reserve(maxpaths);
 		lengths.data.reserve(maxpaths);
 		camerasamples.data.reserve(maxpaths);
 	}
@@ -62,9 +62,9 @@ public:
 		bouncespositions.outfile = folder / "bounces" / filename;
 		bouncespositions.outstream.open(bouncespositions.outfile);
 
-		std::sprintf(filename, "luminance%02d.bin", ti);
-		luminance.outfile = folder / "paths" / filename;
-		luminance.outstream.open(luminance.outfile);
+		std::sprintf(filename, "radiance%02d.bin", ti);
+		radiance.outfile = folder / "paths" / filename;
+		radiance.outstream.open(radiance.outfile);
 
 		std::sprintf(filename, "lengths%02d.bin", ti);
 		lengths.outfile = folder / "paths" / filename;
@@ -78,7 +78,7 @@ public:
 	void closefiles()
 	{
 		bouncespositions.outstream.close();
-		luminance.outstream.close();
+		radiance.outstream.close();
 		lengths.outstream.close();
 		camerasamples.outstream.close();
 	}
@@ -110,7 +110,7 @@ public:
 			folderpath / "bounces" / "positions.bin"
 		};
 		boost::filesystem::ofstream lum_ofs{
-			folderpath / "paths" / "luminance.bin"
+			folderpath / "paths" / "radiance.bin"
 		};
 		boost::filesystem::ofstream len_ofs{
 			folderpath / "paths" / "lengths.bin"
@@ -122,7 +122,7 @@ public:
 		for(DataBlock& db : data)
 		{
 			db.bouncespositions.storechunk();
-			db.luminance.storechunk();
+			db.radiance.storechunk();
 			db.lengths.storechunk();
 			db.camerasamples.storechunk();
 
@@ -131,12 +131,12 @@ public:
 			std::vector<char> buf(1024);
 
 			movefilecontents(db.bouncespositions.outfile, buf, bpos_ofs);
-			movefilecontents(db.luminance.outfile, buf, lum_ofs);
+			movefilecontents(db.radiance.outfile, buf, lum_ofs);
 			movefilecontents(db.lengths.outfile, buf, len_ofs);
 			movefilecontents(db.camerasamples.outfile, buf, cs_ofs);
 
 			boost::filesystem::remove(db.bouncespositions.outfile);
-			boost::filesystem::remove(db.luminance.outfile);
+			boost::filesystem::remove(db.radiance.outfile);
 			boost::filesystem::remove(db.lengths.outfile);
 			boost::filesystem::remove(db.camerasamples.outfile);
 		}
@@ -158,19 +158,19 @@ public:
 		}
 	}
 
-	void finalizepath(unsigned tid, Vec3h luminance, CameraSample sample)
+	void finalizepath(unsigned tid, Vec3h radiance, CameraSample sample)
 	{
 		DataBlock& db = data[tid];
 		db.lengths.data.push_back(db.currentpathbounces);
 		db.currentpathbounces = 0;
-		db.luminance.data.push_back(luminance);
+		db.radiance.data.push_back(radiance);
 		db.camerasamples.data.push_back(sample);
 
 		std::vector<uint8_t>& ld = db.lengths.data;
 		if(ld.size() >= ld.capacity())
 		{
 			data[tid].lengths.storechunk();
-			data[tid].luminance.storechunk();
+			data[tid].radiance.storechunk();
 			data[tid].camerasamples.storechunk();
 		}
 	}

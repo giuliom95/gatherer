@@ -18,7 +18,7 @@ public:
 	unsigned nbounces;
 	std::vector<uint8_t> pathslength;
 	std::vector<Vec3h> bouncesposition;
-	std::vector<Vec3h> pathsluminance;
+	std::vector<Vec3h> pathsradiance;
 	std::vector<CameraSample> pathscamerasamples;
 
 	std::vector<unsigned> firstbounceindexes;

@@ -140,6 +140,7 @@ bool Application::loop()
 					if(pressed)
 					{
 						switchdataset();
+						mustrenderviewport = true;
 						switch_key_pressed = true;
 					}
 				}
@@ -171,6 +172,9 @@ bool Application::loop()
 					GLFW_MOUSE_BUTTON_MIDDLE, mmb_pressed,
 					window, cursor_old_pos, truckboom_camera, camera
 				);
+
+				//if(mustrenderviewport)
+				//	LOG(info) << "!!! camera key + mouse";
 			}
 			else
 			{
@@ -224,6 +228,7 @@ bool Application::loop()
 								lmb_pressed = true;
 
 								mustrenderviewport = true;
+								//LOG(info) << "!!! click on scene";
 							}
 						}
 					}
@@ -253,6 +258,7 @@ void Application::accountwindowresize()
 	camera.aspect = (float)framesize[0] / framesize[1];
 
 	mustrenderviewport = true;
+	//LOG(info) << "!!! window resized";
 }
 
 void Application::render()
@@ -396,12 +402,12 @@ void Application::renderui()
 
 			ImGui::Combo(
 				"Display mode", (int*)&(currentdataset->imagerenderer.displaymode),
-				"Final luminance\0Paths per pixel"
+				"Final radiance\0Paths per pixel"
 			);
 			otherdataset.imagerenderer.displaymode = 
 				currentdataset->imagerenderer.displaymode;
 			
-			if(currentdataset->imagerenderer.displaymode == finalluminance)
+			if(currentdataset->imagerenderer.displaymode == finalradiance)
 			{
 				ImGui::SliderFloat(
 					"Exposure", &(currentdataset->imagerenderer.exposure), -2, 10
@@ -436,12 +442,14 @@ void Application::renderui()
 					currentdataset->pathsrenderer.enabledepth;
 
 				mustrenderviewport |= ImGui::Checkbox(
-					"Luminance scaling", 
-					&(currentdataset->pathsrenderer.enableluminance)
+					"Radiance scaling", 
+					&(currentdataset->pathsrenderer.enableradiance)
 				);
-				otherdataset.pathsrenderer.enableluminance = 
-					currentdataset->pathsrenderer.enableluminance;
+				otherdataset.pathsrenderer.enableradiance = 
+					currentdataset->pathsrenderer.enableradiance;
 			}
+			//if(mustrenderviewport)
+			//	LOG(info) << "!!! path option changed";
 		ImGui::End();
 
 		ImGui::Begin("Filters");
@@ -474,6 +482,7 @@ void Application::renderui()
 			if(filtermanager.renderui())
 			{
 				mustrenderviewport = true;
+				//LOG(info) << "!!! filter manager UI updated";
 			}
 		ImGui::End();
 	}
@@ -597,6 +606,7 @@ void Application::updateselectedpaths()
 	}
 
 	mustrenderviewport = true;
+	//LOG(info) << "!!! path selection";
 }
 
 void Application::loadscene()
@@ -609,6 +619,7 @@ void Application::loadscene()
 
 	sceneloaded = true;
 	mustrenderviewport = true;
+	//LOG(info) << "!!! scene loaded";
 	accountwindowresize();
 }
 
@@ -627,6 +638,7 @@ void Application::loaddataset(DataSet& dataset)
 
 	dataset.isloaded = true;
 	mustrenderviewport = true;
+	//LOG(info) << "!!! dataset loaded";
 	LOG(info) << "Done loading dataset";
 }
 

@@ -219,8 +219,9 @@ void SphereFilter::computepaths(GatheredData& gd)
 
 bool SphereFilter::renderstackui()
 {
+	bool modified = false;
 	char label[11];
 	sprintf(label, "Radius##%02u", globalid);
-	ImGui::DragFloat(label, &radius, 0.1f);
-	return true;
+	modified |= ImGui::DragFloat(label, &radius, 0.1f);
+	return modified;
 }
