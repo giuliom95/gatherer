@@ -1,4 +1,4 @@
-#version 450 core
+#version 460 core
 layout (location = 0) in vec3 vtx_in;
 
 out vec3 worldpos;

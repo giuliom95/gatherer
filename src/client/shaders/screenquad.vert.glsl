@@ -1,4 +1,4 @@
-#version 450 core
+#version 460 core
 out vec2 uv;
 
 void main()

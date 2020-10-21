@@ -1,4 +1,4 @@
-#version 450 core
+#version 460 core
 flat in uint axis;
 out vec4 out_color;
 

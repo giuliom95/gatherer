@@ -134,7 +134,7 @@ bool Application::loop()
 
 			if(datasetA.isloaded && datasetB.isloaded)
 			{
-				bool pressed = glfwGetKey(window, GLFW_KEY_TAB);
+				bool pressed = glfwGetKey(window, GLFW_KEY_X);
 				if(!switch_key_pressed)
 				{
 					if(pressed)
@@ -586,7 +586,7 @@ void Application::initimgui()
 	ImGui::CreateContext();
 	imgui_io = &(ImGui::GetIO());
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 450 core");
+	ImGui_ImplOpenGL3_Init("#version 460 core");
 }
 
 void Application::updateselectedpaths()

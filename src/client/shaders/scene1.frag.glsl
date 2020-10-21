@@ -1,4 +1,4 @@
-#version 450 core
+#version 460 core
 in vec3 worldpos;
 
 layout(location = 0) out vec3 out_worldpos;

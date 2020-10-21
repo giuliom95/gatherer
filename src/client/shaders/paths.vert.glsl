@@ -1,7 +1,7 @@
 #version 460 core
 layout (location = 0) in vec3 vtx_in;
 
-out int pathID;
+out flat int pathID;
 
 uniform mat4 vpmat;
 

@@ -81,6 +81,7 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 	}
 
 	std::vector<Vec3h*> offset_ptrs(npaths);
+	std::vector<float> pathsenergy(npaths);
 
 	unsigned off = 0;
 	unsigned i = 0;
@@ -91,13 +92,16 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 		paths_firsts[i] = off;
 		paths_lengths[i] = len;
 		offset_ptrs[i] = &(gd.bouncesposition[firstbounce]);
-		//LOG(info) << firstbounce << " " << off << " " << len;
+
+		const Vec3h radiance = gd.pathsradiance[pi];
+		const float pathenergy = radiance[0] + radiance[1] + radiance[2];
+		pathsenergy[i] = pathenergy;
+
 		off += len;
 		i++;
 	}
 
 	const unsigned nvtx = off;
-	std::vector<half> pathsenergy(npaths);
 
 	const unsigned totalvtxbytes = nvtx * sizeof(Vec3h);
 	glBindBuffer(GL_ARRAY_BUFFER, posvboidx);
@@ -111,10 +115,6 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 			paths_lengths[i] * sizeof(Vec3h), 
 			offset_ptrs[i]
 		);
-
-		const Vec3h radiance = gd.pathsradiance[i];
-		const half pathenergy = radiance[0] + radiance[1] + radiance[2];
-		pathsenergy[i] = pathenergy;
 	}
 
 	glVertexAttribPointer(
@@ -125,10 +125,10 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboidx);
 	glBufferData(
 		GL_SHADER_STORAGE_BUFFER, 
-		sizeof(half)*npaths, 
+		sizeof(float)*npaths, 
 		pathsenergy.data(),
 		GL_STATIC_DRAW
 	);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssboidx);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboidx);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

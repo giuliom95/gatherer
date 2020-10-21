@@ -1,4 +1,4 @@
-#version 450 core
+#version 460 core
 out float out_mask;
 
 uniform sampler2D scenedepth;
