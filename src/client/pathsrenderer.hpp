@@ -39,7 +39,7 @@ public:
 private:
 	GLuint vaoidx;
 	GLuint posvboidx;
-	GLuint colorvboidx;
+	GLuint ssboidx;
 	GLuint shaprog_idx;
 	GLuint locid_camvpmat;
 	GLuint locid_pathsalpha;

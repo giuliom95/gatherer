@@ -5,9 +5,8 @@ void PathsRenderer::init()
 	glGenVertexArrays(1, &vaoidx);
 	glBindVertexArray(vaoidx);
 	glGenBuffers(1, &posvboidx);
-	glGenBuffers(1, &colorvboidx);
+	glGenBuffers(1, &ssboidx);
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
 	LOG(info) << "Created VAO";
 
 	shaprog_idx = disk_load_shader_program(
@@ -98,11 +97,11 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 	}
 
 	const unsigned nvtx = off;
-	std::vector<half> pathsenergy(nvtx);
+	std::vector<half> pathsenergy(npaths);
 
 	const unsigned totalvtxbytes = nvtx * sizeof(Vec3h);
 	glBindBuffer(GL_ARRAY_BUFFER, posvboidx);
-	glBufferData(GL_ARRAY_BUFFER, totalvtxbytes, NULL,  GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, totalvtxbytes, NULL,  GL_STATIC_DRAW);
 
 	for(unsigned i = 0; i < npaths; ++i)
 	{
@@ -115,11 +114,7 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 
 		const Vec3h radiance = gd.pathsradiance[i];
 		const half pathenergy = radiance[0] + radiance[1] + radiance[2];
-		std::fill(
-			pathsenergy.begin() + paths_firsts[i], 
-			pathsenergy.begin() + paths_firsts[i] + paths_lengths[i],
-			pathenergy
-		);
+		pathsenergy[i] = pathenergy;
 	}
 
 	glVertexAttribPointer(
@@ -127,14 +122,13 @@ void PathsRenderer::updaterenderlist(GatheredData& gd)
 		GL_FALSE, 3 * sizeof(half), (void*)0
 	);
 
-	glBindBuffer(GL_ARRAY_BUFFER, colorvboidx);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboidx);
 	glBufferData(
-		GL_ARRAY_BUFFER, 
-		nvtx*sizeof(half), pathsenergy.data(),
-		GL_DYNAMIC_DRAW
+		GL_SHADER_STORAGE_BUFFER, 
+		sizeof(half)*npaths, 
+		pathsenergy.data(),
+		GL_STATIC_DRAW
 	);
-	glVertexAttribPointer(
-		1, 1, GL_HALF_FLOAT, 
-		GL_FALSE, sizeof(half), (void*)0
-	);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssboidx);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
