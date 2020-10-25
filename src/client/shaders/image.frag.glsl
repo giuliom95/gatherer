@@ -15,22 +15,24 @@ void main()
 
 	float pathmask = texture(pathmasktex, uv).r;
 
-	// radiance
+	float a = pow(2, exposure + 2.47393f);
+	float b = 84.66f;
+	float invGamma = 1 / 2.2f;
+	vec3 hdr = texture(renderedimagetex, uv).rgb;
+	out_color = clamp(b*pow(a*hdr, vec3(invGamma)), 0.0f, 255.0f) / 255.0f;
+
 	if(displaymode == 0)
+	{
+		//Do nothing
+	}
+	// radiance
+	else if(displaymode == 1)
 	{
 		if(pathmask == 0)
 			out_color = bgcolor;
-		else
-		{
-			float a = pow(2, exposure + 2.47393f);
-			float b = 84.66f;
-			float invGamma = 1 / 2.2f;
-			vec3 hdr = texture(renderedimagetex, uv).rgb;
-			out_color = clamp(b*pow(a*hdr, vec3(invGamma)), 0.0f, 255.0f) / 255.0f;
-		}
 	}
 	// bounce map, paths per pixel
-	else if(displaymode == 1)
+	else if(displaymode == 2)
 	{
 		if(pathmask == 0)
 			out_color = bgcolor;

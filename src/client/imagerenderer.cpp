@@ -48,8 +48,8 @@ void ImageRenderer::init(GatheredData& gd)
 		p = p / (half)gd.rendersamples;
 	}
 
-	glGenTextures(1, &renderedimagetex_id);
-	glBindTexture(GL_TEXTURE_2D, renderedimagetex_id);
+	glGenTextures(1, &fullrendertex_id);
+	glBindTexture(GL_TEXTURE_2D, fullrendertex_id);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGB16F, 
 		rendersize[0], rendersize[1], 
@@ -71,7 +71,7 @@ void ImageRenderer::init(GatheredData& gd)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	locid_renderedimagetex = 
+	locid_fullrendertex = 
 		glGetUniformLocation(shaprog_id, "renderedimagetex");
 
 	locid_pathmasktex = glGetUniformLocation(shaprog_id, "pathmasktex");
@@ -114,8 +114,8 @@ void ImageRenderer::render()
 	glViewport(0, 0, rendersize[0], rendersize[1]);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, renderedimagetex_id);
-	glUniform1i(locid_renderedimagetex, 0);
+	glBindTexture(GL_TEXTURE_2D, fullrendertex_id);
+	glUniform1i(locid_fullrendertex, 0);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, pathmasktex_id);

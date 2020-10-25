@@ -11,6 +11,7 @@
 
 enum ImageDisplayMode : int
 {
+	fullrender,
 	finalradiance,
 	pathsperpixel
 };
@@ -31,12 +32,12 @@ private:
 	std::vector<uint16_t> pathmask;
 	float spp_over_2e16;
 
-	GLuint renderedimagetex_id;
+	GLuint fullrendertex_id;
 
 	GLuint shaprog_id;
 	GLuint fbo_id;
 	GLuint pathmasktex_id;
-	GLuint locid_renderedimagetex;
+	GLuint locid_fullrendertex;
 	GLuint locid_pathmasktex;
 	GLuint locid_spp;
 	GLuint locid_exposure;

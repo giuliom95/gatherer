@@ -395,20 +395,26 @@ void Application::renderui()
 			);
 
 			ImGui::ColorEdit3(
-				"Background color", (float*)&(currentdataset->imagerenderer.bgcolor)
+				"Background color", 
+				(float*)&(currentdataset->imagerenderer.bgcolor)
 			);
 			otherdataset.imagerenderer.bgcolor = 
 				currentdataset->imagerenderer.bgcolor;
 
 			ImGui::Combo(
-				"Display mode", (int*)&(currentdataset->imagerenderer.displaymode),
-				"Final radiance\0Paths per pixel"
+				"Display mode", 
+				(int*)&(currentdataset->imagerenderer.displaymode),
+				"Unfiltered rendered image\0Final radiance\0Paths per pixel"
 			);
 			otherdataset.imagerenderer.displaymode = 
 				currentdataset->imagerenderer.displaymode;
 			
-			if(currentdataset->imagerenderer.displaymode == finalradiance)
-			{
+			if(
+				currentdataset->imagerenderer.displaymode == 
+				ImageDisplayMode::fullrender ||
+				currentdataset->imagerenderer.displaymode == 
+				ImageDisplayMode::finalradiance
+			){
 				ImGui::SliderFloat(
 					"Exposure", &(currentdataset->imagerenderer.exposure), -2, 10
 				);
