@@ -4,8 +4,7 @@
 #include "math.hpp"
 
 #include <vector>
-#include <boost/filesystem.hpp>
-#include <boost/log/trivial.hpp>
+#include <filesystem>
 
 class CameraSample
 {
@@ -19,8 +18,8 @@ class Buffer
 {
 public:
 	std::vector<T> data;
-	boost::filesystem::ofstream	outstream;
-	boost::filesystem::path		outfile;
+	std::ofstream	outstream;
+	std::filesystem::path		outfile;
 
 
 	void storechunk()
@@ -55,7 +54,7 @@ public:
 		camerasamples.data.reserve(maxpaths);
 	}
 
-	void openfiles(unsigned ti, const boost::filesystem::path& folder)
+	void openfiles(unsigned ti, const std::filesystem::path& folder)
 	{
 		char filename[20];
 		std::sprintf(filename, "positions%02d.bin", ti);
@@ -88,9 +87,8 @@ public:
 class Gatherer
 {
 public:
-	Gatherer(unsigned nthreads, const boost::filesystem::path& folder)
+	Gatherer(unsigned nthreads, const std::filesystem::path& folder)
 	{
-		BOOST_LOG_TRIVIAL(info) << "Initializing Gatherer";
 		data = std::vector<DataBlock>(nthreads);
 		folderpath = folder;
 
@@ -104,18 +102,17 @@ public:
 
 	~Gatherer()
 	{
-		BOOST_LOG_TRIVIAL(info) << "Releasing Gatherer";
 
-		boost::filesystem::ofstream bpos_ofs{
+		std::ofstream bpos_ofs{
 			folderpath / "bounces" / "positions.bin"
 		};
-		boost::filesystem::ofstream lum_ofs{
+		std::ofstream lum_ofs{
 			folderpath / "paths" / "radiance.bin"
 		};
-		boost::filesystem::ofstream len_ofs{
+		std::ofstream len_ofs{
 			folderpath / "paths" / "lengths.bin"
 		};
-		boost::filesystem::ofstream cs_ofs{
+		std::ofstream cs_ofs{
 			folderpath / "paths" / "camerasamples.bin"
 		};
 
@@ -135,10 +132,10 @@ public:
 			movefilecontents(db.lengths.outfile, buf, len_ofs);
 			movefilecontents(db.camerasamples.outfile, buf, cs_ofs);
 
-			boost::filesystem::remove(db.bouncespositions.outfile);
-			boost::filesystem::remove(db.radiance.outfile);
-			boost::filesystem::remove(db.lengths.outfile);
-			boost::filesystem::remove(db.camerasamples.outfile);
+			std::filesystem::remove(db.bouncespositions.outfile);
+			std::filesystem::remove(db.radiance.outfile);
+			std::filesystem::remove(db.lengths.outfile);
+			std::filesystem::remove(db.camerasamples.outfile);
 		}
 
 		bpos_ofs.close();
@@ -177,14 +174,14 @@ public:
 
 private:
 	std::vector<DataBlock>	data;
-	boost::filesystem::path	folderpath;
+	std::filesystem::path	folderpath;
 
 	void movefilecontents(
-		boost::filesystem::path& ifs_path,
+		std::filesystem::path& ifs_path,
 		std::vector<char>& buf,
-		boost::filesystem::ofstream& ofs
+		std::ofstream& ofs
 	) {
-		boost::filesystem::ifstream ifs{ifs_path};
+		std::ifstream ifs{ifs_path};
 		while(!ifs.eof())
 		{
 			ifs.read(buf.data(), buf.size());
