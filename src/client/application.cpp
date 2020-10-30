@@ -433,37 +433,52 @@ void Application::renderui()
 		ImGui::End();
 
 		
-		ImGui::Begin("Paths options");
-			mustrenderviewport |= ImGui::Checkbox(
-				"Render", &(currentdataset->pathsrenderer.enablerendering)
-			);
-			otherdataset.pathsrenderer.enablerendering
-				= currentdataset->pathsrenderer.enablerendering;
-
-			if(currentdataset->pathsrenderer.enablerendering)
+		ImGui::Begin("Visualization options");
+			if(ImGui::CollapsingHeader("Scene"))
 			{
+				mustrenderviewport |= ImGui::ColorEdit3(
+					"Blend color", 
+					reinterpret_cast<float*>(&scenerenderer.blend_color)
+				);
 				mustrenderviewport |= ImGui::SliderFloat(
-					"Paths alpha", &(currentdataset->pathsrenderer.pathsalpha), 
+					"Blend alpha",
+					&scenerenderer.blend_alpha,
 					0, 1
 				);
-				otherdataset.pathsrenderer.pathsalpha =
-					currentdataset->pathsrenderer.pathsalpha;
-
-				mustrenderviewport |= ImGui::Checkbox(
-					"Depth test", &(currentdataset->pathsrenderer.enabledepth)
-				);
-				otherdataset.pathsrenderer.enabledepth = 
-					currentdataset->pathsrenderer.enabledepth;
-
-				mustrenderviewport |= ImGui::Checkbox(
-					"Radiance scaling", 
-					&(currentdataset->pathsrenderer.enableradiance)
-				);
-				otherdataset.pathsrenderer.enableradiance = 
-					currentdataset->pathsrenderer.enableradiance;
 			}
-			//if(mustrenderviewport)
-			//	LOG(info) << "!!! path option changed";
+			if(ImGui::CollapsingHeader("Paths"))
+			{
+				mustrenderviewport |= ImGui::Checkbox(
+					"Render", &(currentdataset->pathsrenderer.enablerendering)
+				);
+				otherdataset.pathsrenderer.enablerendering
+					= currentdataset->pathsrenderer.enablerendering;
+
+				if(currentdataset->pathsrenderer.enablerendering)
+				{
+					mustrenderviewport |= ImGui::SliderFloat(
+						"Paths alpha", &(currentdataset->pathsrenderer.pathsalpha), 
+						0, 1
+					);
+					otherdataset.pathsrenderer.pathsalpha =
+						currentdataset->pathsrenderer.pathsalpha;
+
+					mustrenderviewport |= ImGui::Checkbox(
+						"Depth test", &(currentdataset->pathsrenderer.enabledepth)
+					);
+					otherdataset.pathsrenderer.enabledepth = 
+						currentdataset->pathsrenderer.enabledepth;
+
+					mustrenderviewport |= ImGui::Checkbox(
+						"Radiance scaling", 
+						&(currentdataset->pathsrenderer.enableradiance)
+					);
+					otherdataset.pathsrenderer.enableradiance = 
+						currentdataset->pathsrenderer.enableradiance;
+				}
+				//if(mustrenderviewport)
+				//	LOG(info) << "!!! path option changed";
+			}
 		ImGui::End();
 
 		ImGui::Begin("Filters");
@@ -591,7 +606,6 @@ void Application::configureogl()
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 }
 

@@ -178,6 +178,7 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid1_camvpmat = glGetUniformLocation(shaprog1_idx, "vpmat");
 	locid1_geomalbedo = glGetUniformLocation(shaprog1_idx, "albedo");
 	locid1_eye = glGetUniformLocation(shaprog1_idx, "eye");
+	locid1_blend = glGetUniformLocation(shaprog1_idx, "blend");
 
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -233,6 +234,7 @@ void SceneRenderer::render1(Camera& cam)
 	GLenum bufs[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glDrawBuffers(2, bufs);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
@@ -243,6 +245,11 @@ void SceneRenderer::render1(Camera& cam)
 
 	const Vec3f eye = cam.eye();
 	glUniform3f(locid1_eye, eye[0], eye[1], eye[2]);
+
+	glUniform4f(
+		locid1_blend, 
+		blend_color[0], blend_color[1], blend_color[2], blend_alpha
+	);
 
 	glBindVertexArray(vaoidx);
 	for(Geometry geo : geometries)
@@ -259,6 +266,7 @@ void SceneRenderer::render1(Camera& cam)
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_CULL_FACE);
 }
 
 void SceneRenderer::render2()

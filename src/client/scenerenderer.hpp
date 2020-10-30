@@ -36,6 +36,9 @@ public:
 	GLuint texid_fbobeauty;
 	GLuint texid_fbodepth;
 	GLuint fbo_id;
+
+	Vec3f blend_color;
+	float blend_alpha;
 private:
 	GLuint vaoidx;
 
@@ -47,6 +50,7 @@ private:
 	GLuint locid1_camvpmat;
 	GLuint locid1_geomalbedo;
 	GLuint locid1_eye;
+	GLuint locid1_blend;
 
 	GLuint shaprog2_idx;
 	GLuint locid2_beautytex;
