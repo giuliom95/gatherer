@@ -39,6 +39,8 @@ public:
 
 	Vec3f blend_color;
 	float blend_alpha;
+
+	bool enableculling = true;
 private:
 	GLuint vaoidx;
 

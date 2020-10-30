@@ -234,7 +234,8 @@ void SceneRenderer::render1(Camera& cam)
 	GLenum bufs[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glDrawBuffers(2, bufs);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	if(enableculling)
+		glEnable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
