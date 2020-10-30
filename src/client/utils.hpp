@@ -24,6 +24,7 @@ public:
 
 	void addpt(Vec3f pt);
 	Vec3f center();
+	float maxlength();
 };
 
 GLuint disk_load_shader(

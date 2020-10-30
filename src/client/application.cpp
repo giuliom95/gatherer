@@ -37,15 +37,16 @@ bool mouse_camera_event(
 
 void rotate_camera(Vec2f cursor_delta, Camera& camera)
 {
-	camera.yaw   +=  0.5f * cursor_delta[0];
-	camera.pitch +=  0.5f * cursor_delta[1];
+	const float mult = 0.5f;
+	camera.yaw   +=  mult * cursor_delta[0];
+	camera.pitch +=  mult * cursor_delta[1];
 	if(camera.pitch >=  90) camera.pitch =  89.9f;
 	if(camera.pitch <= -90) camera.pitch = -89.9f;
 }
 
 void dolly_camera(Vec2f cursor_delta, Camera& camera)
 {
-	float mult = 1;
+	const float mult = 0.1f;
 	Vec3f p{
 		0, 
 		0, 
@@ -56,7 +57,7 @@ void dolly_camera(Vec2f cursor_delta, Camera& camera)
 
 void truckboom_camera(Vec2f cursor_delta, Camera& camera)
 {
-	float mult = 1;
+	const float mult = 0.01f;
 	Vec3f p{
 		-mult * cursor_delta[0], 
 		 mult * cursor_delta[1], 
@@ -201,11 +202,15 @@ bool Application::loop()
 						{
 							if(!lmb_pressed)
 							{
-
+								const float reasonabledim = 
+									scenerenderer.bbox.maxlength() / 10;
 								if(activefiltertool == ActiveFilterTool::sphere)
 								{
 									std::shared_ptr<Filter> ss(
-										new SphereFilter(clicked_worldpoint)
+										new SphereFilter(
+											clicked_worldpoint,
+											reasonabledim
+										)
 									);
 									ss->setframesize(framesize);
 									filtermanager.addfilter(ss);
@@ -216,7 +221,10 @@ bool Application::loop()
 								{
 									Vec3f n = normalize(camera.eye() - camera.focus);
 									std::shared_ptr<WindowFilter> ss(
-										new WindowFilter(clicked_worldpoint, n)
+										new WindowFilter(
+											clicked_worldpoint, n, 
+											{reasonabledim,reasonabledim}
+										)
 									);
 									ss->setframesize(framesize);
 									filtermanager.addfilter(ss);

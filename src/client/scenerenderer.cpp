@@ -99,13 +99,27 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		}
 
 		nlohmann::json json_albedo = json_geom["material"]["albedo"];
-		geom.albedo = Vec3f{
+		Vec3f albedo{
 			json_albedo[0],
 			json_albedo[1],
 			json_albedo[2]
 		};
 
+		nlohmann::json json_emission = json_geom["material"]["emission"];
+		Vec3f emission{
+			json_emission[0],
+			json_emission[1],
+			json_emission[2]
+		};
+
+		geom.color = albedo + emission;
+
 		geometries.push_back(geom);
+	}
+
+	for(Vec3f vtx : vertices)
+	{
+		bbox.addpt(vtx);
 	}
 
 	GLuint vbo;
@@ -148,6 +162,8 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		json_look[1],
 		json_look[2]
 	};
+
+	//cam.r = length(cam_eye - bbox.center());
 	cam.focus = cam_eye + cam.r*cam_look;
 	Vec3f sph = cartesian2spherical(cam_look);
 	LOG(info) << cam_look << " " << sph;
@@ -233,7 +249,7 @@ void SceneRenderer::render1(Camera& cam)
 	{
 		glUniform3f(
 			locid1_geomalbedo, 
-			geo.albedo[0], geo.albedo[1], geo.albedo[2]
+			geo.color[0], geo.color[1], geo.color[2]
 		);
 		glDrawElements(
 			GL_TRIANGLES, 

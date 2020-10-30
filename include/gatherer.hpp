@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <filesystem>
+#include <fstream>
 
 class CameraSample
 {

@@ -1,6 +1,6 @@
 #include "windowfilter.hpp"
 
-WindowFilter::WindowFilter(Vec3f pos, Vec3f n)
+WindowFilter::WindowFilter(Vec3f pos, Vec3f n, Vec2f s)
 {
 	filtertypename = "Window";
 	
@@ -19,7 +19,7 @@ WindowFilter::WindowFilter(Vec3f pos, Vec3f n)
 
 	position = pos;
 	normal = n;
-	size = Vec2f{50, 50};
+	size = s;
 	updatematrices();
 }
 

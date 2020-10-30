@@ -25,7 +25,13 @@ void AABB::addpt(Vec3f pt)
 
 Vec3f AABB::center()
 {
-		return 0.5f * (minpt + maxpt);
+	return 0.5f * (minpt + maxpt);
+}
+
+float AABB::maxlength()
+{
+	const Vec3f diff = maxpt - minpt;
+	return max(max(diff[0], diff[1]), diff[2]);
 }
 
 GLuint disk_load_shader(

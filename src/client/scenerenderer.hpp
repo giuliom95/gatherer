@@ -18,7 +18,7 @@ class Geometry
 public:
 	unsigned offset;
 	unsigned count;
-	Vec3f albedo;
+	Vec3f color;
 };
 
 class SceneRenderer
@@ -30,7 +30,7 @@ public:
 
 	void setframesize(Vec2i size);
 
-	//AABB bbox;
+	AABB bbox;
 
 	GLuint texid_fboworldpos;
 	GLuint texid_fbobeauty;
