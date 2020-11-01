@@ -202,8 +202,9 @@ bool Application::loop()
 						{
 							if(!lmb_pressed)
 							{
+								// Diameter = 1/10 of scene maximum length
 								const float reasonabledim = 
-									scenerenderer.bbox.maxlength() / 10;
+									scenerenderer.bbox.maxlength() / 10 / 2;
 								if(activefiltertool == ActiveFilterTool::sphere)
 								{
 									std::shared_ptr<Filter> ss(
@@ -293,12 +294,14 @@ void Application::render()
 				);
 			}
 
+			
 			filtermanager.render(
 				camera,  
 				scenerenderer.fbo_id, 
 				scenerenderer.texid_fbodepth,
 				scenerenderer.texid_fbobeauty
 			);
+			
 
 			mustrenderviewport = false;
 		}
