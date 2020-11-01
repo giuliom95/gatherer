@@ -80,6 +80,11 @@ private:
 	bool alwaysrenderviewport = false;
 	bool mustrenderviewport = true;
 
+	GLuint finalfbo_id;
+	GLuint texid_final;
+	GLuint finalshaprog_idx;
+	GLuint locid_finaltex;
+
 	void render();
 	void renderui();
 

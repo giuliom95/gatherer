@@ -91,7 +91,7 @@ void SphereFilter::render(
 	glBindFramebuffer(GL_FRAMEBUFFER, scenefbo_id);
 	glDepthMask(GL_FALSE);
 
-	GLenum buf[]{GL_COLOR_ATTACHMENT1};
+	GLenum buf[]{GL_COLOR_ATTACHMENT0};
 	glDrawBuffers(1, buf);
 
 	glActiveTexture(GL_TEXTURE0);

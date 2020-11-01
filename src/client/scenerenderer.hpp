@@ -27,7 +27,8 @@ class SceneRenderer
 public:
 	void init(const boost::filesystem::path& path, Camera& cam);
 	void render1(Camera& cam, bool opaque = true);
-	void render2();
+	void render2(GLuint final_fbo);
+	void render3(GLuint final_fbo, GLuint finaltex);
 
 	void setframesize(Vec2i size);
 
@@ -63,7 +64,11 @@ private:
 	GLuint locid1_opaquedepth;
 
 	GLuint shaprog2_idx;
-	GLuint locid2_beautytex;
+	GLuint locid2_opaquebeauty;
+
+	GLuint shaprog3_idx;
+	GLuint locid3_finaltex;
+	GLuint locid3_transparentbeauty;
 
 	void loadscene(const boost::filesystem::path& path, Camera& cam);
 	void generateopaquefbo();

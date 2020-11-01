@@ -32,6 +32,9 @@ void WindowFilter::render(
 	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, scenefbo_id);
 
+	GLenum buf[]{GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, buf);
+
 	glDisable(GL_CULL_FACE);
 	glDepthMask(GL_FALSE);
 

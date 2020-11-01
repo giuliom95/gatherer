@@ -91,6 +91,7 @@ Application::Application()
 	initimgui();
 
 	//memset(scenepath, '\0', 128);
+	// TODO remove
 	strcpy(scenepath, "../data/sc2s/s.json");
 	strcpy(datasetA.path, "../data/sc2s/rd");
 	
@@ -102,7 +103,27 @@ Application::Application()
 	camera_key_pressed = false;
 	switch_key_pressed = false;
 
+	glGenTextures(1, &texid_final);
+	glBindTexture(GL_TEXTURE_2D, texid_final);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	accountwindowresize();
+
+	glGenFramebuffers(1, &finalfbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, finalfbo_id);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+		GL_TEXTURE_2D, texid_final, 0
+	);
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		LOG(error) << "Final framebuffer is not complete!";
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	finalshaprog_idx = disk_load_shader_program(
+		"../src/client/shaders/screenquad.vert.glsl",
+		"../src/client/shaders/final.frag.glsl"
+	);
+	locid_finaltex = glGetUniformLocation(finalshaprog_idx, "finaltex");
 
 	activefiltertool = ActiveFilterTool::none;
 
@@ -268,6 +289,13 @@ void Application::accountwindowresize()
 	scenerenderer.setframesize(framesize);
 	filtermanager.setframesize(framesize);
 
+	glBindTexture(GL_TEXTURE_2D, texid_final);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA32F, 
+		framesize[0], framesize[1], 0, 
+		GL_RGBA, GL_FLOAT, nullptr
+	);
+
 	camera.aspect = (float)framesize[0] / framesize[1];
 
 	mustrenderviewport = true;
@@ -288,27 +316,39 @@ void Application::render()
 			scenerenderer.render1(camera, true);
 			scenerenderer.render1(camera, false);
 
+			scenerenderer.render2(finalfbo_id);
+			scenerenderer.render3(finalfbo_id, texid_final);
+			
 			if(
 				currentdataset != nullptr &&  
-				currentdataset->pathsrenderer.enablerendering
+				currentdataset->pathsrenderer.enablerendering &&
+				currentdataset->gathereddata.selectedpaths.size() > 0
 			) {
 				currentdataset->pathsrenderer.render(
-					camera, scenerenderer.opaquefbo_id,
+					camera, finalfbo_id,
+					scenerenderer.texid_opaquebeauty, 
+					scenerenderer.texid_transparentbeauty, 
 					scenerenderer.texid_opaquedepth, 
-					framesize, currentdataset->gathereddata
+					scenerenderer.texid_transparentdepth, 
+					currentdataset->gathereddata
 				);
 			}
 			
+			
 			filtermanager.render(
-				camera,  
-				scenerenderer.opaquefbo_id, 
+				camera, finalfbo_id, 
 				scenerenderer.texid_opaquedepth,
-				scenerenderer.texid_opaquebeauty
+				texid_final
 			);
 			
 			mustrenderviewport = false;
 		}
-		scenerenderer.render2();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glUseProgram(finalshaprog_idx);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texid_final);
+		glUniform1i(locid_finaltex, 0);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		axesvisualizer.render(camera);
 		

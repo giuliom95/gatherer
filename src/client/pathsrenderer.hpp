@@ -23,8 +23,10 @@ public:
 	void render(
 		Camera& cam,
 		GLuint fbo,
-		GLuint scenedepthtex,
-		Vec2i framesize,
+		GLuint opaquebeautytex,
+		GLuint transbeautytex,
+		GLuint opaquedepthtex,
+		GLuint transdepthtex,
 		GatheredData& gd
 	);
 	
@@ -45,8 +47,11 @@ private:
 	GLuint locid_pathsalpha;
 	GLuint locid_enabledepth;
 	GLuint locid_enableradiance;
-	GLuint locid_scenedepth;
-	GLuint locid_framesize;
+
+	GLuint locid_opaquebeauty;
+	GLuint locid_transbeauty;
+	GLuint locid_opaquedepth;
+	GLuint locid_transdepth;
 
 	std::vector<GLint>		paths_firsts;
 	std::vector<GLsizei>	paths_lengths;

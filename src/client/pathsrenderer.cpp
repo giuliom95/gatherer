@@ -24,18 +24,27 @@ void PathsRenderer::init()
 	locid_pathsalpha = glGetUniformLocation(shaprog_idx, "pathsalpha");
 	locid_enabledepth = glGetUniformLocation(shaprog_idx, "enabledepth");
 	locid_enableradiance = glGetUniformLocation(shaprog_idx, "enableradiance");
-	locid_scenedepth = glGetUniformLocation(shaprog_idx, "scenedepth");
-	locid_framesize = glGetUniformLocation(shaprog_idx, "framesize");
+
+	locid_opaquebeauty = glGetUniformLocation(shaprog_idx, "opaquebeauty");
+	locid_transbeauty = glGetUniformLocation(shaprog_idx, "transbeauty");
+	locid_opaquedepth = glGetUniformLocation(shaprog_idx, "opaquedepth");
+	locid_transdepth = glGetUniformLocation(shaprog_idx, "transdepth");
 }
 
 void PathsRenderer::render(
 	Camera& cam, 
 	GLuint fbo,
-	GLuint scenedepthtex,
-	Vec2i framesize,
+	GLuint opaquebeautytex,
+	GLuint transbeautytex,
+	GLuint opaquedepthtex,
+	GLuint transdepthtex,
 	GatheredData& gd
 ) {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	GLenum buf[]{GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, buf);
+	
 	glUseProgram(shaprog_idx);
 	glBindVertexArray(vaoidx);
 	glLineWidth(1);
@@ -53,20 +62,27 @@ void PathsRenderer::render(
 	glUniform1i(locid_enableradiance, enableradiance);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, scenedepthtex);
-	glUniform1i(locid_scenedepth, 0);
+	glBindTexture(GL_TEXTURE_2D, opaquebeautytex);
+	glUniform1i(locid_opaquebeauty, 0);
 
-	glUniform2i(locid_framesize, framesize[0], framesize[1]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, transbeautytex);
+	glUniform1i(locid_transbeauty, 1);
 
-	if(gd.selectedpaths.size() > 0)
-	{
-		glMultiDrawArrays(
-			GL_LINE_STRIP, 
-			paths_firsts.data(),
-			paths_lengths.data(),
-			gd.selectedpaths.size()
-		);
-	}
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, opaquedepthtex);
+	glUniform1i(locid_opaquedepth, 2);
+	
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, transdepthtex);
+	glUniform1i(locid_transdepth, 3);
+
+	glMultiDrawArrays(
+		GL_LINE_STRIP, 
+		paths_firsts.data(),
+		paths_lengths.data(),
+		gd.selectedpaths.size()
+	);
 }
 
 void PathsRenderer::updaterenderlist(GatheredData& gd)

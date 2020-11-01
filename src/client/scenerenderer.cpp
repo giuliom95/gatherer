@@ -28,8 +28,15 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		"../src/client/shaders/screenquad.vert.glsl",
 		"../src/client/shaders/scene2.frag.glsl"
 	);
+	locid2_opaquebeauty = glGetUniformLocation(shaprog2_idx, "opaquebeauty");
 
-	locid2_beautytex = glGetUniformLocation(shaprog2_idx, "beautytex");
+	shaprog3_idx = disk_load_shader_program(
+		"../src/client/shaders/screenquad.vert.glsl",
+		"../src/client/shaders/scene3.frag.glsl"
+	);
+	locid3_finaltex = glGetUniformLocation(shaprog3_idx, "finaltex");
+	locid3_transparentbeauty = 
+		glGetUniformLocation(shaprog3_idx, "transparentbeauty");
 }
 
 void SceneRenderer::render1(Camera& cam, bool opaque)
@@ -98,17 +105,32 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	glDisable(GL_CULL_FACE);
 }
 
-void SceneRenderer::render2()
+void SceneRenderer::render2(GLuint finalfbo)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, finalfbo);
 	glUseProgram(shaprog2_idx);
-
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texid_opaquebeauty);
-	glUniform1i(locid2_beautytex, 0);
+	glUniform1i(locid2_opaquebeauty, 0);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void SceneRenderer::render3(GLuint finalfbo, GLuint finaltex)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, finalfbo);
+	glUseProgram(shaprog3_idx);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, finaltex);
+	glUniform1i(locid3_finaltex, 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texid_transparentbeauty);
+	glUniform1i(locid3_transparentbeauty, 1);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
+
 
 void SceneRenderer::setframesize(Vec2i size)
 {
@@ -116,12 +138,12 @@ void SceneRenderer::setframesize(Vec2i size)
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGB32F, 
 		size[0], size[1], 0, 
-		GL_RGB,  GL_FLOAT, nullptr
+		GL_RGB, GL_FLOAT, nullptr
 	);
 
 	glBindTexture(GL_TEXTURE_2D, texid_opaquebeauty);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA32F, 
+		GL_TEXTURE_2D, 0, GL_RGBA8, 
 		size[0], size[1], 0, 
 		GL_RGBA, GL_FLOAT, nullptr
 	);
@@ -135,7 +157,7 @@ void SceneRenderer::setframesize(Vec2i size)
 
 	glBindTexture(GL_TEXTURE_2D, texid_transparentbeauty);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA32F, 
+		GL_TEXTURE_2D, 0, GL_RGBA8, 
 		size[0], size[1], 0, 
 		GL_RGBA,  GL_FLOAT, nullptr
 	);

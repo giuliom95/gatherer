@@ -6,8 +6,11 @@ out vec4 out_color;
 uniform float pathsalpha;
 uniform bool enabledepth;
 uniform bool enableradiance;
-uniform sampler2D scenedepth;
-uniform ivec2 framesize;
+
+uniform sampler2D opaquebeauty;
+uniform sampler2D transbeauty;
+uniform sampler2D opaquedepth;
+uniform sampler2D transdepth;
 
 layout (binding = 0) buffer RadianceBlock
 {
@@ -19,10 +22,32 @@ void main()
 	float pathradiance = radiances[pathID];
 	if(enableradiance && pathradiance*pathsalpha < 0.0001) discard;
 
-	vec2 uv = gl_FragCoord.xy / vec2(framesize);
-	float sd = texture(scenedepth, uv).r;
-	if(enabledepth && gl_FragCoord.z > sd) discard;
+	ivec2 pixcoords = ivec2(gl_FragCoord.xy);
+	float d = gl_FragCoord.z;
+	float od = texelFetch(opaquedepth, pixcoords, 0).r;
+	if(enabledepth && d > od) discard;
 
-	float a = enableradiance ? pathradiance : 1;
-	out_color = vec4(vec3(1), min(a*pathsalpha, 1));
+	// Path color
+	float pam = enableradiance ? pathradiance : 1;
+	float pa = min(pam*pathsalpha, 1);
+	vec4 pc = vec4(vec3(1), pa);
+
+	float td = texelFetch(transdepth, pixcoords, 0).r;
+	if(d > td)
+	{
+		vec3 ob = texelFetch(opaquebeauty, pixcoords, 0).rgb;
+		vec4 tb = texelFetch(transbeauty, pixcoords, 0);
+		
+		// Color of ray on opaque
+		vec3 c1 = (1-pc.a)*ob + pc.a*pc.rgb;
+
+		out_color.rgb = tb.a*tb.rgb + (1-tb.a)*c1;
+		out_color.a = 1;
+	}
+	else
+	{
+		// Unoccluded ray
+		out_color = pc;
+	}
+
 }
