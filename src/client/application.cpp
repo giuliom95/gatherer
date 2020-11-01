@@ -281,7 +281,7 @@ void Application::render()
 
 		if(mustrenderviewport)
 		{
-			scenerenderer.render1opaque(camera);
+			scenerenderer.render1(camera);
 
 			if(
 				currentdataset != nullptr &&  
@@ -305,7 +305,7 @@ void Application::render()
 
 			mustrenderviewport = false;
 		}
-		scenerenderer.render3();
+		scenerenderer.render2();
 
 		axesvisualizer.render(camera);
 		

@@ -26,9 +26,8 @@ class SceneRenderer
 {
 public:
 	void init(const boost::filesystem::path& path, Camera& cam);
-	void render1opaque(Camera& cam);
-	void render2transparent(Camera& cam);
-	void render3();
+	void render1(Camera& cam);
+	void render2();
 
 	void setframesize(Vec2i size);
 
@@ -52,13 +51,15 @@ private:
 	std::vector<Geometry> geometries;
 	GLuint shaprog1_idx;
 	GLuint locid1_camvpmat;
-	GLuint locid1_geomalbedo;
+	GLuint locid1_geocolor;
+	GLuint locid1_geomalpha;
 	GLuint locid1_eye;
 	GLuint locid1_blend;
+	GLuint locid1_beautytex;
 
 
-	GLuint shaprog3_idx;
-	GLuint locid3_beautytex;
+	GLuint shaprog2_idx;
+	GLuint locid2_beautytex;
 
 };
 #endif

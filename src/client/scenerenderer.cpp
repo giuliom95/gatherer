@@ -121,13 +121,14 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		float opacity = 
 			json_opacity.is_null() ? 1 : (float)json_opacity;
 		float translucency = 
-			json_translucency.is_null() ? 1 : (float)json_translucency;
+			json_translucency.is_null() ? 0 : (float)json_translucency;
 		float transmission = 
-			json_transmission.is_null() ? 1 : (float)json_transmission;
-		LOG(info) << "STEP 2";
+			json_transmission.is_null() ? 0 : (float)json_transmission;
 		
 		if(opacity < 1 || translucency > 0 || transmission > 0)
+		{
 			geom.alpha = 0.5f;
+		}
 		else
 			geom.alpha = 1;
 
@@ -193,9 +194,11 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	);
 
 	locid1_camvpmat = glGetUniformLocation(shaprog1_idx, "vpmat");
-	locid1_geomalbedo = glGetUniformLocation(shaprog1_idx, "albedo");
+	locid1_geocolor = glGetUniformLocation(shaprog1_idx, "color");
+	locid1_geomalpha = glGetUniformLocation(shaprog1_idx, "alpha");
 	locid1_eye = glGetUniformLocation(shaprog1_idx, "eye");
 	locid1_blend = glGetUniformLocation(shaprog1_idx, "blend");
+	locid1_beautytex = glGetUniformLocation(shaprog1_idx, "beautytex");
 
 	glGenFramebuffers(1, &fbo_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -235,15 +238,15 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		LOG(error) << "Framebuffer is not complete!";
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	shaprog3_idx = disk_load_shader_program(
+	shaprog2_idx = disk_load_shader_program(
 		"../src/client/shaders/screenquad.vert.glsl",
-		"../src/client/shaders/scene3.frag.glsl"
+		"../src/client/shaders/scene2.frag.glsl"
 	);
 
-	locid3_beautytex = glGetUniformLocation(shaprog3_idx, "beautytex");
+	locid2_beautytex = glGetUniformLocation(shaprog2_idx, "beautytex");
 }
 
-void SceneRenderer::render1opaque(Camera& cam)
+void SceneRenderer::render1(Camera& cam)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
@@ -274,10 +277,15 @@ void SceneRenderer::render1opaque(Camera& cam)
 	glBindVertexArray(vaoidx);
 	for(Geometry geo : geometries)
 	{
+		if(geo.alpha < 1) continue;
+		
+		glUniform1f(locid1_geomalpha, geo.alpha);
+
 		glUniform3f(
-			locid1_geomalbedo, 
+			locid1_geocolor, 
 			geo.color[0], geo.color[1], geo.color[2]
 		);
+
 		glDrawElements(
 			GL_TRIANGLES, 
 			geo.count, 
@@ -289,20 +297,14 @@ void SceneRenderer::render1opaque(Camera& cam)
 	glDisable(GL_CULL_FACE);
 }
 
-void render2transparent(Camera& cam)
-{
-
-}
-
-
-void SceneRenderer::render3()
+void SceneRenderer::render2()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glUseProgram(shaprog3_idx);
+	glUseProgram(shaprog2_idx);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glUniform1i(locid3_beautytex, 0);
+	glUniform1i(locid2_beautytex, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
