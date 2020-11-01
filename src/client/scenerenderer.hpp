@@ -26,7 +26,7 @@ class SceneRenderer
 {
 public:
 	void init(const boost::filesystem::path& path, Camera& cam);
-	void render1(Camera& cam);
+	void render1(Camera& cam, bool opaque = true);
 	void render2();
 
 	void setframesize(Vec2i size);
@@ -34,9 +34,14 @@ public:
 	AABB bbox;
 
 	GLuint texid_fboworldpos;
-	GLuint texid_fbobeauty;
-	GLuint texid_fbodepth;
-	GLuint fbo_id;
+
+	GLuint texid_opaquebeauty;
+	GLuint texid_opaquedepth;
+	GLuint opaquefbo_id;
+
+	GLuint texid_transparentbeauty;
+	GLuint texid_transparentdepth;
+	GLuint transparentfbo_id;
 
 	Vec3f blend_color;
 	float blend_alpha;
@@ -55,11 +60,14 @@ private:
 	GLuint locid1_geomalpha;
 	GLuint locid1_eye;
 	GLuint locid1_blend;
-	GLuint locid1_beautytex;
-
+	GLuint locid1_opaquedepth;
 
 	GLuint shaprog2_idx;
 	GLuint locid2_beautytex;
+
+	void loadscene(const boost::filesystem::path& path, Camera& cam);
+	void generateopaquefbo();
+	void generatetransparentfbo();
 
 };
 #endif

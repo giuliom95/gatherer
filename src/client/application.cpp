@@ -90,7 +90,9 @@ Application::Application()
 
 	initimgui();
 
-	memset(scenepath, '\0', 128);
+	//memset(scenepath, '\0', 128);
+	strcpy(scenepath, "../data/sc2s/s.json");
+	strcpy(datasetA.path, "../data/sc2s/rd");
 	
 	// TODO move 
 	cursor_old_pos = get_cursor_pos(window);
@@ -188,7 +190,9 @@ bool Application::loop()
 					if (btn_state == GLFW_PRESS)
 					{
 						// Find out world position
-						glBindFramebuffer(GL_FRAMEBUFFER, scenerenderer.fbo_id);
+						glBindFramebuffer(
+							GL_FRAMEBUFFER, scenerenderer.opaquefbo_id
+						);
 						Vec2f p = get_cursor_pos(window);
 						Vec3f clicked_worldpoint;
 						glReadPixels(
@@ -281,28 +285,27 @@ void Application::render()
 
 		if(mustrenderviewport)
 		{
-			scenerenderer.render1(camera);
+			scenerenderer.render1(camera, true);
+			scenerenderer.render1(camera, false);
 
 			if(
 				currentdataset != nullptr &&  
 				currentdataset->pathsrenderer.enablerendering
 			) {
 				currentdataset->pathsrenderer.render(
-					camera, scenerenderer.fbo_id,
-					scenerenderer.texid_fbodepth, 
+					camera, scenerenderer.opaquefbo_id,
+					scenerenderer.texid_opaquedepth, 
 					framesize, currentdataset->gathereddata
 				);
 			}
-
 			
 			filtermanager.render(
 				camera,  
-				scenerenderer.fbo_id, 
-				scenerenderer.texid_fbodepth,
-				scenerenderer.texid_fbobeauty
+				scenerenderer.opaquefbo_id, 
+				scenerenderer.texid_opaquedepth,
+				scenerenderer.texid_opaquebeauty
 			);
 			
-
 			mustrenderviewport = false;
 		}
 		scenerenderer.render2();

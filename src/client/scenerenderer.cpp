@@ -2,6 +2,154 @@
 
 void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 {
+	loadscene(path, cam);
+
+	glGenTextures(1, &texid_fboworldpos);
+	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	generateopaquefbo();
+	generatetransparentfbo();
+
+	shaprog1_idx = disk_load_shader_program(
+		"../src/client/shaders/scene1.vert.glsl",
+		"../src/client/shaders/scene1.frag.glsl"
+	);
+
+	locid1_camvpmat = glGetUniformLocation(shaprog1_idx, "vpmat");
+	locid1_geocolor = glGetUniformLocation(shaprog1_idx, "color");
+	locid1_geomalpha = glGetUniformLocation(shaprog1_idx, "alpha");
+	locid1_eye = glGetUniformLocation(shaprog1_idx, "eye");
+	locid1_blend = glGetUniformLocation(shaprog1_idx, "blend");
+	locid1_opaquedepth = glGetUniformLocation(shaprog1_idx, "opaquedepth");
+
+	shaprog2_idx = disk_load_shader_program(
+		"../src/client/shaders/screenquad.vert.glsl",
+		"../src/client/shaders/scene2.frag.glsl"
+	);
+
+	locid2_beautytex = glGetUniformLocation(shaprog2_idx, "beautytex");
+}
+
+void SceneRenderer::render1(Camera& cam, bool opaque)
+{
+	glBindFramebuffer(
+		GL_FRAMEBUFFER, 
+		opaque ? opaquefbo_id : transparentfbo_id
+	);
+
+	glUseProgram(shaprog1_idx);
+
+	GLenum bufs2clear[]{GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(opaque ? 2 : 1, bufs2clear);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	GLenum bufs[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+	glDrawBuffers(2, bufs);
+	glEnable(GL_DEPTH_TEST);
+	if(enableculling)
+		glEnable(GL_CULL_FACE);
+	else
+		glDisable(GL_CULL_FACE);
+
+	const Mat4f vpmat = cam.w2c()*cam.persp();
+	glUniformMatrix4fv(
+		locid1_camvpmat, 1, GL_FALSE, 
+		reinterpret_cast<const GLfloat*>(&vpmat)
+	);
+
+	const Vec3f eye = cam.eye();
+	glUniform3f(locid1_eye, eye[0], eye[1], eye[2]);
+
+	glUniform4f(
+		locid1_blend, 
+		blend_color[0], blend_color[1], blend_color[2], blend_alpha
+	);
+
+	if(!opaque)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texid_opaquedepth);
+		glUniform1i(locid1_opaquedepth, 0);
+	}
+
+	glBindVertexArray(vaoidx);
+	for(Geometry geo : geometries)
+	{
+		if( opaque && geo.alpha <  1) continue;
+		if(!opaque && geo.alpha == 1) continue;
+		
+		glUniform1f(locid1_geomalpha, geo.alpha);
+
+		glUniform3f(
+			locid1_geocolor, 
+			geo.color[0], geo.color[1], geo.color[2]
+		);
+
+		glDrawElements(
+			GL_TRIANGLES, 
+			geo.count, 
+			GL_UNSIGNED_INT, reinterpret_cast<void*>(geo.offset)
+		);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_CULL_FACE);
+}
+
+void SceneRenderer::render2()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(shaprog2_idx);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texid_opaquebeauty);
+	glUniform1i(locid2_beautytex, 0);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void SceneRenderer::setframesize(Vec2i size)
+{
+	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGB32F, 
+		size[0], size[1], 0, 
+		GL_RGB,  GL_FLOAT, nullptr
+	);
+
+	glBindTexture(GL_TEXTURE_2D, texid_opaquebeauty);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA32F, 
+		size[0], size[1], 0, 
+		GL_RGBA, GL_FLOAT, nullptr
+	);
+
+	glBindTexture(GL_TEXTURE_2D, texid_opaquedepth);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
+		size[0], size[1], 0, 
+		GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
+	);
+
+	glBindTexture(GL_TEXTURE_2D, texid_transparentbeauty);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA32F, 
+		size[0], size[1], 0, 
+		GL_RGBA,  GL_FLOAT, nullptr
+	);
+
+	glBindTexture(GL_TEXTURE_2D, texid_transparentdepth);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
+		size[0], size[1], 0, 
+		GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
+	);
+}
+
+void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
+{
 	boost::filesystem::path bin_path = 
 		boost::filesystem::change_extension(path, "bin");
 	LOG(info) << path << " " << bin_path;
@@ -187,35 +335,21 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	LOG(info) << cam_look << " " << sph;
 	cam.yaw = sph[1];
 	cam.pitch = sph[2];
+}
 
-	shaprog1_idx = disk_load_shader_program(
-		"../src/client/shaders/scene1.vert.glsl",
-		"../src/client/shaders/scene1.frag.glsl"
-	);
+void SceneRenderer::generateopaquefbo()
+{
+	glGenFramebuffers(1, &opaquefbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, opaquefbo_id);
 
-	locid1_camvpmat = glGetUniformLocation(shaprog1_idx, "vpmat");
-	locid1_geocolor = glGetUniformLocation(shaprog1_idx, "color");
-	locid1_geomalpha = glGetUniformLocation(shaprog1_idx, "alpha");
-	locid1_eye = glGetUniformLocation(shaprog1_idx, "eye");
-	locid1_blend = glGetUniformLocation(shaprog1_idx, "blend");
-	locid1_beautytex = glGetUniformLocation(shaprog1_idx, "beautytex");
+	glGenTextures(1, &texid_opaquebeauty);
+	glGenTextures(1, &texid_opaquedepth);
 
-	glGenFramebuffers(1, &fbo_id);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
-	glGenTextures(1, &texid_fboworldpos);
-	glGenTextures(1, &texid_fbobeauty);
-	glGenTextures(1, &texid_fbodepth);
-
-	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
+	glBindTexture(GL_TEXTURE_2D, texid_opaquebeauty);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
+	glBindTexture(GL_TEXTURE_2D, texid_opaquedepth);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -227,108 +361,54 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
-		GL_TEXTURE_2D, texid_fbobeauty, 0
+		GL_TEXTURE_2D, texid_opaquebeauty, 0
 	);  
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
-		GL_TEXTURE_2D, texid_fbodepth, 0
+		GL_TEXTURE_2D, texid_opaquedepth, 0
 	);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		LOG(error) << "Framebuffer is not complete!";
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	shaprog2_idx = disk_load_shader_program(
-		"../src/client/shaders/screenquad.vert.glsl",
-		"../src/client/shaders/scene2.frag.glsl"
-	);
-
-	locid2_beautytex = glGetUniformLocation(shaprog2_idx, "beautytex");
-}
-
-void SceneRenderer::render1(Camera& cam)
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
-	glUseProgram(shaprog1_idx);
-	GLenum bufs[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-	glDrawBuffers(2, bufs);
-	glEnable(GL_DEPTH_TEST);
-	if(enableculling)
-		glEnable(GL_CULL_FACE);
-	else
-		glDisable(GL_CULL_FACE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	const Mat4f vpmat = cam.w2c()*cam.persp();
-	glUniformMatrix4fv(
-		locid1_camvpmat, 1, GL_FALSE, 
-		reinterpret_cast<const GLfloat*>(&vpmat)
-	);
-
-	const Vec3f eye = cam.eye();
-	glUniform3f(locid1_eye, eye[0], eye[1], eye[2]);
-
-	glUniform4f(
-		locid1_blend, 
-		blend_color[0], blend_color[1], blend_color[2], blend_alpha
-	);
-
-	glBindVertexArray(vaoidx);
-	for(Geometry geo : geometries)
 	{
-		if(geo.alpha < 1) continue;
-		
-		glUniform1f(locid1_geomalpha, geo.alpha);
-
-		glUniform3f(
-			locid1_geocolor, 
-			geo.color[0], geo.color[1], geo.color[2]
-		);
-
-		glDrawElements(
-			GL_TRIANGLES, 
-			geo.count, 
-			GL_UNSIGNED_INT, reinterpret_cast<void*>(geo.offset)
-		);
+		LOG(error) << "Opaque framebuffer is not complete!";
 	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_CULL_FACE);
 }
 
-void SceneRenderer::render2()
+void SceneRenderer::generatetransparentfbo()
 {
+	glGenFramebuffers(1, &transparentfbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, transparentfbo_id);
+
+	glGenTextures(1, &texid_transparentbeauty);
+	glGenTextures(1, &texid_transparentdepth);
+
+	glBindTexture(GL_TEXTURE_2D, texid_transparentbeauty);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_2D, texid_transparentdepth);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	setframesize({DEF_WINDOW_W, DEF_WINDOW_H});
+
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+		GL_TEXTURE_2D, texid_fboworldpos, 0
+	);
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
+		GL_TEXTURE_2D, texid_transparentbeauty, 0
+	);  
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 
+		GL_TEXTURE_2D, texid_transparentdepth, 0
+	);
+
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		LOG(error) << "Transparent framebuffer is not complete!";
+	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glUseProgram(shaprog2_idx);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glUniform1i(locid2_beautytex, 0);
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-}
-
-void SceneRenderer::setframesize(Vec2i size)
-{
-	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGB32F, 
-		size[0], size[1], 0, 
-		GL_RGB,  GL_FLOAT, nullptr
-	);
-
-	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA32F, 
-		size[0], size[1], 0, 
-		GL_RGBA, GL_FLOAT, nullptr
-	);
-
-	glBindTexture(GL_TEXTURE_2D, texid_fbodepth);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
-		size[0], size[1], 0, 
-		 GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
-	);
 }
