@@ -276,18 +276,14 @@ void Application::render()
 
 	if(sceneloaded)
 	{
+		if(alwaysrenderviewport) mustrenderviewport = true;
+
 		if(mustrenderviewport)
 		{
-			scenerenderer.render1(camera);
-			filtermanager.render(
-				camera,  
-				scenerenderer.fbo_id, 
-				scenerenderer.texid_fbodepth,
-				scenerenderer.texid_fbobeauty
-			);
+			scenerenderer.render1opaque(camera);
 
 			if(
-				currentdataset != nullptr && 
+				currentdataset != nullptr &&  
 				currentdataset->pathsrenderer.enablerendering
 			) {
 				currentdataset->pathsrenderer.render(
@@ -297,9 +293,16 @@ void Application::render()
 				);
 			}
 
+			filtermanager.render(
+				camera,  
+				scenerenderer.fbo_id, 
+				scenerenderer.texid_fbodepth,
+				scenerenderer.texid_fbobeauty
+			);
+
 			mustrenderviewport = false;
 		}
-		scenerenderer.render2();
+		scenerenderer.render3();
 
 		axesvisualizer.render(camera);
 		
@@ -385,6 +388,64 @@ void Application::renderui()
 				{0,1}, {1,0}
 			);
 		ImGui::End();
+
+		ImGui::Begin("Visualization options");
+			if(ImGui::CollapsingHeader("Scene"))
+			{
+				mustrenderviewport |= ImGui::Checkbox(
+					"Backface culling", &scenerenderer.enableculling
+				);
+				mustrenderviewport |= ImGui::ColorEdit3(
+					"Blend color", 
+					reinterpret_cast<float*>(&scenerenderer.blend_color)
+				);
+				mustrenderviewport |= ImGui::SliderFloat(
+					"Blend alpha",
+					&scenerenderer.blend_alpha,
+					0, 1
+				);
+			}
+			
+			if(currentdataset != nullptr)
+			{
+				DataSet& otherdataset = 
+					currentdataset->id == datasetA.id ? datasetB : datasetA;
+
+				if(ImGui::CollapsingHeader("Paths"))
+				{
+					mustrenderviewport |= ImGui::Checkbox(
+						"Render", &(currentdataset->pathsrenderer.enablerendering)
+					);
+					otherdataset.pathsrenderer.enablerendering
+						= currentdataset->pathsrenderer.enablerendering;
+
+					if(currentdataset->pathsrenderer.enablerendering)
+					{
+						mustrenderviewport |= ImGui::SliderFloat(
+							"Paths alpha", &(currentdataset->pathsrenderer.pathsalpha), 
+							0, 1
+						);
+						otherdataset.pathsrenderer.pathsalpha =
+							currentdataset->pathsrenderer.pathsalpha;
+
+						mustrenderviewport |= ImGui::Checkbox(
+							"Depth test", &(currentdataset->pathsrenderer.enabledepth)
+						);
+						otherdataset.pathsrenderer.enabledepth = 
+							currentdataset->pathsrenderer.enabledepth;
+
+						mustrenderviewport |= ImGui::Checkbox(
+							"Radiance scaling", 
+							&(currentdataset->pathsrenderer.enableradiance)
+						);
+						otherdataset.pathsrenderer.enableradiance = 
+							currentdataset->pathsrenderer.enableradiance;
+					}
+					//if(mustrenderviewport)
+					//	LOG(info) << "!!! path option changed";
+				}
+			}
+		ImGui::End();
 	}
 
 	if(currentdataset != nullptr)
@@ -432,58 +493,6 @@ void Application::renderui()
 
 		ImGui::End();
 
-		
-		ImGui::Begin("Visualization options");
-			if(ImGui::CollapsingHeader("Scene"))
-			{
-				mustrenderviewport |= ImGui::Checkbox(
-					"Backface culling", &scenerenderer.enableculling
-				);
-				mustrenderviewport |= ImGui::ColorEdit3(
-					"Blend color", 
-					reinterpret_cast<float*>(&scenerenderer.blend_color)
-				);
-				mustrenderviewport |= ImGui::SliderFloat(
-					"Blend alpha",
-					&scenerenderer.blend_alpha,
-					0, 1
-				);
-			}
-			if(ImGui::CollapsingHeader("Paths"))
-			{
-				mustrenderviewport |= ImGui::Checkbox(
-					"Render", &(currentdataset->pathsrenderer.enablerendering)
-				);
-				otherdataset.pathsrenderer.enablerendering
-					= currentdataset->pathsrenderer.enablerendering;
-
-				if(currentdataset->pathsrenderer.enablerendering)
-				{
-					mustrenderviewport |= ImGui::SliderFloat(
-						"Paths alpha", &(currentdataset->pathsrenderer.pathsalpha), 
-						0, 1
-					);
-					otherdataset.pathsrenderer.pathsalpha =
-						currentdataset->pathsrenderer.pathsalpha;
-
-					mustrenderviewport |= ImGui::Checkbox(
-						"Depth test", &(currentdataset->pathsrenderer.enabledepth)
-					);
-					otherdataset.pathsrenderer.enabledepth = 
-						currentdataset->pathsrenderer.enabledepth;
-
-					mustrenderviewport |= ImGui::Checkbox(
-						"Radiance scaling", 
-						&(currentdataset->pathsrenderer.enableradiance)
-					);
-					otherdataset.pathsrenderer.enableradiance = 
-						currentdataset->pathsrenderer.enableradiance;
-				}
-				//if(mustrenderviewport)
-				//	LOG(info) << "!!! path option changed";
-			}
-		ImGui::End();
-
 		ImGui::Begin("Filters");
 			if(ImGui::Button("Update paths"))
 			{
@@ -522,6 +531,7 @@ void Application::renderui()
 	//Debug window start
 	if(sceneloaded)
 	{
+		ImGui::Checkbox("Always re-render", &alwaysrenderviewport);
 		if(ImGui::CollapsingHeader("Camera controls"))
 		{
 			ImGui::DragFloat3(

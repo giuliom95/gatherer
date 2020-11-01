@@ -58,12 +58,15 @@ void PathsRenderer::render(
 
 	glUniform2i(locid_framesize, framesize[0], framesize[1]);
 
-	glMultiDrawArrays(
-		GL_LINE_STRIP, 
-		paths_firsts.data(),
-		paths_lengths.data(),
-		gd.selectedpaths.size()
-	);
+	if(gd.selectedpaths.size() > 0)
+	{
+		glMultiDrawArrays(
+			GL_LINE_STRIP, 
+			paths_firsts.data(),
+			paths_lengths.data(),
+			gd.selectedpaths.size()
+		);
+	}
 }
 
 void PathsRenderer::updaterenderlist(GatheredData& gd)

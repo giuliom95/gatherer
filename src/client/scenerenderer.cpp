@@ -97,15 +97,16 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 			}
 
 		}
+		nlohmann::json json_material = json_geom["material"];
 
-		nlohmann::json json_albedo = json_geom["material"]["albedo"];
+		nlohmann::json json_albedo = json_material["albedo"];
 		Vec3f albedo{
 			json_albedo[0],
 			json_albedo[1],
 			json_albedo[2]
 		};
 
-		nlohmann::json json_emission = json_geom["material"]["emission"];
+		nlohmann::json json_emission = json_material["emission"];
 		Vec3f emission{
 			json_emission[0],
 			json_emission[1],
@@ -113,6 +114,22 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		};
 
 		geom.color = albedo + emission;
+
+		nlohmann::json json_opacity = json_material["opacity"];
+		nlohmann::json json_translucency = json_material["translucency"];
+		nlohmann::json json_transmission = json_material["transmission"];
+		float opacity = 
+			json_opacity.is_null() ? 1 : (float)json_opacity;
+		float translucency = 
+			json_translucency.is_null() ? 1 : (float)json_translucency;
+		float transmission = 
+			json_transmission.is_null() ? 1 : (float)json_transmission;
+		LOG(info) << "STEP 2";
+		
+		if(opacity < 1 || translucency > 0 || transmission > 0)
+			geom.alpha = 0.5f;
+		else
+			geom.alpha = 1;
 
 		geometries.push_back(geom);
 	}
@@ -218,15 +235,15 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		LOG(error) << "Framebuffer is not complete!";
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	shaprog2_idx = disk_load_shader_program(
+	shaprog3_idx = disk_load_shader_program(
 		"../src/client/shaders/screenquad.vert.glsl",
-		"../src/client/shaders/scene2.frag.glsl"
+		"../src/client/shaders/scene3.frag.glsl"
 	);
 
-	locid2_beautytex = glGetUniformLocation(shaprog2_idx, "beautytex");
+	locid3_beautytex = glGetUniformLocation(shaprog3_idx, "beautytex");
 }
 
-void SceneRenderer::render1(Camera& cam)
+void SceneRenderer::render1opaque(Camera& cam)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
@@ -270,14 +287,20 @@ void SceneRenderer::render1(Camera& cam)
 	glDisable(GL_CULL_FACE);
 }
 
-void SceneRenderer::render2()
+void render2transparent(Camera& cam)
+{
+
+}
+
+
+void SceneRenderer::render3()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glUseProgram(shaprog2_idx);
+	glUseProgram(shaprog3_idx);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texid_fbobeauty);
-	glUniform1i(locid2_beautytex, 0);
+	glUniform1i(locid3_beautytex, 0);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

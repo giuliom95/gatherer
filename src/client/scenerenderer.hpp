@@ -19,14 +19,16 @@ public:
 	unsigned offset;
 	unsigned count;
 	Vec3f color;
+	float alpha;
 };
 
 class SceneRenderer
 {
 public:
 	void init(const boost::filesystem::path& path, Camera& cam);
-	void render1(Camera& cam);
-	void render2();
+	void render1opaque(Camera& cam);
+	void render2transparent(Camera& cam);
+	void render3();
 
 	void setframesize(Vec2i size);
 
@@ -54,8 +56,9 @@ private:
 	GLuint locid1_eye;
 	GLuint locid1_blend;
 
-	GLuint shaprog2_idx;
-	GLuint locid2_beautytex;
+
+	GLuint shaprog3_idx;
+	GLuint locid3_beautytex;
 
 };
 #endif

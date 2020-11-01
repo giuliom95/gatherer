@@ -24,5 +24,5 @@ void main()
 	if(enabledepth && gl_FragCoord.z > sd) discard;
 
 	float a = enableradiance ? pathradiance : 1;
-	out_color = vec4(vec3(1), a*pathsalpha);
+	out_color = vec4(vec3(1), min(a*pathsalpha, 1));
 }

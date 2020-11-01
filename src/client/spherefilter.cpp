@@ -51,11 +51,15 @@ void SphereFilter::render(
 	GLuint scenedepthtex,
 	GLuint scenebeautytex
 ) {
-	glDisable(GL_CULL_FACE);
-
 	glUseProgram(shaprog1_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	glEnable(GL_DEPTH_TEST);
+
 
 	glPatchParameteri(GL_PATCH_VERTICES, 4);
 	const GLfloat il[]{6,6}; const GLfloat ol[]{6,6,6,6};

@@ -29,11 +29,11 @@ void WindowFilter::render(
 	GLuint scenedepthtex,
 	GLuint scenebeautytex
 ) {
-	glDisable(GL_CULL_FACE);
-	glDepthMask(GL_FALSE);
-
 	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, scenefbo_id);
+
+	glDisable(GL_CULL_FACE);
+	glDepthMask(GL_FALSE);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(

@@ -77,6 +77,7 @@ private:
 	bool camera_key_pressed;
 	bool switch_key_pressed;
 
+	bool alwaysrenderviewport = false;
 	bool mustrenderviewport = true;
 
 	void render();
