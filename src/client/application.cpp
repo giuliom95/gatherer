@@ -286,8 +286,14 @@ void Application::accountwindowresize()
 	glfwGetFramebufferSize(window, &framesize[0], &framesize[1]);
 	LOG(info) << "Framebuffer size: " << framesize;
 
-	scenerenderer.setframesize(framesize);
-	filtermanager.setframesize(framesize);
+	if(sceneloaded)
+	{
+		scenerenderer.setframesize(framesize);
+		filtermanager.setframesize(framesize);
+	}
+
+	if(datasetA.isloaded) datasetA.pathsrenderer.setframesize(framesize);
+	if(datasetB.isloaded) datasetB.pathsrenderer.setframesize(framesize);
 
 	glBindTexture(GL_TEXTURE_2D, texid_final);
 	glTexImage2D(
@@ -333,7 +339,6 @@ void Application::render()
 					currentdataset->gathereddata
 				);
 			}
-			
 			
 			filtermanager.render(
 				camera, finalfbo_id, 
@@ -720,6 +725,8 @@ void Application::loaddataset(DataSet& dataset)
 	dataset.gathereddata.loadall(dataset.path, scenepath);
 	dataset.pathsrenderer.init();
 	dataset.imagerenderer.init(dataset.gathereddata);
+
+	dataset.pathsrenderer.setframesize(framesize);
 
 	currentdataset = &dataset;
 

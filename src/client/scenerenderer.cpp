@@ -297,7 +297,7 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 		
 		if(opacity < 1 || translucency > 0 || transmission > 0)
 		{
-			geom.alpha = 0.5f;
+			geom.alpha = 0.7f;
 		}
 		else
 			geom.alpha = 1;

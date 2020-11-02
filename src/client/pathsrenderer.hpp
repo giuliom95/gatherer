@@ -22,13 +22,14 @@ public:
 	void init();
 	void render(
 		Camera& cam,
-		GLuint fbo,
+		GLuint finalfbo,
 		GLuint opaquebeautytex,
 		GLuint transbeautytex,
 		GLuint opaquedepthtex,
 		GLuint transdepthtex,
 		GatheredData& gd
 	);
+	void setframesize(Vec2i size);
 	
 	bool enablerendering;
 
@@ -42,16 +43,24 @@ private:
 	GLuint vaoidx;
 	GLuint posvboidx;
 	GLuint ssboidx;
-	GLuint shaprog_idx;
-	GLuint locid_camvpmat;
-	GLuint locid_pathsalpha;
-	GLuint locid_enabledepth;
-	GLuint locid_enableradiance;
 
-	GLuint locid_opaquebeauty;
-	GLuint locid_transbeauty;
-	GLuint locid_opaquedepth;
-	GLuint locid_transdepth;
+	GLuint shaprog1_idx;
+	GLuint locid1_camvpmat;
+	GLuint locid1_pathsalpha;
+	GLuint locid1_enabledepth;
+	GLuint locid1_enableradiance;
+	GLuint locid1_opaquedepth;
+	GLuint locid1_transdepth;
+
+	GLuint shaprog2_idx;
+	GLuint locid2_opaquebeauty;
+	GLuint locid2_transbeauty;
+	GLuint locid2_above;
+	GLuint locid2_below;
+
+	GLuint texid_above;
+	GLuint texid_below;
+	GLuint fbo_id;
 
 	std::vector<GLint>		paths_firsts;
 	std::vector<GLsizei>	paths_lengths;
