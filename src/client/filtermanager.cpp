@@ -8,7 +8,8 @@ void FilterManager::render(
 ) {
 	for(std::shared_ptr<Filter> f : filterslist)
 	{
-		f->render(cam, scenefbo_id, scenedepthtex, scenebeautytex);
+		if(f->visible)
+			f->render(cam, scenefbo_id, scenedepthtex, scenebeautytex);
 	}
 }
 
@@ -38,11 +39,22 @@ bool FilterManager::renderui()
 		it != filterslist.end();
 	) {
 		std::shared_ptr<Filter> filterptr = *it;
-		
-		char label[6];
-		sprintf(label, "-##%02u", i);
-		bool toerase = ImGui::Button(label);
+
+		ImGui::PushID(i);
+		bool toerase = ImGui::Button("-");
 		ImGui::SameLine();
+
+		std::string label;
+		if(filterptr->visible)
+			label = "Hide";
+		else
+			label = "Show";
+		bool visibilitytoggled = ImGui::Button(label.c_str());
+		modified |= visibilitytoggled;
+		filterptr->visible ^= visibilitytoggled;
+		ImGui::SameLine();
+		ImGui::PopID();
+
 		ImGui::Text(
 			"%s %u", 
 			filterptr->filtertypename.c_str(), 

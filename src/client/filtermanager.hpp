@@ -38,6 +38,8 @@ public:
 
 	Vec2i framesize;
 	unsigned globalid;
+
+	bool visible = true;
 };
 
 class FilterManager
