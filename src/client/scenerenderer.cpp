@@ -24,6 +24,8 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid1_blend = glGetUniformLocation(shaprog1_idx, "blend");
 	locid1_geomid = glGetUniformLocation(shaprog1_idx, "geomid");
 	locid1_opaquedepth = glGetUniformLocation(shaprog1_idx, "opaquedepth");
+	locid1_highlight = glGetUniformLocation(shaprog1_idx, "highlight");
+
 
 	shaprog2_idx = disk_load_shader_program(
 		"../src/client/shaders/screenquad.vert.glsl",
@@ -101,7 +103,11 @@ bool SceneRenderer::renderui()
 			}
 			ImGui::SameLine();
 
-			ImGui::Text(g.name.c_str());
+
+			if(ImGui::Selectable(g.name.c_str(), selected_geom == (int)idx))
+			{
+				selected_geom = idx;
+			}
 			ImGui::PopID();
 			++idx;
 		}
@@ -160,6 +166,8 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 		glUniform1f(locid1_geomalpha, geo.alpha);
 
 		glUniform1i(locid1_geomid, id);
+
+		glUniform1i(locid1_highlight, id == selected_geom ? 1 : 0);
 
 		glUniform3f(
 			locid1_geocolor, 

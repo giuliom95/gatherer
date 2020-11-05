@@ -202,31 +202,35 @@ bool Application::loop()
 			}
 			else
 			{
-				// Events on path filters matter only when a dataset is loaded
-				if(currentdataset != nullptr)
-				{
-					const int btn_state = 
-						glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+				const int btn_state = 
+					glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 
-					if (btn_state == GLFW_PRESS)
+				if (btn_state == GLFW_PRESS)
+				{
+					// Find out world position
+					glBindFramebuffer(
+						GL_FRAMEBUFFER, scenerenderer.opaquefbo_id
+					);
+					Vec2f p = get_cursor_pos(window);
+					float data[4];
+					glReadPixels(
+						(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
+						GL_RGBA, GL_FLOAT, 
+						&data
+					);
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+					Vec3f clicked_worldpoint{data[0], data[1], data[2]};
+					int clicked_geometry = data[3];
+					if(!lmb_pressed)
 					{
-						// Find out world position
-						glBindFramebuffer(
-							GL_FRAMEBUFFER, scenerenderer.opaquefbo_id
-						);
-						Vec2f p = get_cursor_pos(window);
-						float data[4];
-						glReadPixels(
-							(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
-							GL_RGBA, GL_FLOAT, 
-							&data
-						);
-						Vec3f clicked_worldpoint{data[0], data[1], data[2]};
-						glBindFramebuffer(GL_FRAMEBUFFER, 0);
 						// Perfect zero happens only when out of scene
 						if(length(clicked_worldpoint) != 0)
 						{
-							if(!lmb_pressed)
+							if(activefiltertool == ActiveFilterTool::none)
+							{
+								scenerenderer.selected_geom = clicked_geometry;
+							}
+							else
 							{
 								// Diameter = 1/10 of scene maximum length
 								const float reasonabledim = 
@@ -258,19 +262,24 @@ bool Application::loop()
 
 									activefiltertool = ActiveFilterTool::none;
 								}
-								
-
-								lmb_pressed = true;
-
-								mustrenderviewport = true;
-								//LOG(info) << "!!! click on scene";
 							}
+
 						}
+						else // Clicked out of scene
+						{
+							scenerenderer.selected_geom = -1;
+						}
+
+						lmb_pressed = true;
+
+						mustrenderviewport = true;
+						//LOG(info) << "!!! click on scene";
 					}
 					else
 					{
 						lmb_pressed = false;
 					}
+
 				}
 			}
 			

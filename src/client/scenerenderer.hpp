@@ -53,6 +53,8 @@ public:
 
 	Vec3f blend_color;
 	float blend_alpha;
+
+	int selected_geom = -1;
 private:
 	GLuint vaoidx;
 
@@ -68,6 +70,7 @@ private:
 	GLuint locid1_blend;
 	GLuint locid1_geomid;
 	GLuint locid1_opaquedepth;
+	GLuint locid1_highlight;
 
 	GLuint shaprog2_idx;
 	GLuint locid2_opaquebeauty;

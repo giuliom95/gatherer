@@ -14,6 +14,7 @@ uniform vec4 blend;
 uniform sampler2D opaquedepth;
 
 uniform int geomid;
+uniform bool highlight;
 
 void main()
 {
@@ -29,6 +30,13 @@ void main()
 	vec3 l = normalize(worldpos - eye);
 	vec3 diff = (0.5 + 0.5*abs(dot(n,l))) * color ;
 	diff = (1-blend.a) * diff + blend.a*blend.rgb;
+	if(
+		highlight && 
+		int(gl_FragCoord.x) % 2 == 0 && 
+		int(gl_FragCoord.y) % 2 == 0 
+	) {
+		diff = vec3(1,1,0);
+	}
 	out_beauty = vec4(diff, alpha);
 	out_worldposid.rgb = worldpos;
 	out_worldposid.a = geomid;
