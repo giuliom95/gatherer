@@ -41,7 +41,7 @@ public:
 
 	AABB bbox;
 
-	GLuint texid_fboworldpos;
+	GLuint texid_fboworldposid;
 
 	GLuint texid_opaquebeauty;
 	GLuint texid_opaquedepth;
@@ -66,6 +66,7 @@ private:
 	GLuint locid1_geomalpha;
 	GLuint locid1_eye;
 	GLuint locid1_blend;
+	GLuint locid1_geomid;
 	GLuint locid1_opaquedepth;
 
 	GLuint shaprog2_idx;

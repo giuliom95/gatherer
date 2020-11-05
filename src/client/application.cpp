@@ -215,12 +215,13 @@ bool Application::loop()
 							GL_FRAMEBUFFER, scenerenderer.opaquefbo_id
 						);
 						Vec2f p = get_cursor_pos(window);
-						Vec3f clicked_worldpoint;
+						float data[4];
 						glReadPixels(
 							(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
-							GL_RGB, GL_FLOAT, 
-							&clicked_worldpoint
+							GL_RGBA, GL_FLOAT, 
+							&data
 						);
+						Vec3f clicked_worldpoint{data[0], data[1], data[2]};
 						glBindFramebuffer(GL_FRAMEBUFFER, 0);
 						// Perfect zero happens only when out of scene
 						if(length(clicked_worldpoint) != 0)

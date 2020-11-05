@@ -4,8 +4,8 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 {
 	loadscene(path, cam);
 
-	glGenTextures(1, &texid_fboworldpos);
-	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
+	glGenTextures(1, &texid_fboworldposid);
+	glBindTexture(GL_TEXTURE_2D, texid_fboworldposid);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -22,6 +22,7 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid1_geomalpha = glGetUniformLocation(shaprog1_idx, "alpha");
 	locid1_eye = glGetUniformLocation(shaprog1_idx, "eye");
 	locid1_blend = glGetUniformLocation(shaprog1_idx, "blend");
+	locid1_geomid = glGetUniformLocation(shaprog1_idx, "geomid");
 	locid1_opaquedepth = glGetUniformLocation(shaprog1_idx, "opaquedepth");
 
 	shaprog2_idx = disk_load_shader_program(
@@ -147,14 +148,18 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	}
 
 	glBindVertexArray(vaoidx);
+	int id = -1;
 	for(Geometry geo : geometries)
 	{
+		++id;
 		if(!geo.visible) continue;
 
 		if( opaque && geo.alpha <  1) continue;
 		if(!opaque && geo.alpha == 1) continue;
 		
 		glUniform1f(locid1_geomalpha, geo.alpha);
+
+		glUniform1i(locid1_geomid, id);
 
 		glUniform3f(
 			locid1_geocolor, 
@@ -171,6 +176,7 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 			geo.count, 
 			GL_UNSIGNED_INT, reinterpret_cast<void*>(geo.offset)
 		);
+
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -206,11 +212,11 @@ void SceneRenderer::render3(GLuint finalfbo, GLuint finaltex)
 
 void SceneRenderer::setframesize(Vec2i size)
 {
-	glBindTexture(GL_TEXTURE_2D, texid_fboworldpos);
+	glBindTexture(GL_TEXTURE_2D, texid_fboworldposid);
 	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGB32F, 
+		GL_TEXTURE_2D, 0, GL_RGBA32F, 
 		size[0], size[1], 0, 
-		GL_RGB, GL_FLOAT, nullptr
+		GL_RGBA, GL_FLOAT, nullptr
 	);
 
 	glBindTexture(GL_TEXTURE_2D, texid_opaquebeauty);
@@ -454,7 +460,7 @@ void SceneRenderer::generateopaquefbo()
 
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-		GL_TEXTURE_2D, texid_fboworldpos, 0
+		GL_TEXTURE_2D, texid_fboworldposid, 0
 	);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
@@ -492,7 +498,7 @@ void SceneRenderer::generatetransparentfbo()
 
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-		GL_TEXTURE_2D, texid_fboworldpos, 0
+		GL_TEXTURE_2D, texid_fboworldposid, 0
 	);
 	glFramebufferTexture2D(
 		GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
