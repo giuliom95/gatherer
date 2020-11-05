@@ -4,6 +4,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -20,12 +23,16 @@ public:
 	unsigned count;
 	Vec3f color;
 	float alpha;
+	bool visible = true;
+	bool backfaceculling = true;
+	std::string name;
 };
 
 class SceneRenderer
 {
 public:
 	void init(const boost::filesystem::path& path, Camera& cam);
+	bool renderui();
 	void render1(Camera& cam, bool opaque = true);
 	void render2(GLuint final_fbo);
 	void render3(GLuint final_fbo, GLuint finaltex);
@@ -46,8 +53,6 @@ public:
 
 	Vec3f blend_color;
 	float blend_alpha;
-
-	bool enableculling = true;
 private:
 	GLuint vaoidx;
 
@@ -74,5 +79,7 @@ private:
 	void generateopaquefbo();
 	void generatetransparentfbo();
 
+	bool visibilitytoggle = false;
+	bool backfacestoggle = false;
 };
 #endif

@@ -443,9 +443,11 @@ void Application::renderui()
 		ImGui::Begin("Visualization options");
 			if(ImGui::CollapsingHeader("Scene"))
 			{
+				/*
 				mustrenderviewport |= ImGui::Checkbox(
 					"Backface culling", &scenerenderer.enableculling
 				);
+				*/
 				mustrenderviewport |= ImGui::ColorEdit3(
 					"Blend color", 
 					reinterpret_cast<float*>(&scenerenderer.blend_color)
@@ -455,6 +457,8 @@ void Application::renderui()
 					&scenerenderer.blend_alpha,
 					0, 1
 				);
+
+				mustrenderviewport |= scenerenderer.renderui();
 			}
 			
 			if(currentdataset != nullptr)

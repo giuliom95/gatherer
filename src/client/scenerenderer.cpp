@@ -39,6 +39,75 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 		glGetUniformLocation(shaprog3_idx, "transparentbeauty");
 }
 
+bool SceneRenderer::renderui()
+{
+	bool modified = false;
+
+	if(ImGui::CollapsingHeader("Geometries"))
+	{
+		if(ImGui::Button("Toggle visibility for all"))
+		{
+			for(Geometry& g : geometries)
+				g.visible = visibilitytoggle;
+			visibilitytoggle = !visibilitytoggle;
+			modified = true;
+		}
+		if(ImGui::Button("Toggle backfaces for all"))
+		{
+			for(Geometry& g : geometries)
+				g.backfaceculling = backfacestoggle;
+			backfacestoggle = !backfacestoggle;
+			modified = true;
+		}
+		ImGui::Separator();
+		unsigned idx = 0;
+		for(Geometry& g : geometries)
+		{
+			ImGui::PushID(idx);
+			if(g.visible)
+			{
+				if(ImGui::Button("Hide"))
+				{
+					g.visible = false;
+					modified = true;
+				}
+			}
+			else
+			{
+				if(ImGui::Button("Show"))
+				{
+					g.visible = true;
+					modified = true;
+				}
+			}
+			ImGui::SameLine();
+
+			if(g.backfaceculling)
+			{
+				if(ImGui::Button("Show back"))
+				{
+					g.backfaceculling = false;
+					modified = true;
+				}
+			}
+			else
+			{
+				if(ImGui::Button("Hide back"))
+				{
+					g.backfaceculling = true;
+					modified = true;
+				}
+			}
+			ImGui::SameLine();
+
+			ImGui::Text(g.name.c_str());
+			ImGui::PopID();
+			++idx;
+		}
+	}
+	return modified;
+}
+
 void SceneRenderer::render1(Camera& cam, bool opaque)
 {
 	glBindFramebuffer(
@@ -55,10 +124,6 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	GLenum bufs[]{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glDrawBuffers(2, bufs);
 	glEnable(GL_DEPTH_TEST);
-	if(enableculling)
-		glEnable(GL_CULL_FACE);
-	else
-		glDisable(GL_CULL_FACE);
 
 	const Mat4f vpmat = cam.w2c()*cam.persp();
 	glUniformMatrix4fv(
@@ -84,6 +149,8 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	glBindVertexArray(vaoidx);
 	for(Geometry geo : geometries)
 	{
+		if(!geo.visible) continue;
+
 		if( opaque && geo.alpha <  1) continue;
 		if(!opaque && geo.alpha == 1) continue;
 		
@@ -93,6 +160,11 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 			locid1_geocolor, 
 			geo.color[0], geo.color[1], geo.color[2]
 		);
+
+		if(geo.backfaceculling)
+			glEnable(GL_CULL_FACE);
+		else
+			glDisable(GL_CULL_FACE);
 
 		glDrawElements(
 			GL_TRIANGLES, 
@@ -228,6 +300,7 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 	unsigned vtx_byteoff = 0;
 	unsigned idx_byteoff = 0;
 	unsigned maxidx = 0;
+	unsigned idx = 0;
 	for(const nlohmann::json json_geom : json_data["geometries"]) 
 	{
 		unsigned curmaxidx = maxidx;
@@ -296,11 +369,13 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 			json_transmission.is_null() ? 0 : (float)json_transmission;
 		
 		if(opacity < 1 || translucency > 0 || transmission > 0)
-		{
 			geom.alpha = 0.7f;
-		}
 		else
 			geom.alpha = 1;
+
+		nlohmann::json json_name = json_geom["name"];
+		geom.name = 
+			json_name.is_null() ? "Geometry " + idx : (std::string)json_name;
 
 		geometries.push_back(geom);
 	}
