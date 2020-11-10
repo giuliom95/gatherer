@@ -28,6 +28,15 @@ public:
 	std::string name;
 };
 
+class Triangle
+{
+public:
+	Vec2f o;
+	Vec2f v1;
+	Vec2f v2;
+};
+
+
 class SceneRenderer
 {
 public:
@@ -82,6 +91,11 @@ private:
 	void loadscene(const boost::filesystem::path& path, Camera& cam);
 	void generateopaquefbo();
 	void generatetransparentfbo();
+
+	void generateuvmap(
+		const std::vector<Vec3f>& vertices, 
+		const std::vector<unsigned>& indexes
+	);
 
 	bool visibilitytoggle = false;
 	bool backfacestoggle = false;

@@ -107,6 +107,7 @@ bool SceneRenderer::renderui()
 			if(ImGui::Selectable(g.name.c_str(), selected_geom == (int)idx))
 			{
 				selected_geom = idx;
+				modified = true;
 			}
 			ImGui::PopID();
 			++idx;
@@ -394,6 +395,8 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 		geometries.push_back(geom);
 	}
 
+	generateuvmap(vertices, indexes);
+
 	for(Vec3f vtx : vertices)
 	{
 		bbox.addpt(vtx);
@@ -522,4 +525,130 @@ void SceneRenderer::generatetransparentfbo()
 		LOG(error) << "Transparent framebuffer is not complete!";
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void SceneRenderer::generateuvmap(
+	const std::vector<Vec3f>& vertices, 
+	const std::vector<unsigned>& indexes
+) {
+	const unsigned nverts = indexes.size();
+	std::vector<Triangle> tris;
+
+	for(unsigned tvi = 0; tvi < nverts; tvi += 3)
+	{
+		//LOG(info) << tvi;
+		//LOG(info) << indexes[tvi + 0];
+		//LOG(info) << indexes[tvi + 1];
+		//LOG(info) << indexes[tvi + 2];
+		const Vec3f v0 = vertices[indexes[tvi + 0]];
+		const Vec3f v1 = vertices[indexes[tvi + 1]];
+		const Vec3f v2 = vertices[indexes[tvi + 2]];
+		//LOG(info) << v0;
+		//LOG(info) << v1;
+		//LOG(info) << v2;
+
+		const Vec3f a = v1 - v0;
+		const Vec3f b = v2 - v0;
+		const Vec3f na = normalize(a);
+		const Vec3f nb = normalize(b);
+		const Vec3f n = normalize(cross(na, nb));
+		const Vec3f c = cross(n, na);
+
+		//LOG(info) << a;
+		//LOG(info) << c;
+		//LOG(info) << n;
+
+		// n contains a NaN, so degenerate triangle
+		if(length(n) != length(n))
+		{
+			//LOG(info) << "Discarded";
+			continue;
+		}
+
+		const Mat4f r = transpose({na, c, n, {}});
+
+		const Vec3f at = transformPoint(r, a);
+		const Vec3f bt = transformPoint(r, b);
+
+		Triangle t{{}, {at[1],at[0]}, {bt[1], bt[0]}};
+
+		if(t.v2[1] < 0)
+		{
+			Vec2f v1{t.v2[0], -t.v2[1]};
+			Vec2f v2{t.v2[0], t.v1[1]-t.v2[1]};
+			t.v1 = v1;
+			t.v2 = v2;
+		}
+
+		tris.push_back(t);
+	}
+
+	// Sort by area
+	std::sort(tris.begin(), tris.end(), [](
+		const Triangle& a, const Triangle& b
+	){
+		return max(a.v1[1], a.v2[1]) > max(b.v1[1], b.v2[1]);
+	});
+
+	// Put them on a single row
+	float xoff = 0;
+	float maxh = 0;
+	for(Triangle& t : tris)
+	{
+		maxh = max(maxh, t.v1[1]);
+		maxh = max(maxh, t.v2[1]);
+		t.o[0] = xoff;
+		xoff += max(t.v1[0], t.v2[0]);
+	}
+
+	const float totalw = xoff;
+	const int rows = sqrt(totalw / maxh);
+	//LOG(info) << rows;
+
+	xoff = 0;
+	maxh = 0;
+	float setw = 0;
+	int row = 0;
+	float rowh = 0;
+	const float tgtroww = totalw/rows;
+	for(Triangle& t : tris)
+	{
+		maxh = max(maxh, t.v1[1]);
+		maxh = max(maxh, t.v2[1]);
+		t.o[0] = xoff;
+		t.o[1] = rowh;
+		xoff += max(t.v1[0], t.v2[0]);
+		if(xoff > tgtroww)
+		{
+			//change row
+			setw = max(setw, xoff);
+			++row;
+			xoff = 0;
+			rowh += maxh;
+			maxh = 0;
+		}
+	}
+
+	float seth = rowh + maxh;
+	float divisor = 1 / max(setw, seth);
+
+	// Scale to UV space
+	for(Triangle& t : tris)
+	{
+		t.o = t.o * divisor;
+		t.v1 = t.v1 * divisor;
+		t.v2 = t.v2 * divisor;
+
+		t.v1 = t.o + t.v1;
+		t.v2 = t.o + t.v2;
+	}
+
+	//std::ofstream ofs("./uvmap");
+	//for(Triangle& t : tris)
+	//{
+	//	ofs << "pmc.polyCreateFacet(p=[["<< t.o[0] <<",0,"<< t.o[1] <<"],["<< t.o[0]+t.v1[0] <<",0,"<< t.o[1]+t.v1[1] <<"],["<< t.o[0]+t.v2[0] <<",0,"<< t.o[1]+t.v2[1] <<"]])" << std::endl;
+	//}
+	//ofs.close();
+
 }
