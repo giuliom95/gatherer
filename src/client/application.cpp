@@ -92,8 +92,8 @@ Application::Application()
 
 	//memset(scenepath, '\0', 128);
 	// TODO remove
-	strcpy(scenepath, "../data/sc2s/s.json");
-	strcpy(datasetA.path, "../data/sc2s/rd");
+	strcpy(scenepath, "../data/cb/s.json");
+	strcpy(datasetA.path, "../data/cb/rd");
 	
 	// TODO move 
 	cursor_old_pos = get_cursor_pos(window);
@@ -202,27 +202,28 @@ bool Application::loop()
 			}
 			else
 			{
-				const int btn_state = 
-					glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-
-				if (btn_state == GLFW_PRESS)
+				if(!lmb_pressed)
 				{
-					// Find out world position
-					glBindFramebuffer(
-						GL_FRAMEBUFFER, scenerenderer.opaquefbo_id
-					);
-					Vec2f p = get_cursor_pos(window);
-					float data[4];
-					glReadPixels(
-						(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
-						GL_RGBA, GL_FLOAT, 
-						&data
-					);
-					glBindFramebuffer(GL_FRAMEBUFFER, 0);
-					Vec3f clicked_worldpoint{data[0], data[1], data[2]};
-					int clicked_geometry = data[3];
-					if(!lmb_pressed)
+					const int btn_state = 
+						glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+
+					if (btn_state == GLFW_PRESS)
 					{
+						// Find out world position
+						glBindFramebuffer(
+							GL_FRAMEBUFFER, scenerenderer.opaquefbo_id
+						);
+						Vec2f p = get_cursor_pos(window);
+						float data[4];
+						glReadPixels(
+							(int)p[0],(int)(framesize[1]-p[1]), 1, 1, 
+							GL_RGBA, GL_FLOAT, 
+							&data
+						);
+						glBindFramebuffer(GL_FRAMEBUFFER, 0);
+						Vec3f clicked_worldpoint{data[0], data[1], data[2]};
+						int clicked_geometry = data[3];
+						
 						// Perfect zero happens only when out of scene
 						if(length(clicked_worldpoint) != 0)
 						{
@@ -247,6 +248,7 @@ bool Application::loop()
 									filtermanager.addfilter(ss);
 
 									activefiltertool = ActiveFilterTool::none;
+									LOG(info) << "FILTER";
 								}
 								else if(activefiltertool == ActiveFilterTool::window)
 								{
@@ -274,13 +276,14 @@ bool Application::loop()
 
 						mustrenderviewport = true;
 						//LOG(info) << "!!! click on scene";
+						
 					}
 					else
 					{
 						lmb_pressed = false;
 					}
-
 				}
+				
 			}
 			
 		}
