@@ -528,12 +528,83 @@ void SceneRenderer::generatetransparentfbo()
 }
 
 
+void squarify(
+	std::vector<Triangle>& triangles, 
+	const unsigned start, const unsigned end
+) {
+	LOG(info) << "start/end: " << start << " " << end;
+
+	// Put them on a single row
+	float xoff = 0;
+	float maxh = 0;
+	for(unsigned ti = start; ti < end; ++ti)
+	{
+		Triangle& t = triangles[ti];
+		maxh = max(maxh, t.v1[1]);
+		maxh = max(maxh, t.v2[1]);
+		t.o[0] = xoff;
+		xoff += max(t.v1[0], t.v2[0]);
+	}
+
+	const float totalw = xoff;
+	const int rows = sqrt(totalw / maxh)*1.5f;
+	//LOG(info) << rows;
+
+	xoff = 0;
+	maxh = 0;
+	float setw = 0;
+	int row = 0;
+	float rowh = 0;
+	const float tgtroww = totalw/rows;
+	for(unsigned ti = start; ti < end; ++ti)
+	{
+		Triangle& t = triangles[ti];
+		maxh = max(maxh, t.v1[1]);
+		maxh = max(maxh, t.v2[1]);
+		t.o[0] = xoff;
+		t.o[1] = rowh;
+		xoff += max(t.v1[0], t.v2[0]);
+		if(xoff > tgtroww)
+		{
+			//change row
+			setw = max(setw, xoff);
+			++row;
+			xoff = 0;
+			rowh += maxh;
+			maxh = 0;
+		}
+	}
+
+	float seth = rowh + maxh;
+	float divisor = 1 / max(setw, seth);
+
+	// Scale to UV space
+	for(unsigned ti = start; ti < end; ++ti)
+	{
+		Triangle& t = triangles[ti];
+		t.o = t.o * divisor;
+		t.v1 = t.v1 * divisor;
+		t.v2 = t.v2 * divisor;
+	}
+
+	char s[20];
+	sprintf(s, "./uvmap%i", start);
+	std::ofstream ofs(s);
+	for(unsigned ti = start; ti < end; ++ti)
+	{
+		Triangle& t = triangles[ti];
+		ofs << "pmc.polyCreateFacet(p=[["<< t.o[0] <<",0,"<< t.o[1] <<"],["<< t.o[0]+t.v1[0] <<",0,"<< t.o[1]+t.v1[1] <<"],["<< t.o[0]+t.v2[0] <<",0,"<< t.o[1]+t.v2[1] <<"]])" << std::endl;
+	}
+	ofs.close();
+}
+
 void SceneRenderer::generateuvmap(
 	const std::vector<Vec3f>& vertices, 
 	const std::vector<unsigned>& indexes
 ) {
 	const unsigned nverts = indexes.size();
 	std::vector<Triangle> tris;
+	float totalarea = 0;
 
 	for(unsigned tvi = 0; tvi < nverts; tvi += 3)
 	{
@@ -571,7 +642,7 @@ void SceneRenderer::generateuvmap(
 		const Vec3f at = transformPoint(r, a);
 		const Vec3f bt = transformPoint(r, b);
 
-		Triangle t{{}, {at[1],at[0]}, {bt[1], bt[0]}};
+		Triangle t{{}, {at[1],at[0]}, {bt[1], bt[0]}, tvi};
 
 		if(t.v2[1] < 0)
 		{
@@ -581,74 +652,42 @@ void SceneRenderer::generateuvmap(
 			t.v2 = v2;
 		}
 
+		totalarea += abs(t.v1[0]*t.v2[1] - t.v1[1]*t.v2[0]);
+
 		tris.push_back(t);
 	}
 
-	// Sort by area
+	// Sort by height
 	std::sort(tris.begin(), tris.end(), [](
 		const Triangle& a, const Triangle& b
 	){
 		return max(a.v1[1], a.v2[1]) > max(b.v1[1], b.v2[1]);
 	});
 
-	// Put them on a single row
-	float xoff = 0;
-	float maxh = 0;
+	// Individuate triangles at the boundaries of the uv sets
+	constexpr unsigned numuvsets = 3;
+	const float uvsetseparator = totalarea / numuvsets;
+	std::vector<unsigned> uvsetboundarytris(numuvsets + 1);
+	uvsetboundarytris[0] = 0;
+	uvsetboundarytris[numuvsets] = tris.size();
+	unsigned curuvset = 0;
+	float areaaccumulator = 0;
+	unsigned ti = 0;
 	for(Triangle& t : tris)
 	{
-		maxh = max(maxh, t.v1[1]);
-		maxh = max(maxh, t.v2[1]);
-		t.o[0] = xoff;
-		xoff += max(t.v1[0], t.v2[0]);
-	}
-
-	const float totalw = xoff;
-	const int rows = sqrt(totalw / maxh);
-	//LOG(info) << rows;
-
-	xoff = 0;
-	maxh = 0;
-	float setw = 0;
-	int row = 0;
-	float rowh = 0;
-	const float tgtroww = totalw/rows;
-	for(Triangle& t : tris)
-	{
-		maxh = max(maxh, t.v1[1]);
-		maxh = max(maxh, t.v2[1]);
-		t.o[0] = xoff;
-		t.o[1] = rowh;
-		xoff += max(t.v1[0], t.v2[0]);
-		if(xoff > tgtroww)
-		{
-			//change row
-			setw = max(setw, xoff);
-			++row;
-			xoff = 0;
-			rowh += maxh;
-			maxh = 0;
+		areaaccumulator += abs(t.v1[0]*t.v2[1] - t.v1[1]*t.v2[0]);
+		//LOG(info) << ti << " " << areaaccumulator;
+		if((curuvset + 1)*uvsetseparator < areaaccumulator) {
+			uvsetboundarytris[curuvset+1] = ti;
+			++curuvset;
+			if(curuvset == numuvsets - 1) break;
 		}
+		++ti;
 	}
 
-	float seth = rowh + maxh;
-	float divisor = 1 / max(setw, seth);
-
-	// Scale to UV space
-	for(Triangle& t : tris)
+	for(unsigned i = 0; i < numuvsets; ++i)
 	{
-		t.o = t.o * divisor;
-		t.v1 = t.v1 * divisor;
-		t.v2 = t.v2 * divisor;
-
-		t.v1 = t.o + t.v1;
-		t.v2 = t.o + t.v2;
+		squarify(tris, uvsetboundarytris[i], uvsetboundarytris[i+1]);
 	}
-
-	//std::ofstream ofs("./uvmap");
-	//for(Triangle& t : tris)
-	//{
-	//	ofs << "pmc.polyCreateFacet(p=[["<< t.o[0] <<",0,"<< t.o[1] <<"],["<< t.o[0]+t.v1[0] <<",0,"<< t.o[1]+t.v1[1] <<"],["<< t.o[0]+t.v2[0] <<",0,"<< t.o[1]+t.v2[1] <<"]])" << std::endl;
-	//}
-	//ofs.close();
 
 }
