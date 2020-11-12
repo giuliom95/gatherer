@@ -180,12 +180,7 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 		else
 			glDisable(GL_CULL_FACE);
 
-		glDrawElements(
-			GL_TRIANGLES, 
-			geo.count, 
-			GL_UNSIGNED_INT, reinterpret_cast<void*>(geo.offset)
-		);
-
+		glDrawArrays(GL_TRIANGLES, geo.offset, geo.count);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -350,8 +345,9 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 					maxidx = max(maxidx, shiftedvalue + 1);
 				}
 				
-				geom.count = buf_size / sizeof(unsigned);
-				idx_byteoff += buf_size;
+				unsigned count = buf_size / sizeof(unsigned);
+				geom.count = count;
+				idx_byteoff += count;
 			}
 
 		}
@@ -395,11 +391,27 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 		geometries.push_back(geom);
 	}
 
-	generateuvmap(vertices, indexes);
+	std::vector<Vec2f> uvs = generateuvmap(vertices, indexes);
 
 	for(Vec3f vtx : vertices)
 	{
 		bbox.addpt(vtx);
+	}
+
+	std::vector<float> finalvertices;
+	finalvertices.reserve(5*nidxs);
+
+	for(unsigned i = 0; i < nidxs; ++i)
+	{
+		const Vec3f& v = vertices[indexes[i]];
+		const Vec2f& uv = uvs[i];
+		finalvertices.push_back(v[0]);
+		finalvertices.push_back(v[1]);
+		finalvertices.push_back(v[2]);
+		finalvertices.push_back(uv[0]);
+		finalvertices.push_back(uv[1]);
+		//LOG(info) << v;
+		//LOG(info) << uv;
 	}
 
 	GLuint vbo;
@@ -407,23 +419,19 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(
 		GL_ARRAY_BUFFER, 
-		nverts*sizeof(Vec3f), vertices.data(), 
+		nidxs*(sizeof(Vec3f)+sizeof(Vec2f)), finalvertices.data(), 
 		GL_STATIC_DRAW
 	);
 	glVertexAttribPointer(
-		0, 3, GL_FLOAT,
-		GL_FALSE, 3 * sizeof(float), NULL
+		0, 3, GL_FLOAT, GL_FALSE, 
+		sizeof(Vec3f)+sizeof(Vec2f), NULL
+	);
+	glVertexAttribPointer(
+		1, 2, GL_FLOAT, GL_FALSE, 
+		sizeof(Vec3f)+sizeof(Vec2f), (void*)(sizeof(Vec3f))
 	);
 	glEnableVertexAttribArray(0);
-
-	GLuint ebo;
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(
-		GL_ELEMENT_ARRAY_BUFFER, 
-		nidxs*sizeof(unsigned), indexes.data(), 
-		GL_STATIC_DRAW
-	);
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -530,7 +538,8 @@ void SceneRenderer::generatetransparentfbo()
 
 void squarify(
 	std::vector<Triangle>& triangles, 
-	const unsigned start, const unsigned end
+	const unsigned start, const unsigned end,
+	const unsigned setid
 ) {
 	LOG(info) << "start/end: " << start << " " << end;
 
@@ -585,20 +594,12 @@ void squarify(
 		t.o = t.o * divisor;
 		t.v1 = t.v1 * divisor;
 		t.v2 = t.v2 * divisor;
+		t.o[0] += setid;
 	}
 
-	char s[20];
-	sprintf(s, "./uvmap%i", start);
-	std::ofstream ofs(s);
-	for(unsigned ti = start; ti < end; ++ti)
-	{
-		Triangle& t = triangles[ti];
-		ofs << "pmc.polyCreateFacet(p=[["<< t.o[0] <<",0,"<< t.o[1] <<"],["<< t.o[0]+t.v1[0] <<",0,"<< t.o[1]+t.v1[1] <<"],["<< t.o[0]+t.v2[0] <<",0,"<< t.o[1]+t.v2[1] <<"]])" << std::endl;
-	}
-	ofs.close();
 }
 
-void SceneRenderer::generateuvmap(
+std::vector<Vec2f> SceneRenderer::generateuvmap(
 	const std::vector<Vec3f>& vertices, 
 	const std::vector<unsigned>& indexes
 ) {
@@ -687,7 +688,29 @@ void SceneRenderer::generateuvmap(
 
 	for(unsigned i = 0; i < numuvsets; ++i)
 	{
-		squarify(tris, uvsetboundarytris[i], uvsetboundarytris[i+1]);
+		squarify(tris, uvsetboundarytris[i], uvsetboundarytris[i+1], i);
 	}
 
+	//create a uv buffer
+	std::vector<Vec2f> uvs(nverts, Vec2f());
+	
+	for(Triangle& t : tris)
+	{
+		uvs[t.fvi+0] = t.o;
+		uvs[t.fvi+1] = t.o + t.v1;
+		uvs[t.fvi+2] = t.o + t.v2;
+	}
+
+	//std::ofstream ofs("./uvmap");
+	//for(unsigned i = 0; i < uvs.size(); i += 6)
+	//	ofs << "pmc.polyCreateFacet(p=[["<< uvs[i+0] <<",0,"<< uvs[i+1] <<"],["<< uvs[i+2] <<",0,"<< uvs[i+3] <<"],["<< uvs[i+4] <<",0,"<< uvs[i+5] <<"]])" << std::endl;
+	//ofs.close();
+	//LOG(info) << "Done outing uv map";
+
+	std::ofstream ofs("./uvmap_raw");
+	for(unsigned i = 0; i < uvs.size(); ++i)
+		ofs << uvs[i] << std::endl;
+	ofs.close();
+
+	return uvs;
 }

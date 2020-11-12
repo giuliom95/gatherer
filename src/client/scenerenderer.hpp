@@ -93,7 +93,7 @@ private:
 	void generateopaquefbo();
 	void generatetransparentfbo();
 
-	void generateuvmap(
+	std::vector<Vec2f> generateuvmap(
 		const std::vector<Vec3f>& vertices, 
 		const std::vector<unsigned>& indexes
 	);

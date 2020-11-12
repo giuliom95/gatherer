@@ -1,5 +1,6 @@
 #version 460 core
 in vec3 worldpos;
+in vec2 uv;
 
 layout(location = 0) out vec4 out_worldposid;
 layout(location = 1) out vec4 out_beauty;
@@ -28,7 +29,8 @@ void main()
 	vec3 yt = dFdy(worldpos);
 	vec3 n = normalize(cross(xt, yt));
 	vec3 l = normalize(worldpos - eye);
-	vec3 diff = (0.5 + 0.5*abs(dot(n,l))) * color ;
+	//vec3 diff = (0.5 + 0.5*abs(dot(n,l))) * color;
+	vec3 diff = vec3(mod(uv[0], 1), uv[1], 0);
 	diff = (1-blend.a) * diff + blend.a*blend.rgb;
 	if(
 		highlight && 
