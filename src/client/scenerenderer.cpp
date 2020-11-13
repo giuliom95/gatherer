@@ -156,7 +156,7 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 
 	glBindVertexArray(vaoidx);
 	int id = -1;
-	for(Geometry geo : geometries)
+	for(Geometry& geo : geometries)
 	{
 		++id;
 		if(!geo.visible) continue;
@@ -437,6 +437,8 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	generateuvworldtextures();
+
 	const nlohmann::json json_camera = json_data["camera"];
 	const nlohmann::json json_eye = json_camera["eye"];
 	const Vec3f cam_eye{
@@ -585,13 +587,13 @@ void squarify(
 	}
 
 	float seth = rowh + maxh;
-	float divisor = 1 / max(setw, seth);
+	float divisor = 0.99f / max(setw, seth);
 
 	// Scale to UV space
 	for(unsigned ti = start; ti < end; ++ti)
 	{
 		Triangle& t = triangles[ti];
-		t.o = t.o * divisor;
+		t.o = t.o * divisor + 0.001f;
 		t.v1 = t.v1 * divisor;
 		t.v2 = t.v2 * divisor;
 		t.o[0] += setid;
@@ -666,7 +668,6 @@ std::vector<Vec2f> SceneRenderer::generateuvmap(
 	});
 
 	// Individuate triangles at the boundaries of the uv sets
-	constexpr unsigned numuvsets = 3;
 	const float uvsetseparator = totalarea / numuvsets;
 	std::vector<unsigned> uvsetboundarytris(numuvsets + 1);
 	uvsetboundarytris[0] = 0;
@@ -713,4 +714,69 @@ std::vector<Vec2f> SceneRenderer::generateuvmap(
 	ofs.close();
 
 	return uvs;
+}
+
+void SceneRenderer::generateuvworldtextures()
+{
+	//Generate fbo
+	GLuint fboid;
+	glGenFramebuffers(1, &fboid);
+	glBindFramebuffer(GL_FRAMEBUFFER, fboid);
+
+	//generate textures
+	texids_uvworld = std::vector<GLuint>(numuvsets);
+	glGenTextures(numuvsets, texids_uvworld.data());
+	unsigned i = 0;
+	for(const GLuint tex : texids_uvworld)
+	{
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGB32F, 
+			256, 256, 0, 
+			GL_RGB, GL_FLOAT, nullptr
+		);
+
+		glFramebufferTexture2D(
+			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, 
+			GL_TEXTURE_2D, tex, 0
+		);
+
+		++i;
+	}
+
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		LOG(error) << "UV world framebuffer is not complete!";
+	}
+
+	//load shaders
+	GLuint sha_idx = disk_load_shader_program(
+		"../src/client/shaders/uvworld.vert.glsl",
+		"../src/client/shaders/uvworld.frag.glsl"
+	);
+	GLuint locid_uvset = glGetUniformLocation(sha_idx, "currentuvset");
+
+	//Render
+	glViewport(0, 0, 256, 256);
+	glUseProgram(sha_idx);
+	glBindVertexArray(vaoidx);
+
+	for(unsigned i = 0; i < numuvsets; ++i)
+	{
+		GLenum bufs = GL_COLOR_ATTACHMENT0 + i;
+		glDrawBuffers(1, &bufs);
+
+		glUniform1i(locid_uvset, i);
+		glClear(GL_COLOR_BUFFER_BIT);
+		for(Geometry& geo : geometries)
+		{
+			glDrawArrays(GL_TRIANGLES, geo.offset, geo.count);
+		}
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 }

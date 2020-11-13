@@ -37,6 +37,8 @@ public:
 	unsigned fvi; // first vertex index
 };
 
+// Before modifying this remember that shaders are hardcoded with three uv sets
+constexpr unsigned numuvsets = 3;
 
 class SceneRenderer
 {
@@ -97,6 +99,10 @@ private:
 		const std::vector<Vec3f>& vertices, 
 		const std::vector<unsigned>& indexes
 	);
+
+	std::vector<GLuint> texids_uvworld;
+	void generateuvworldtextures();
+	
 
 	bool visibilitytoggle = false;
 	bool backfacestoggle = false;
