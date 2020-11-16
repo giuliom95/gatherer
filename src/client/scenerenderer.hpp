@@ -13,6 +13,7 @@
 
 #include "utils.hpp"
 #include "camera.hpp"
+#include "gathereddata.hpp"
 
 #include "json.hpp"
 
@@ -39,6 +40,7 @@ public:
 
 // Before modifying this remember that shaders are hardcoded with three uv sets
 constexpr unsigned numuvsets = 3;
+constexpr unsigned texres = 64;
 
 class SceneRenderer
 {
@@ -50,6 +52,8 @@ public:
 	void render3(GLuint final_fbo, GLuint finaltex);
 
 	void setframesize(Vec2i size);
+
+	void generateheatmap(GatheredData& gd);
 
 	AABB bbox;
 
@@ -83,6 +87,7 @@ private:
 	GLuint locid1_geomid;
 	GLuint locid1_opaquedepth;
 	GLuint locid1_highlight;
+	std::vector<GLuint> locid1_uvworldtex;
 
 	GLuint shaprog2_idx;
 	GLuint locid2_opaquebeauty;
@@ -103,7 +108,6 @@ private:
 	std::vector<GLuint> texids_uvworld;
 	void generateuvworldtextures();
 	
-
 	bool visibilitytoggle = false;
 	bool backfacestoggle = false;
 };

@@ -25,7 +25,12 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid1_geomid = glGetUniformLocation(shaprog1_idx, "geomid");
 	locid1_opaquedepth = glGetUniformLocation(shaprog1_idx, "opaquedepth");
 	locid1_highlight = glGetUniformLocation(shaprog1_idx, "highlight");
-
+	locid1_uvworldtex = std::vector<GLuint>(3);
+	for(unsigned i = 0; i < numuvsets; ++i)
+	{
+		char name[20]; sprintf(name, "uvworld%d", i);
+		locid1_uvworldtex[i] = glGetUniformLocation(shaprog1_idx, name);
+	}
 
 	shaprog2_idx = disk_load_shader_program(
 		"../src/client/shaders/screenquad.vert.glsl",
@@ -147,11 +152,14 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 		blend_color[0], blend_color[1], blend_color[2], blend_alpha
 	);
 
-	if(!opaque)
-	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texid_opaquedepth);
-		glUniform1i(locid1_opaquedepth, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texid_opaquedepth);
+	glUniform1i(locid1_opaquedepth, 0);
+	
+	for(unsigned i = 0; i < numuvsets; ++i){
+		glActiveTexture(GL_TEXTURE1 + i);
+		glBindTexture(GL_TEXTURE_2D, texids_uvworld[i]);
+		glUniform1i(locid1_uvworldtex[i], i+1);
 	}
 
 	glBindVertexArray(vaoidx);
@@ -250,6 +258,64 @@ void SceneRenderer::setframesize(Vec2i size)
 		size[0], size[1], 0, 
 		GL_DEPTH_COMPONENT,  GL_FLOAT, nullptr
 	);
+}
+
+void SceneRenderer::generateheatmap(GatheredData& gd)
+{
+	for(unsigned i = 0; i < numuvsets; ++i)
+	{
+		// Dump uv 2 world maps from GPU
+		std::vector<Vec3f> uvworld(texres*texres);
+		glBindTexture(GL_TEXTURE_2D, texids_uvworld[i]);
+		glGetTexImage(
+			GL_TEXTURE_2D, 0,
+			GL_RGB, GL_FLOAT,
+			uvworld.data()
+		);
+	
+		LOG(info) << "UV set #" << i;
+		// Iterate over pixels
+		for(unsigned x = 0; x < texres; ++x)
+		{
+			LOG(info) << "Column #" << x;
+			for(unsigned y = 0; y < texres; ++y)
+			{
+				const unsigned idx = x + y*texres;
+				Vec3f& pix = uvworld[idx];
+				Vec3f wp = uvworld[idx];
+
+				if(length(wp) != 0)
+				{
+					pix[0] = 0; pix[1] = 0; pix[2] = 0;
+					// Iterate over bounces
+					const float r = 0.03f;
+					const float r2 = r*r;
+					Vec3f d; float dl2;
+					for(Vec3h& b : gd.bouncesposition)
+					{
+						d[0] = wp[0]-b[0];
+						d[1] = wp[1]-b[1];
+						d[2] = wp[2]-b[2];
+						dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+
+						if(r2 > dl2)
+						{
+							pix[0] += 1.0f;
+						}
+					}
+				}
+			}
+		}
+
+		// Write textures back on GPU
+	
+		glBindTexture(GL_TEXTURE_2D, texids_uvworld[i]);
+		glTexSubImage2D(
+			GL_TEXTURE_2D, 0, 
+			0, 0, texres, texres,
+			GL_RGB, GL_FLOAT, uvworld.data()
+		);
+	}
 }
 
 void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
@@ -735,7 +801,7 @@ void SceneRenderer::generateuvworldtextures()
 
 		glTexImage2D(
 			GL_TEXTURE_2D, 0, GL_RGB32F, 
-			256, 256, 0, 
+			texres, texres, 0, 
 			GL_RGB, GL_FLOAT, nullptr
 		);
 
@@ -760,7 +826,7 @@ void SceneRenderer::generateuvworldtextures()
 	GLuint locid_uvset = glGetUniformLocation(sha_idx, "currentuvset");
 
 	//Render
-	glViewport(0, 0, 256, 256);
+	glViewport(0, 0, texres, texres);
 	glUseProgram(sha_idx);
 	glBindVertexArray(vaoidx);
 

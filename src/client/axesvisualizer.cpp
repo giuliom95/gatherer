@@ -14,7 +14,7 @@ void AxesVisualizer::init()
 	glBindTexture(GL_TEXTURE_2D, fbotex_id);
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGBA, 
-		AXESVISUZLIZER_W, AXESVISUZLIZER_H, 
+		AXESVISUALIZER_W, AXESVISUALIZER_H, 
 		0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
 	);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -30,7 +30,7 @@ void AxesVisualizer::init()
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo_id);
 	glRenderbufferStorage(
 		GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 
-		AXESVISUZLIZER_W, AXESVISUZLIZER_H
+		AXESVISUALIZER_W, AXESVISUALIZER_H
 	);  
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	glFramebufferRenderbuffer(
@@ -49,7 +49,7 @@ void AxesVisualizer::render(Camera& cam)
 {
 	glUseProgram(shaprog_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-	glViewport(0, 0, AXESVISUZLIZER_W, AXESVISUZLIZER_H);
+	glViewport(0, 0, AXESVISUALIZER_W, AXESVISUALIZER_H);
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

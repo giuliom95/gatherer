@@ -448,7 +448,7 @@ void Application::renderui()
 		ImGui::Begin("Axes", nullptr);
 			ImGui::Image(
 				(void*)(intptr_t)axesvisualizer.fbotex_id, 
-				{AXESVISUZLIZER_W, AXESVISUZLIZER_H},
+				{AXESVISUALIZER_W, AXESVISUALIZER_H},
 				{0,1}, {1,0}
 			);
 		ImGui::End();
@@ -744,6 +744,8 @@ void Application::loaddataset(DataSet& dataset)
 	dataset.imagerenderer.init(dataset.gathereddata);
 
 	dataset.pathsrenderer.setframesize(framesize);
+
+	scenerenderer.generateheatmap(dataset.gathereddata);
 
 	currentdataset = &dataset;
 
