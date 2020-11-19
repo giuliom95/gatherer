@@ -87,7 +87,9 @@ private:
 	GLuint locid1_geomid;
 	GLuint locid1_opaquedepth;
 	GLuint locid1_highlight;
-	std::vector<GLuint> locid1_uvworldtex;
+	GLuint locid1_showheatmap;
+	GLuint locid1_heatmapmax;
+	std::vector<GLuint> locid1_heatmaptex;
 
 	GLuint shaprog2_idx;
 	GLuint locid2_opaquebeauty;
@@ -105,8 +107,11 @@ private:
 		const std::vector<unsigned>& indexes
 	);
 
-	std::vector<GLuint> texids_uvworld;
+	std::vector<GLuint> texids_heatmap;
 	void generateuvworldtextures();
+
+	bool showheatmap = false;
+	float heatmapmax = 1;
 	
 	bool visibilitytoggle = false;
 	bool backfacestoggle = false;

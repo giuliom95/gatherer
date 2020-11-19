@@ -25,11 +25,13 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid1_geomid = glGetUniformLocation(shaprog1_idx, "geomid");
 	locid1_opaquedepth = glGetUniformLocation(shaprog1_idx, "opaquedepth");
 	locid1_highlight = glGetUniformLocation(shaprog1_idx, "highlight");
-	locid1_uvworldtex = std::vector<GLuint>(3);
+	locid1_showheatmap = glGetUniformLocation(shaprog1_idx, "showheatmap");
+	locid1_heatmapmax = glGetUniformLocation(shaprog1_idx, "heatmapmax");
+	locid1_heatmaptex = std::vector<GLuint>(3);
 	for(unsigned i = 0; i < numuvsets; ++i)
 	{
 		char name[20]; sprintf(name, "uvworld%d", i);
-		locid1_uvworldtex[i] = glGetUniformLocation(shaprog1_idx, name);
+		locid1_heatmaptex[i] = glGetUniformLocation(shaprog1_idx, name);
 	}
 
 	shaprog2_idx = disk_load_shader_program(
@@ -50,6 +52,12 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 bool SceneRenderer::renderui()
 {
 	bool modified = false;
+
+	modified |= ImGui::Checkbox("Heatmap", &showheatmap);
+	if(showheatmap)
+	{
+		modified |= ImGui::DragFloat("Heatmap max", &heatmapmax);
+	}
 
 	if(ImGui::CollapsingHeader("Geometries"))
 	{
@@ -156,10 +164,13 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	glBindTexture(GL_TEXTURE_2D, texid_opaquedepth);
 	glUniform1i(locid1_opaquedepth, 0);
 	
+	glUniform1i(locid1_showheatmap, showheatmap);
+	glUniform1f(locid1_heatmapmax, heatmapmax);
+
 	for(unsigned i = 0; i < numuvsets; ++i){
 		glActiveTexture(GL_TEXTURE1 + i);
-		glBindTexture(GL_TEXTURE_2D, texids_uvworld[i]);
-		glUniform1i(locid1_uvworldtex[i], i+1);
+		glBindTexture(GL_TEXTURE_2D, texids_heatmap[i]);
+		glUniform1i(locid1_heatmaptex[i], i+1);
 	}
 
 	glBindVertexArray(vaoidx);
@@ -265,12 +276,12 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 	for(unsigned i = 0; i < numuvsets; ++i)
 	{
 		// Dump uv 2 world maps from GPU
-		std::vector<Vec3f> uvworld(texres*texres);
-		glBindTexture(GL_TEXTURE_2D, texids_uvworld[i]);
+		std::vector<Vec3f> tex(texres*texres);
+		glBindTexture(GL_TEXTURE_2D, texids_heatmap[i]);
 		glGetTexImage(
 			GL_TEXTURE_2D, 0,
 			GL_RGB, GL_FLOAT,
-			uvworld.data()
+			tex.data()
 		);
 	
 		LOG(info) << "UV set #" << i;
@@ -281,8 +292,8 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 			for(unsigned y = 0; y < texres; ++y)
 			{
 				const unsigned idx = x + y*texres;
-				Vec3f& pix = uvworld[idx];
-				Vec3f wp = uvworld[idx];
+				Vec3f& pix = tex[idx];
+				Vec3f wp = tex[idx];
 
 				if(length(wp) != 0)
 				{
@@ -307,13 +318,17 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 			}
 		}
 
-		// Write textures back on GPU
-	
-		glBindTexture(GL_TEXTURE_2D, texids_uvworld[i]);
+		// Find max for color mapping
+		for(unsigned x = 0; x < texres; ++x)
+			for(unsigned y = 0; y < texres; ++y)
+				heatmapmax = max(heatmapmax, tex[x + y*texres][0]);
+
+		// Write texture back on GPU
+		glBindTexture(GL_TEXTURE_2D, texids_heatmap[i]);
 		glTexSubImage2D(
 			GL_TEXTURE_2D, 0, 
 			0, 0, texres, texres,
-			GL_RGB, GL_FLOAT, uvworld.data()
+			GL_RGB, GL_FLOAT, tex.data()
 		);
 	}
 }
@@ -765,7 +780,7 @@ std::vector<Vec2f> SceneRenderer::generateuvmap(
 	{
 		uvs[t.fvi+0] = t.o;
 		uvs[t.fvi+1] = t.o + t.v1;
-		uvs[t.fvi+2] = t.o + t.v2;
+		uvs[t.fvi+2] = t.o + t.v2;		
 	}
 
 	//std::ofstream ofs("./uvmap");
@@ -790,10 +805,10 @@ void SceneRenderer::generateuvworldtextures()
 	glBindFramebuffer(GL_FRAMEBUFFER, fboid);
 
 	//generate textures
-	texids_uvworld = std::vector<GLuint>(numuvsets);
-	glGenTextures(numuvsets, texids_uvworld.data());
+	texids_heatmap = std::vector<GLuint>(numuvsets);
+	glGenTextures(numuvsets, texids_heatmap.data());
 	unsigned i = 0;
-	for(const GLuint tex : texids_uvworld)
+	for(const GLuint tex : texids_heatmap)
 	{
 		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
