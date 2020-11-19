@@ -17,6 +17,8 @@
 
 #include "json.hpp"
 
+#include <thread>
+
 class Geometry
 {
 public:

@@ -285,37 +285,57 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 		);
 	
 		LOG(info) << "UV set #" << i;
-		// Iterate over pixels
-		for(unsigned x = 0; x < texres; ++x)
+		const unsigned nthreads = std::thread::hardware_concurrency();
+		// Rows Per Thread
+		const unsigned rpt = texres / nthreads;
+		std::vector<std::thread> threads(nthreads);
+
+
+		for(unsigned ti = 0; ti < nthreads; ++ti)
 		{
-			LOG(info) << "Column #" << x;
-			for(unsigned y = 0; y < texres; ++y)
-			{
-				const unsigned idx = x + y*texres;
-				Vec3f& pix = tex[idx];
-				Vec3f wp = tex[idx];
-
-				if(length(wp) != 0)
-				{
-					pix[0] = 0; pix[1] = 0; pix[2] = 0;
-					// Iterate over bounces
-					const float r = 0.03f;
-					const float r2 = r*r;
-					Vec3f d; float dl2;
-					for(Vec3h& b : gd.bouncesposition)
-					{
-						d[0] = wp[0]-b[0];
-						d[1] = wp[1]-b[1];
-						d[2] = wp[2]-b[2];
-						dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-
-						if(r2 > dl2)
+			threads[ti] = std::thread(
+				[ti, rpt, &tex, &gd](){
+					for(
+						unsigned x = ti*rpt; 
+						x < (ti+1)*rpt; 
+						++x
+					) {
+						LOG(info) << "Column #" << x;
+						for(unsigned y = 0; y < texres; ++y)
 						{
-							pix[0] += 1.0f;
+							const unsigned idx = x + y*texres;
+							Vec3f& pix = tex[idx];
+							Vec3f wp = tex[idx];
+
+							if(length(wp) != 0)
+							{
+								pix[0] = 0; pix[1] = 0; pix[2] = 0;
+								// Iterate over bounces
+								const float r = 0.03f;
+								const float r2 = r*r;
+								Vec3f d; float dl2;
+								for(Vec3h& b : gd.bouncesposition)
+								{
+									d[0] = wp[0]-b[0];
+									d[1] = wp[1]-b[1];
+									d[2] = wp[2]-b[2];
+									dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+
+									if(r2 > dl2)
+									{
+										pix[0] += 1.0f;
+									}
+								}
+							}
 						}
 					}
 				}
-			}
+			);
+		}
+
+		for(std::thread& th : threads)
+		{
+			th.join();
 		}
 
 		// Find max for color mapping
