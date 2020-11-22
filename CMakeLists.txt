@@ -23,14 +23,14 @@ set(JSON_INCLUDE "deps/json/single_include/nlohmann")
 set(IMGUI_DIR "deps/imgui")
 set(IMGUI_INCLUDE 
   "${IMGUI_DIR}"
-  "${IMGUI_DIR}/examples"
+  "${IMGUI_DIR}/backends"
 )
 set(IMGUI_SRCS
   "${IMGUI_DIR}/imgui_draw.cpp"
   "${IMGUI_DIR}/imgui_widgets.cpp"
   "${IMGUI_DIR}/imgui.cpp"
-  "${IMGUI_DIR}/examples/imgui_impl_glfw.cpp"
-  "${IMGUI_DIR}/examples/imgui_impl_opengl3.cpp"
+  "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
+  "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
 )
 
 include_directories(
