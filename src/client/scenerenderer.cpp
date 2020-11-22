@@ -640,66 +640,74 @@ void SceneRenderer::generatetransparentfbo()
 
 
 void squarify(
-	std::vector<Triangle>& triangles, 
-	const unsigned start, const unsigned end,
-	const unsigned setid
+	std::vector<Triangle>& triangles
 ) {
-	LOG(info) << "start/end: " << start << " " << end;
+	const float maxheight = max(triangles[0].v1[1], triangles[0].v2[1]);
+	const float mult = texres / maxheight / 3;
 
-	// Put them on a single row
-	float xoff = 0;
-	float maxh = 0;
-	for(unsigned ti = start; ti < end; ++ti)
+	//Start from texel center
+	Vec2f off{0.5f, 0.5f};
+	float rowheight = 0;
+	unsigned rowfirstti = 0;
+	unsigned uvset = 0;
+	for(unsigned ti = 0; ti < triangles.size(); ++ti)
 	{
 		Triangle& t = triangles[ti];
-		maxh = max(maxh, t.v1[1]);
-		maxh = max(maxh, t.v2[1]);
-		t.o[0] = xoff;
-		xoff += max(t.v1[0], t.v2[0]);
-	}
 
-	const float totalw = xoff;
-	const int rows = sqrt(totalw / maxh)*1.5f;
-	//LOG(info) << rows;
+		//Scaled triangle vectors must lie on texel intersections
+		t.v1 = roundv(mult * t.v1);
+		t.v2 = roundv(mult * t.v2);
 
-	xoff = 0;
-	maxh = 0;
-	float setw = 0;
-	int row = 0;
-	float rowh = 0;
-	const float tgtroww = totalw/rows;
-	for(unsigned ti = start; ti < end; ++ti)
-	{
-		Triangle& t = triangles[ti];
-		maxh = max(maxh, t.v1[1]);
-		maxh = max(maxh, t.v2[1]);
-		t.o[0] = xoff;
-		t.o[1] = rowh;
-		xoff += max(t.v1[0], t.v2[0]);
-		if(xoff > tgtroww)
+		float width = max(t.v1[0], t.v2[0]);
+		float height = max(t.v1[1], t.v2[1]);
+
+		rowheight = max(rowheight, height);
+
+		// if triangle goes beyond right texture border
+		if(off[0] + width > texres)
 		{
-			//change row
-			setw = max(setw, xoff);
-			++row;
-			xoff = 0;
-			rowh += maxh;
-			maxh = 0;
+			// New row
+			LOG(info) << "ROW (" << rowfirstti << "/" << ti - 1 << ")";
+			LOG(info) << off[1] << " " << rowheight;
+
+			
+			// Check if new texture
+			if(off[1] + rowheight > (uvset+1)*texres)
+			{
+				//new texture
+				++uvset;
+				// Move prev row to new uv set
+				off[1] = texres*uvset + 0.5f;
+				LOG(info) << "SET (" << uvset << "): " << off[1];
+				for(unsigned rti = rowfirstti; rti < ti; ++rti)
+				{
+					LOG(info) << "rti: " << rti;
+					Triangle& rt = triangles[rti];
+					rt.o[1] = off[1];
+				}
+			}
+
+			//normal new row
+			off[0] = 0.5f;
+			off[1] += rowheight + 1.0f;
+			rowheight = 0;
+			rowfirstti = ti;
 		}
+		
+		// Still on same row
+		t.o = off;
+		off[0] += width + 1.0f;
 	}
 
-	float seth = rowh + maxh;
-	float divisor = 0.99f / max(setw, seth);
-
-	// Scale to UV space
-	for(unsigned ti = start; ti < end; ++ti)
+	std::ofstream ofs("./uvdata");
+	for(Triangle& t : triangles)
 	{
-		Triangle& t = triangles[ti];
-		t.o = t.o * divisor + 0.001f;
-		t.v1 = t.v1 * divisor;
-		t.v2 = t.v2 * divisor;
-		t.o[0] += setid;
+		const Vec3f p0{t.o[0], 0, t.o[1]};
+		const Vec3f p1{t.o[0]+t.v1[0], 0, t.o[1]+t.v1[1]};
+		const Vec3f p2{t.o[0]+t.v2[0], 0, t.o[1]+t.v2[1]};
+		ofs << "pmc.polyCreateFacet(p=[" << p0 << "," << p1 << "," << p2 << "])" << std::endl;
 	}
-
+	ofs.close();
 }
 
 std::vector<Vec2f> SceneRenderer::generateuvmap(
@@ -768,30 +776,7 @@ std::vector<Vec2f> SceneRenderer::generateuvmap(
 		return max(a.v1[1], a.v2[1]) > max(b.v1[1], b.v2[1]);
 	});
 
-	// Individuate triangles at the boundaries of the uv sets
-	const float uvsetseparator = totalarea / numuvsets;
-	std::vector<unsigned> uvsetboundarytris(numuvsets + 1);
-	uvsetboundarytris[0] = 0;
-	uvsetboundarytris[numuvsets] = tris.size();
-	unsigned curuvset = 0;
-	float areaaccumulator = 0;
-	unsigned ti = 0;
-	for(Triangle& t : tris)
-	{
-		areaaccumulator += abs(t.v1[0]*t.v2[1] - t.v1[1]*t.v2[0]);
-		//LOG(info) << ti << " " << areaaccumulator;
-		if((curuvset + 1)*uvsetseparator < areaaccumulator) {
-			uvsetboundarytris[curuvset+1] = ti;
-			++curuvset;
-			if(curuvset == numuvsets - 1) break;
-		}
-		++ti;
-	}
-
-	for(unsigned i = 0; i < numuvsets; ++i)
-	{
-		squarify(tris, uvsetboundarytris[i], uvsetboundarytris[i+1], i);
-	}
+	squarify(tris);
 
 	//create a uv buffer
 	std::vector<Vec2f> uvs(nverts, Vec2f());
