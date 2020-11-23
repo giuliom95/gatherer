@@ -283,11 +283,13 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 	const unsigned rpt = texres / nthreads;
 	std::vector<std::thread> threads(nthreads);
 
+	const float r = 0.707106781f * uvscalefactor;
+	const float r2 = r*r;
 
 	for(unsigned ti = 0; ti < nthreads; ++ti)
 	{
 		threads[ti] = std::thread(
-			[nuv, ti, rpt, &tex, &gd](){
+			[nuv, r2, ti, rpt, &tex, &gd](){
 				for(
 					unsigned x = ti*rpt; 
 					x < (ti+1)*rpt; 
@@ -304,8 +306,6 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 						{
 							pix[0] = 0; pix[1] = 0; pix[2] = 0;
 							// Iterate over bounces
-							const float r = 0.03f;
-							const float r2 = r*r;
 							Vec3f d; float dl2;
 							for(Vec3h& b : gd.bouncesposition)
 							{
@@ -334,7 +334,7 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 
 	// Find max for color mapping
 	for(unsigned x = 0; x < texres; ++x)
-		for(unsigned y = 0; y < texres; ++y)
+		for(unsigned y = 0; y < numuvsets*texres; ++y)
 		{
 			const float v = tex[x + y*texres][0];
 			//LOG(info) << "(" << x << ", " << y << "): " << v;
