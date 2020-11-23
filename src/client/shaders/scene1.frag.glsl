@@ -20,9 +20,7 @@ uniform bool highlight;
 uniform bool showheatmap;
 uniform float heatmapmax;
 
-uniform sampler2D uvworld0;
-uniform sampler2D uvworld1;
-uniform sampler2D uvworld2;
+uniform sampler2DArray heatmap;
 
 vec3 coolwarm(float x)
 {
@@ -62,11 +60,11 @@ void main()
 	}
 	else
 	{
-		int uvset = int(floor(uv[0]));
-		float x = 0;
-		if(uvset == 0) x = texture(uvworld0, vec2(mod(uv[0], 1), uv[1])).r;
-		if(uvset == 1) x = texture(uvworld1, vec2(mod(uv[0], 1), uv[1])).r;
-		if(uvset == 2) x = texture(uvworld2, vec2(mod(uv[0], 1), uv[1])).r;
+		float uvset = floor(uv[1]);
+		vec3 coords = vec3(
+			uv[0], mod(uv[1], 1), uvset
+		);
+		float x = texture(heatmap, coords).r;
 		diff = coolwarm(x / heatmapmax);
 	}
 

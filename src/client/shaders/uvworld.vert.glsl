@@ -7,10 +7,10 @@ out int uvset;
 
 void main()
 {
-	uvset = int(floor(uv_in[0]));
+	uvset = int(floor(uv_in[1]));
 	gl_Position = vec4(
-		2*mod(uv_in[0], 1)-1, 
-		2*uv_in[1]-1, 
+		2*uv_in[0]-1, 
+		2*mod(uv_in[1],1)-1, 
 		0, 1
 	);
 	worldpos = vtx_in;

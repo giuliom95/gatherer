@@ -27,12 +27,7 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid1_highlight = glGetUniformLocation(shaprog1_idx, "highlight");
 	locid1_showheatmap = glGetUniformLocation(shaprog1_idx, "showheatmap");
 	locid1_heatmapmax = glGetUniformLocation(shaprog1_idx, "heatmapmax");
-	locid1_heatmaptex = std::vector<GLuint>(3);
-	for(unsigned i = 0; i < numuvsets; ++i)
-	{
-		char name[20]; sprintf(name, "uvworld%d", i);
-		locid1_heatmaptex[i] = glGetUniformLocation(shaprog1_idx, name);
-	}
+	locid1_heatmaptex = glGetUniformLocation(shaprog1_idx, "heatmap");
 
 	shaprog2_idx = disk_load_shader_program(
 		"../src/client/shaders/screenquad.vert.glsl",
@@ -166,12 +161,9 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	
 	glUniform1i(locid1_showheatmap, showheatmap);
 	glUniform1f(locid1_heatmapmax, heatmapmax);
-
-	for(unsigned i = 0; i < numuvsets; ++i){
-		glActiveTexture(GL_TEXTURE1 + i);
-		glBindTexture(GL_TEXTURE_2D, texids_heatmap[i]);
-		glUniform1i(locid1_heatmaptex[i], i+1);
-	}
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, texid_heatmap);
+	glUniform1i(locid1_heatmaptex, 1);
 
 	glBindVertexArray(vaoidx);
 	int id = -1;
@@ -273,84 +265,88 @@ void SceneRenderer::setframesize(Vec2i size)
 
 void SceneRenderer::generateheatmap(GatheredData& gd)
 {
-	for(unsigned i = 0; i < numuvsets; ++i)
+	// Dump texture from GPU
+	const unsigned nuv = numuvsets;
+	std::vector<Vec3f> tex(texres*texres*nuv);
+	LOG(info) << "Allocated memory";
+	glBindTexture(GL_TEXTURE_2D_ARRAY, texid_heatmap);
+	LOG(info) << "Binded texture array";
+	glGetTexImage(
+		GL_TEXTURE_2D_ARRAY, 0,
+		GL_RGB, GL_FLOAT,
+		tex.data()
+	);
+	LOG(info) << "Read texture array";
+
+	const unsigned nthreads = std::thread::hardware_concurrency();
+	// Rows Per Thread
+	const unsigned rpt = texres / nthreads;
+	std::vector<std::thread> threads(nthreads);
+
+
+	for(unsigned ti = 0; ti < nthreads; ++ti)
 	{
-		// Dump uv 2 world maps from GPU
-		std::vector<Vec3f> tex(texres*texres);
-		glBindTexture(GL_TEXTURE_2D, texids_heatmap[i]);
-		glGetTexImage(
-			GL_TEXTURE_2D, 0,
-			GL_RGB, GL_FLOAT,
-			tex.data()
-		);
-	
-		LOG(info) << "UV set #" << i;
-		const unsigned nthreads = std::thread::hardware_concurrency();
-		// Rows Per Thread
-		const unsigned rpt = texres / nthreads;
-		std::vector<std::thread> threads(nthreads);
+		threads[ti] = std::thread(
+			[nuv, ti, rpt, &tex, &gd](){
+				for(
+					unsigned x = ti*rpt; 
+					x < (ti+1)*rpt; 
+					++x
+				) {
+					LOG(info) << "Column #" << x;
+					for(unsigned y = 0; y < nuv*texres; ++y)
+					{
+						const unsigned idx = x + y*texres;
+						Vec3f& pix = tex[idx];
+						Vec3f wp = tex[idx];
 
-
-		for(unsigned ti = 0; ti < nthreads; ++ti)
-		{
-			threads[ti] = std::thread(
-				[ti, rpt, &tex, &gd](){
-					for(
-						unsigned x = ti*rpt; 
-						x < (ti+1)*rpt; 
-						++x
-					) {
-						LOG(info) << "Column #" << x;
-						for(unsigned y = 0; y < texres; ++y)
+						if(length(wp) != 0)
 						{
-							const unsigned idx = x + y*texres;
-							Vec3f& pix = tex[idx];
-							Vec3f wp = tex[idx];
-
-							if(length(wp) != 0)
+							pix[0] = 0; pix[1] = 0; pix[2] = 0;
+							// Iterate over bounces
+							const float r = 0.03f;
+							const float r2 = r*r;
+							Vec3f d; float dl2;
+							for(Vec3h& b : gd.bouncesposition)
 							{
-								pix[0] = 0; pix[1] = 0; pix[2] = 0;
-								// Iterate over bounces
-								const float r = 0.03f;
-								const float r2 = r*r;
-								Vec3f d; float dl2;
-								for(Vec3h& b : gd.bouncesposition)
-								{
-									d[0] = wp[0]-b[0];
-									d[1] = wp[1]-b[1];
-									d[2] = wp[2]-b[2];
-									dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+								d[0] = wp[0]-b[0];
+								d[1] = wp[1]-b[1];
+								d[2] = wp[2]-b[2];
+								dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
 
-									if(r2 > dl2)
-									{
-										pix[0] += 1.0f;
-									}
+								if(r2 > dl2)
+								{
+									pix[0] += 1.0f;
 								}
 							}
+							//LOG(info) << x << ", " << y << ": " << wp << " -> " << pix[0];
 						}
 					}
 				}
-			);
-		}
-
-		for(std::thread& th : threads)
-		{
-			th.join();
-		}
-
-		// Find max for color mapping
-		for(unsigned x = 0; x < texres; ++x)
-			for(unsigned y = 0; y < texres; ++y)
-				heatmapmax = max(heatmapmax, tex[x + y*texres][0]);
-
-		// Write texture back on GPU
-		glBindTexture(GL_TEXTURE_2D, texids_heatmap[i]);
-		glTexSubImage2D(
-			GL_TEXTURE_2D, 0, 
-			0, 0, texres, texres,
-			GL_RGB, GL_FLOAT, tex.data()
+			}
 		);
 	}
+
+	for(std::thread& th : threads)
+	{
+		th.join();
+	}
+
+	// Find max for color mapping
+	for(unsigned x = 0; x < texres; ++x)
+		for(unsigned y = 0; y < texres; ++y)
+		{
+			const float v = tex[x + y*texres][0];
+			//LOG(info) << "(" << x << ", " << y << "): " << v;
+			heatmapmax = max(heatmapmax, v);
+		}
+
+	
+	glTexSubImage3D(
+		GL_TEXTURE_2D_ARRAY, 0, 
+		0, 0, 0, texres, texres, numuvsets,
+		GL_RGB, GL_FLOAT, tex.data()
+	);
 }
 
 void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
@@ -639,11 +635,11 @@ void SceneRenderer::generatetransparentfbo()
 }
 
 
-void squarify(
-	std::vector<Triangle>& triangles
+unsigned squarify(
+	std::vector<Triangle>& triangles,
+	const float multiplier
 ) {
-	const float maxheight = max(triangles[0].v1[1], triangles[0].v2[1]);
-	const float mult = texres / maxheight / 3;
+	const float mult = multiplier;
 
 	//Start from texel center
 	Vec2f off{0.5f, 0.5f};
@@ -667,9 +663,8 @@ void squarify(
 		if(off[0] + width > texres)
 		{
 			// New row
-			LOG(info) << "ROW (" << rowfirstti << "/" << ti - 1 << ")";
-			LOG(info) << off[1] << " " << rowheight;
-
+			//LOG(info) << "ROW (" << rowfirstti << "/" << ti - 1 << ")";
+			//LOG(info) << off[1] << " " << rowheight;
 			
 			// Check if new texture
 			if(off[1] + rowheight > (uvset+1)*texres)
@@ -678,10 +673,10 @@ void squarify(
 				++uvset;
 				// Move prev row to new uv set
 				off[1] = texres*uvset + 0.5f;
-				LOG(info) << "SET (" << uvset << "): " << off[1];
+				//LOG(info) << "SET (" << uvset << "): " << off[1];
 				for(unsigned rti = rowfirstti; rti < ti; ++rti)
 				{
-					LOG(info) << "rti: " << rti;
+					//LOG(info) << "rti: " << rti;
 					Triangle& rt = triangles[rti];
 					rt.o[1] = off[1];
 				}
@@ -690,7 +685,7 @@ void squarify(
 			//normal new row
 			off[0] = 0.5f;
 			off[1] += rowheight + 1.0f;
-			rowheight = 0;
+			rowheight = height;
 			rowfirstti = ti;
 		}
 		
@@ -699,6 +694,7 @@ void squarify(
 		off[0] += width + 1.0f;
 	}
 
+	/*
 	std::ofstream ofs("./uvdata");
 	for(Triangle& t : triangles)
 	{
@@ -708,6 +704,9 @@ void squarify(
 		ofs << "pmc.polyCreateFacet(p=[" << p0 << "," << p1 << "," << p2 << "])" << std::endl;
 	}
 	ofs.close();
+	*/
+	const unsigned nuvsets = uvset + 1;
+	return nuvsets;
 }
 
 std::vector<Vec2f> SceneRenderer::generateuvmap(
@@ -776,28 +775,40 @@ std::vector<Vec2f> SceneRenderer::generateuvmap(
 		return max(a.v1[1], a.v2[1]) > max(b.v1[1], b.v2[1]);
 	});
 
-	squarify(tris);
+	const float maxheight = max(tris[0].v1[1], tris[0].v2[1]);
+	uvscalefactor = texres / maxheight / 2.7f;
+	numuvsets = squarify(tris, uvscalefactor);
 
 	//create a uv buffer
 	std::vector<Vec2f> uvs(nverts, Vec2f());
 	
+	const float invtexres = 1.0f / texres;
 	for(Triangle& t : tris)
 	{
-		uvs[t.fvi+0] = t.o;
-		uvs[t.fvi+1] = t.o + t.v1;
-		uvs[t.fvi+2] = t.o + t.v2;		
+		uvs[t.fvi+0] = invtexres*(t.o);
+		uvs[t.fvi+1] = invtexres*(t.o + t.v1);
+		uvs[t.fvi+2] = invtexres*(t.o + t.v2);
+		//LOG(info) << uvs[t.fvi+0] << " " << uvs[t.fvi+1] << " " << uvs[t.fvi+2];
 	}
 
-	//std::ofstream ofs("./uvmap");
-	//for(unsigned i = 0; i < uvs.size(); i += 6)
-	//	ofs << "pmc.polyCreateFacet(p=[["<< uvs[i+0] <<",0,"<< uvs[i+1] <<"],["<< uvs[i+2] <<",0,"<< uvs[i+3] <<"],["<< uvs[i+4] <<",0,"<< uvs[i+5] <<"]])" << std::endl;
-	//ofs.close();
-	//LOG(info) << "Done outing uv map";
-
+	
+	std::ofstream ofs("./uvmap");
+	for(unsigned i = 0; i < uvs.size(); i += 3)
+	{
+		Vec3f v0{uvs[i+0][0], 0, uvs[i+0][1]};
+		Vec3f v1{uvs[i+1][0], 0, uvs[i+1][1]};
+		Vec3f v2{uvs[i+2][0], 0, uvs[i+2][1]};
+		ofs << "pmc.polyCreateFacet(p=[" << v0 << "," << v1 << "," << v2 << "])" << std::endl;
+	}
+	ofs.close();
+	LOG(info) << "Done outing uv map";
+	
+	/*
 	std::ofstream ofs("./uvmap_raw");
 	for(unsigned i = 0; i < uvs.size(); ++i)
 		ofs << uvs[i] << std::endl;
 	ofs.close();
+	*/
 
 	return uvs;
 }
@@ -810,33 +821,11 @@ void SceneRenderer::generateuvworldtextures()
 	glBindFramebuffer(GL_FRAMEBUFFER, fboid);
 
 	//generate textures
-	texids_heatmap = std::vector<GLuint>(numuvsets);
-	glGenTextures(numuvsets, texids_heatmap.data());
-	unsigned i = 0;
-	for(const GLuint tex : texids_heatmap)
-	{
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glTexImage2D(
-			GL_TEXTURE_2D, 0, GL_RGB32F, 
-			texres, texres, 0, 
-			GL_RGB, GL_FLOAT, nullptr
-		);
-
-		glFramebufferTexture2D(
-			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, 
-			GL_TEXTURE_2D, tex, 0
-		);
-
-		++i;
-	}
-
-	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		LOG(error) << "UV world framebuffer is not complete!";
-	}
+	glGenTextures(1, &texid_heatmap);
+	glBindTexture(GL_TEXTURE_2D_ARRAY,texid_heatmap);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB32F, texres, texres, numuvsets);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	//load shaders
 	GLuint sha_idx = disk_load_shader_program(
@@ -850,9 +839,21 @@ void SceneRenderer::generateuvworldtextures()
 	glUseProgram(sha_idx);
 	glBindVertexArray(vaoidx);
 
+	// Conservative rendering
+	glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
+
 	for(unsigned i = 0; i < numuvsets; ++i)
 	{
-		GLenum bufs = GL_COLOR_ATTACHMENT0 + i;
+		glFramebufferTextureLayer(
+			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+			texid_heatmap, 0, i
+		);
+		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			LOG(error) << "Heatmap framebuffer is not complete!";
+		}
+
+		GLenum bufs = GL_COLOR_ATTACHMENT0;
 		glDrawBuffers(1, &bufs);
 
 		glUniform1i(locid_uvset, i);
@@ -862,6 +863,8 @@ void SceneRenderer::generateuvworldtextures()
 			glDrawArrays(GL_TRIANGLES, geo.offset, geo.count);
 		}
 	}
+
+	glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

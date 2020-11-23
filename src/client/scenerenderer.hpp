@@ -40,8 +40,6 @@ public:
 	unsigned fvi; // first vertex index
 };
 
-// Before modifying this remember that shaders are hardcoded with three uv sets
-constexpr unsigned numuvsets = 3;
 constexpr unsigned texres = 64;
 
 class SceneRenderer
@@ -91,7 +89,7 @@ private:
 	GLuint locid1_highlight;
 	GLuint locid1_showheatmap;
 	GLuint locid1_heatmapmax;
-	std::vector<GLuint> locid1_heatmaptex;
+	GLuint locid1_heatmaptex;
 
 	GLuint shaprog2_idx;
 	GLuint locid2_opaquebeauty;
@@ -109,7 +107,9 @@ private:
 		const std::vector<unsigned>& indexes
 	);
 
-	std::vector<GLuint> texids_heatmap;
+	GLuint texid_heatmap;
+	unsigned numuvsets;
+	float uvscalefactor;
 	void generateuvworldtextures();
 
 	bool showheatmap = false;
@@ -117,5 +117,6 @@ private:
 	
 	bool visibilitytoggle = false;
 	bool backfacestoggle = false;
+
 };
 #endif
