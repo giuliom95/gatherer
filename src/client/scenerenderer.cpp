@@ -283,7 +283,8 @@ void SceneRenderer::generateheatmap(GatheredData& gd)
 	const unsigned rpt = texres / nthreads;
 	std::vector<std::thread> threads(nthreads);
 
-	const float r = 0.707106781f * uvscalefactor;
+	const float r = 0.707106781f / uvscalefactor;
+	//LOG(info) << "SCALE FACTOR:" << r;
 	const float r2 = r*r;
 
 	for(unsigned ti = 0; ti < nthreads; ++ti)

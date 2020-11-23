@@ -40,7 +40,7 @@ public:
 	unsigned fvi; // first vertex index
 };
 
-constexpr unsigned texres = 128;
+constexpr unsigned texres = 64;
 
 class SceneRenderer
 {
