@@ -451,33 +451,16 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 		}
 		nlohmann::json json_material = json_geom["material"];
 
-		nlohmann::json json_albedo = json_material["albedo"];
-		Vec3f albedo{
-			json_albedo[0],
-			json_albedo[1],
-			json_albedo[2]
+		nlohmann::json json_color = json_material["color"];
+		geom.color = Vec3f{
+			json_color[0],
+			json_color[1],
+			json_color[2]
 		};
 
-		nlohmann::json json_emission = json_material["emission"];
-		Vec3f emission{
-			json_emission[0],
-			json_emission[1],
-			json_emission[2]
-		};
-
-		geom.color = albedo + emission;
-
-		nlohmann::json json_opacity = json_material["opacity"];
-		nlohmann::json json_translucency = json_material["translucency"];
-		nlohmann::json json_transmission = json_material["transmission"];
-		float opacity = 
-			json_opacity.is_null() ? 1 : (float)json_opacity;
-		float translucency = 
-			json_translucency.is_null() ? 0 : (float)json_translucency;
-		float transmission = 
-			json_transmission.is_null() ? 0 : (float)json_transmission;
+		nlohmann::json json_translucent = json_material["translucent"];
 		
-		if(opacity < 1 || translucency > 0 || transmission > 0)
+		if(json_translucent)
 			geom.alpha = 0.7f;
 		else
 			geom.alpha = 1;
@@ -551,7 +534,7 @@ void SceneRenderer::loadscene(const boost::filesystem::path& path, Camera& cam)
 		json_look[2]
 	};
 
-	//cam.r = length(cam_eye - bbox.center());
+	cam.r = length(cam_eye - bbox.center());
 	cam.focus = cam_eye + cam.r*cam_look;
 	Vec3f sph = cartesian2spherical(cam_look);
 	LOG(info) << cam_look << " " << sph;
@@ -841,7 +824,10 @@ void SceneRenderer::generateuvworldtextures()
 	glBindVertexArray(vaoidx);
 
 	// Conservative rendering
-	glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
+
+	glPointSize(.2f);
+	glLineWidth(.2f);
+	glDisable(GL_LINE_SMOOTH);
 
 	for(unsigned i = 0; i < numuvsets; ++i)
 	{
@@ -859,14 +845,27 @@ void SceneRenderer::generateuvworldtextures()
 
 		glUniform1i(locid_uvset, i);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		for(Geometry& geo : geometries)
+		{
+			glDrawArrays(GL_POINTS, geo.offset, geo.count);
+		}
+
+		glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
 		for(Geometry& geo : geometries)
 		{
 			glDrawArrays(GL_TRIANGLES, geo.offset, geo.count);
 		}
+		glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		for(Geometry& geo : geometries)
+		{
+			glDrawArrays(GL_TRIANGLES, geo.offset, geo.count);
+		}
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-	glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
-
+	glEnable(GL_LINE_SMOOTH);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
