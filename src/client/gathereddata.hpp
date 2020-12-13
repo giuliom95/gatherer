@@ -31,6 +31,9 @@ public:
 		const boost::filesystem::path& folder,
 		const boost::filesystem::path& scenejson
 	);
+
+	float heatmapmax = 1;
+	GLuint texid_heatmap;
 };
 
 #endif

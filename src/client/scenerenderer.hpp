@@ -46,8 +46,8 @@ class SceneRenderer
 {
 public:
 	void init(const boost::filesystem::path& path, Camera& cam);
-	bool renderui();
-	void render1(Camera& cam, bool opaque = true);
+	bool renderui(bool datasetloaded = false);
+	void render1(Camera& cam, GatheredData* gd = nullptr, bool opaque = true);
 	void render2(GLuint final_fbo);
 	void render3(GLuint final_fbo, GLuint finaltex);
 
@@ -107,7 +107,7 @@ private:
 		const std::vector<unsigned>& indexes
 	);
 
-	GLuint texid_heatmap;
+	GLuint texid_uvworld;
 	unsigned numuvsets;
 	float uvscalefactor;
 	void generateuvworldtextures();
@@ -117,6 +117,5 @@ private:
 	
 	bool visibilitytoggle = false;
 	bool backfacestoggle = false;
-
 };
 #endif

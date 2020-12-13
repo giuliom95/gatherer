@@ -42,16 +42,20 @@ void SceneRenderer::init(const boost::filesystem::path& path, Camera& cam)
 	locid3_finaltex = glGetUniformLocation(shaprog3_idx, "finaltex");
 	locid3_transparentbeauty = 
 		glGetUniformLocation(shaprog3_idx, "transparentbeauty");
+
 }
 
-bool SceneRenderer::renderui()
+bool SceneRenderer::renderui(bool datasetloaded)
 {
 	bool modified = false;
 
-	modified |= ImGui::Checkbox("Heatmap", &showheatmap);
-	if(showheatmap)
+	if(datasetloaded)
 	{
-		modified |= ImGui::DragFloat("Heatmap max", &heatmapmax);
+		modified |= ImGui::Checkbox("Heatmap", &showheatmap);
+		if(showheatmap)
+		{
+			modified |= ImGui::DragFloat("Heatmap max", &heatmapmax);
+		}
 	}
 
 	if(ImGui::CollapsingHeader("Geometries"))
@@ -124,7 +128,7 @@ bool SceneRenderer::renderui()
 	return modified;
 }
 
-void SceneRenderer::render1(Camera& cam, bool opaque)
+void SceneRenderer::render1(Camera& cam, GatheredData* gd, bool opaque)
 {
 	glBindFramebuffer(
 		GL_FRAMEBUFFER, 
@@ -162,7 +166,7 @@ void SceneRenderer::render1(Camera& cam, bool opaque)
 	glUniform1i(locid1_showheatmap, showheatmap);
 	glUniform1f(locid1_heatmapmax, heatmapmax);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, texid_heatmap);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, gd != nullptr ? gd->texid_heatmap : 0);
 	glUniform1i(locid1_heatmaptex, 1);
 
 	glBindVertexArray(vaoidx);
@@ -265,84 +269,114 @@ void SceneRenderer::setframesize(Vec2i size)
 
 void SceneRenderer::generateheatmap(GatheredData& gd)
 {
-	// Dump texture from GPU
+	boost::filesystem::path heatmappath = gd.datafolder / "heatmap.bin";
 	const unsigned nuv = numuvsets;
 	std::vector<Vec3f> tex(texres*texres*nuv);
 	LOG(info) << "Allocated memory";
-	glBindTexture(GL_TEXTURE_2D_ARRAY, texid_heatmap);
-	LOG(info) << "Binded texture array";
-	glGetTexImage(
-		GL_TEXTURE_2D_ARRAY, 0,
-		GL_RGB, GL_FLOAT,
-		tex.data()
-	);
-	LOG(info) << "Read texture array";
-
-	const unsigned nthreads = std::thread::hardware_concurrency();
-	// Rows Per Thread
-	const unsigned rpt = texres / nthreads;
-	std::vector<std::thread> threads(nthreads);
-
-	const float r = 0.707106781f / uvscalefactor;
-	//LOG(info) << "SCALE FACTOR:" << r;
-	const float r2 = r*r;
-
-	for(unsigned ti = 0; ti < nthreads; ++ti)
+	if(boost::filesystem::exists(heatmappath))
 	{
-		threads[ti] = std::thread(
-			[nuv, r2, ti, rpt, &tex, &gd](){
-				for(
-					unsigned x = ti*rpt; 
-					x < (ti+1)*rpt; 
-					++x
-				) {
-					LOG(info) << "Column #" << x;
-					for(unsigned y = 0; y < nuv*texres; ++y)
-					{
-						const unsigned idx = x + y*texres;
-						Vec3f& pix = tex[idx];
-						Vec3f wp = tex[idx];
+		//load from disk
+		LOG(info) << "Heatmap found";
+		
+		boost::filesystem::ifstream ifs(heatmappath);
+		ifs.read(reinterpret_cast<char*>(tex.data()), tex.size()*sizeof(Vec3f));
+		ifs.close();
+	}
+	else
+	{
+		LOG(info) << "Heatmap does not exist. Generating";
+		// Dump texture from GPU
+		
+		glBindTexture(GL_TEXTURE_2D_ARRAY, texid_uvworld);
+		LOG(info) << "Binded texture array";
+		glGetTexImage(
+			GL_TEXTURE_2D_ARRAY, 0,
+			GL_RGB, GL_FLOAT,
+			tex.data()
+		);
+		LOG(info) << "Read texture array";
 
-						if(length(wp) != 0)
+		const unsigned nthreads = std::thread::hardware_concurrency();
+		// Rows Per Thread
+		const unsigned rpt = texres / nthreads;
+		std::vector<std::thread> threads(nthreads);
+
+		const float r = 0.707106781f / uvscalefactor;
+		//LOG(info) << "SCALE FACTOR:" << r;
+		const float r2 = r*r;
+
+		for(unsigned ti = 0; ti < nthreads; ++ti)
+		{
+			threads[ti] = std::thread(
+				[nuv, r2, ti, rpt, &tex, &gd](){
+					for(
+						unsigned x = ti*rpt; 
+						x < (ti+1)*rpt; 
+						++x
+					) {
+						LOG(info) << "Column #" << x;
+						for(unsigned y = 0; y < nuv*texres; ++y)
 						{
-							pix[0] = 0; pix[1] = 0; pix[2] = 0;
-							// Iterate over bounces
-							Vec3f d; float dl2;
-							for(Vec3h& b : gd.bouncesposition)
-							{
-								d[0] = wp[0]-b[0];
-								d[1] = wp[1]-b[1];
-								d[2] = wp[2]-b[2];
-								dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+							const unsigned idx = x + y*texres;
+							Vec3f& pix = tex[idx];
+							Vec3f wp = tex[idx];
 
-								if(r2 > dl2)
+							if(length(wp) != 0)
+							{
+								pix[0] = 0; pix[1] = 0; pix[2] = 0;
+								// Iterate over bounces
+								Vec3f d; float dl2;
+								for(Vec3h& b : gd.bouncesposition)
 								{
-									pix[0] += 1.0f;
+									d[0] = wp[0]-b[0];
+									d[1] = wp[1]-b[1];
+									d[2] = wp[2]-b[2];
+									dl2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+
+									if(r2 > dl2)
+									{
+										pix[0] += 1.0f;
+									}
 								}
+								//LOG(info) << x << ", " << y << ": " << wp << " -> " << pix[0];
 							}
-							//LOG(info) << x << ", " << y << ": " << wp << " -> " << pix[0];
 						}
 					}
 				}
-			}
-		);
-	}
+			);
+		}
 
-	for(std::thread& th : threads)
-	{
-		th.join();
+		for(std::thread& th : threads)
+		{
+			th.join();
+		}
+
+		// Write map to disk
+		boost::filesystem::ofstream ofs(heatmappath);
+		ofs.write(reinterpret_cast<char*>(tex.data()), tex.size()*sizeof(Vec3f));
+		ofs.close();
 	}
 
 	// Find max for color mapping
+	unsigned hmm = 0;
 	for(unsigned x = 0; x < texres; ++x)
+	{
 		for(unsigned y = 0; y < numuvsets*texres; ++y)
 		{
 			const float v = tex[x + y*texres][0];
 			//LOG(info) << "(" << x << ", " << y << "): " << v;
-			heatmapmax = max(heatmapmax, v);
+			hmm = max(hmm, v);
 		}
-
+	}
+	gd.heatmapmax = hmm;
+	heatmapmax = max(heatmapmax, hmm);
 	
+	glGenTextures(1, &gd.texid_heatmap);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, gd.texid_heatmap);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB32F, texres, texres, numuvsets);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	glTexSubImage3D(
 		GL_TEXTURE_2D_ARRAY, 0, 
 		0, 0, 0, texres, texres, numuvsets,
@@ -805,8 +839,8 @@ void SceneRenderer::generateuvworldtextures()
 	glBindFramebuffer(GL_FRAMEBUFFER, fboid);
 
 	//generate textures
-	glGenTextures(1, &texid_heatmap);
-	glBindTexture(GL_TEXTURE_2D_ARRAY,texid_heatmap);
+	glGenTextures(1, &texid_uvworld);
+	glBindTexture(GL_TEXTURE_2D_ARRAY,texid_uvworld);
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB32F, texres, texres, numuvsets);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -833,7 +867,7 @@ void SceneRenderer::generateuvworldtextures()
 	{
 		glFramebufferTextureLayer(
 			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-			texid_heatmap, 0, i
+			texid_uvworld, 0, i
 		);
 		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{

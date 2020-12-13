@@ -332,8 +332,10 @@ void Application::render()
 
 		if(mustrenderviewport)
 		{
-			scenerenderer.render1(camera, true);
-			scenerenderer.render1(camera, false);
+			GatheredData* gd = currentdataset != nullptr ? 
+				&currentdataset->gathereddata : nullptr;
+			scenerenderer.render1(camera, gd, true);
+			scenerenderer.render1(camera, gd, false);
 
 			scenerenderer.render2(finalfbo_id);
 			scenerenderer.render3(finalfbo_id, texid_final);
@@ -471,7 +473,8 @@ void Application::renderui()
 					0, 1
 				);
 
-				mustrenderviewport |= scenerenderer.renderui();
+				mustrenderviewport |= 
+					scenerenderer.renderui(currentdataset != nullptr);
 			}
 			
 			if(currentdataset != nullptr)

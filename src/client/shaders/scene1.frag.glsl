@@ -53,7 +53,6 @@ void main()
 	vec3 l = normalize(worldpos - eye);
 
 	vec3 diff;
-
 	if(!showheatmap)
 	{
 		diff = (0.5 + 0.5*abs(dot(n,l))) * color;
